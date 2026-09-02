@@ -70,7 +70,6 @@ export function useOnlineGame(config: OnlineGameConfig | null) {
   statusRef.current = status;
   configRef.current = config;
 
-  const tcLabel = config?.timeControl === 'custom' ? `${config.customMinutes} min` : config?.timeControl ?? '3min';
   const initialMs = config?.timeControl === 'custom'
     ? (config.customMinutes || 5) * 60_000
     : { '1min': 60_000, '3min': 180_000, '5min': 300_000, '10min': 600_000, '30min': 1_800_000 }[config?.timeControl ?? '3min'] ?? 180_000;
@@ -79,7 +78,6 @@ export function useOnlineGame(config: OnlineGameConfig | null) {
   // Fetch opponent profile
   useEffect(() => {
     if (!config) return;
-    const opponentId = config.isHost ? null : null; // We need the host's id when guest
     const myId = config.userId;
     supabase
       .from('online_games')
