@@ -27,6 +27,10 @@ import { sound } from './game/sound';
 import { legalMoves } from './game/engine';
 import { supabase, type AppUser } from './lib/supabase';
 import { useProfile } from './hooks/useProfile';
+import { BoardThemeSwitcher } from './components/BoardThemeSwitcher';
+import { OnlineGameView } from './components/OnlineGameView';
+import { getStoredTheme, storeTheme, getThemeById, applyThemeCSS } from './game/themes';
+import type { OnlineGameConfig } from './hooks/useOnlineGame';
 import { LayoutGrid, Swords, Settings as SettingsIcon, History, Music, Music2 } from 'lucide-react';
 
 const PIECE_VALUES: Record<PieceType, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
@@ -83,6 +87,9 @@ export default function App() {
   const [matchmakingOpen, setMatchmakingOpen] = useState(false);
   const [onlineGameId, setOnlineGameId] = useState<string | null>(null);
   const [onlineIsHost, setOnlineIsHost] = useState(false);
+  const [boardThemeId, setBoardThemeId] = useState<string>(getStoredTheme());
+  const [onlineGameConfig, setOnlineGameConfig] = useState<OnlineGameConfig | null>(null);
+  const [onlineRoomCode, setOnlineRoomCode] = useState<string>('');
 
   // Settings state
   const [muted, setMuted] = useState(sound.muted);
@@ -95,6 +102,11 @@ export default function App() {
   const [authOpen, setAuthOpen] = useState(false);
 
   const { profile, showBonusPopup, setShowBonusPopup, updateProfile, claimBonus } = useProfile(authUser);
+
+  // Apply saved board theme on mount
+  useEffect(() => {
+    applyThemeCSS(getThemeById(boardThemeId));
+  }, [boardThemeId]);
 
   // Restore session on mount
   useEffect(() => {
@@ -111,6 +123,16 @@ export default function App() {
       }
     });
     return () => sub.subscription.unsubscribe();
+  }, []);
+
+  // Auto-open RoomPanel when arriving via ?room=CODE shared link
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roomParam = params.get('room');
+    if (roomParam) {
+      setGameMode('room');
+      setRoomOpen(true);
+    }
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -219,9 +241,19 @@ export default function App() {
     setGameMode('online');
     setPlayerColor(isHost ? 'w' : 'b');
     if (autoFlip) setOrientation(isHost ? 'w' : 'b');
-    game.startGame();
+    if (authUser) {
+      setOnlineGameConfig({
+        gameId,
+        roomId: gameId,
+        isHost,
+        userId: authUser.id,
+        playerColor: isHost ? 'w' : 'b',
+        timeControl,
+        customMinutes,
+      });
+    }
     navigate('play');
-  }, [autoFlip, game, navigate]);
+  }, [autoFlip, authUser, timeControl, customMinutes, navigate]);
 
   // Broadcast local moves to the online game table
   useEffect(() => {
@@ -334,6 +366,40 @@ export default function App() {
         />
         <FooterPage page={footerPage as any} onBack={() => { setFooterPage(null); navigate('home'); }} />
         <Footer onNavigate={navigate} onFooterPage={onFooterPage} />
+        <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onAuthed={(u) => { setAuthUser(u); setAuthOpen(false); }} />
+      </div>
+    );
+  }
+
+  // Full-screen online multiplayer game view
+  if (onlineGameConfig) {
+    const handleExitOnline = () => {
+      setOnlineGameConfig(null);
+      setOnlineGameId(null);
+      setActiveRoomId(null);
+      navigate('home');
+    };
+    const handleRematch = () => {
+      if (onlineGameConfig) {
+        setOnlineGameConfig({ ...onlineGameConfig, gameId: onlineGameConfig.gameId + '-rematch-' + Date.now() });
+      }
+    };
+    return (
+      <div className="min-h-screen bg-navy-800">
+        <Navbar
+          active="play"
+          onNavigate={navigate}
+          user={authUser}
+          onLogin={() => setAuthOpen(true)}
+          onLogout={handleLogout}
+        />
+        <OnlineGameView
+          config={onlineGameConfig}
+          themeId={boardThemeId}
+          onThemeChange={(id) => { setBoardThemeId(id); storeTheme(id); }}
+          onExit={handleExitOnline}
+          onRematch={handleRematch}
+        />
         <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onAuthed={(u) => { setAuthUser(u); setAuthOpen(false); }} />
       </div>
     );
@@ -472,6 +538,11 @@ export default function App() {
                     {'\u226B|'}
                   </button>
                 </div>
+                {/* Board theme switcher */}
+                <BoardThemeSwitcher
+                  currentThemeId={boardThemeId}
+                  onThemeChange={(id) => { setBoardThemeId(id); storeTheme(id); }}
+                />
                 {/* Music toggle */}
                 <button
                   onClick={onToggleMusic}
@@ -618,7 +689,72 @@ export default function App() {
         open={roomOpen}
         onClose={() => setRoomOpen(false)}
         userId={authUser?.id ?? null}
-        onRoomJoined={(rid: string) => setActiveRoomId(rid)}
+        username={profile?.display_name || profile?.username || authUser?.email || 'Player'}
+        onRoomJoined={async (rid: string, isHost: boolean, code: string, tc: TimeControl) => {
+          setActiveRoomId(rid);
+          setOnlineRoomCode(code);
+          if (!authUser) return;
+          let gameId: string | null = null;
+
+          if (!isHost) {
+            // Guest joins: fetch the room to get host_id, then create the online_games row
+            const { data: room } = await supabase
+              .from('rooms')
+              .select('host_id')
+              .eq('id', rid)
+              .maybeSingle();
+            if (room?.host_id) {
+              const { data: ogRow } = await supabase
+                .from('online_games')
+                .insert({
+                  host_id: room.host_id,
+                  guest_id: authUser.id,
+                  time_control: tc,
+                  status: 'active',
+                  turn: 'w',
+                })
+                .select()
+                .maybeSingle();
+              if (ogRow) {
+                gameId = ogRow.id;
+                // Store game_id on the room so the host can find it
+                await supabase.from('rooms').update({ game_id: gameId }).eq('id', rid);
+              }
+            }
+          } else {
+            // Host: poll the room for game_id set by the guest (up to ~15s)
+            for (let i = 0; i < 30; i++) {
+              const { data: room } = await supabase
+                .from('rooms')
+                .select('game_id')
+                .eq('id', rid)
+                .maybeSingle();
+              if (room?.game_id) {
+                gameId = room.game_id;
+                break;
+              }
+              await new Promise((r) => setTimeout(r, 500));
+            }
+          }
+
+          if (gameId) {
+            setOnlineGameConfig({
+              gameId,
+              roomId: rid,
+              isHost,
+              userId: authUser.id,
+              playerColor: isHost ? 'w' : 'b',
+              timeControl: tc,
+              customMinutes,
+            });
+            setOnlineGameId(gameId);
+            setOnlineIsHost(isHost);
+            setGameMode('online');
+            setPlayerColor(isHost ? 'w' : 'b');
+            if (autoFlip) setOrientation(isHost ? 'w' : 'b');
+            navigate('play');
+          }
+        }}
       />
 
       <MatchmakingPanel

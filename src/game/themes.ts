@@ -9,13 +9,13 @@ export interface BoardTheme {
   legalRing: string;
   checkBg: string;
   lastMoveBg: string;
-  preview: string; // small swatch for the picker
+  preview: string;
 }
 
 export const BOARD_THEMES: BoardTheme[] = [
   {
     id: 'green',
-    name: 'Green',
+    name: 'Emerald Green',
     light: '#ebecd0',
     dark: '#779952',
     highlight: '#baca44',
@@ -28,7 +28,7 @@ export const BOARD_THEMES: BoardTheme[] = [
   },
   {
     id: 'blue',
-    name: 'Blue',
+    name: 'Ocean Blue',
     light: '#dee3e6',
     dark: '#8ca2ad',
     highlight: '#c4d4e0',
@@ -41,7 +41,7 @@ export const BOARD_THEMES: BoardTheme[] = [
   },
   {
     id: 'brown',
-    name: 'Brown',
+    name: 'Classic Wood',
     light: '#f0d9b5',
     dark: '#b58863',
     highlight: '#dcb28c',
@@ -67,7 +67,7 @@ export const BOARD_THEMES: BoardTheme[] = [
   },
   {
     id: 'dark',
-    name: 'Dark',
+    name: 'Dark Mode',
     light: '#8b8b8b',
     dark: '#3d3d3d',
     highlight: '#5a5a5a',
@@ -79,21 +79,21 @@ export const BOARD_THEMES: BoardTheme[] = [
     preview: 'linear-gradient(135deg, #8b8b8b 50%, #3d3d3d 50%)',
   },
   {
-    id: 'purple',
-    name: 'Violet',
-    light: '#e3d9f0',
-    dark: '#7d5ba6',
-    highlight: '#c4a8e8',
-    select: '#d4b8f8',
-    legalDot: 'rgba(0,0,0,0.22)',
-    legalRing: 'rgba(0,0,0,0.22)',
-    checkBg: 'rgba(229,57,53,0.45)',
-    lastMoveBg: 'rgba(125,91,166,0.5)',
-    preview: 'linear-gradient(135deg, #e3d9f0 50%, #7d5ba6 50%)',
+    id: 'ice',
+    name: 'Ice Blue',
+    light: '#e0f7fa',
+    dark: '#80deea',
+    highlight: '#b2ebf2',
+    select: '#c0eef5',
+    legalDot: 'rgba(0,0,0,0.18)',
+    legalRing: 'rgba(0,0,0,0.18)',
+    checkBg: 'rgba(229,57,53,0.4)',
+    lastMoveBg: 'rgba(128,222,234,0.5)',
+    preview: 'linear-gradient(135deg, #e0f7fa 50%, #80deea 50%)',
   },
   {
     id: 'ocean',
-    name: 'Ocean',
+    name: 'Deep Ocean',
     light: '#cfedf6',
     dark: '#4a9eb8',
     highlight: '#a8d8e8',
@@ -120,6 +120,13 @@ export const BOARD_THEMES: BoardTheme[] = [
 ];
 
 const STORAGE_KEY = 'chess-board-theme';
+const CUSTOM_KEY = 'chess-board-custom';
+const CUSTOM_ID = 'custom';
+
+export interface CustomColors {
+  light: string;
+  dark: string;
+}
 
 export function getStoredTheme(): string {
   try {
@@ -137,6 +144,44 @@ export function storeTheme(id: string): void {
   }
 }
 
+export function getCustomColors(): CustomColors | null {
+  try {
+    const raw = localStorage.getItem(CUSTOM_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as CustomColors;
+  } catch {
+    return null;
+  }
+}
+
+export function storeCustomColors(colors: CustomColors): void {
+  try {
+    localStorage.setItem(CUSTOM_KEY, JSON.stringify(colors));
+  } catch {
+    // ignore
+  }
+}
+
+function deriveTheme(light: string, dark: string): BoardTheme {
+  return {
+    id: CUSTOM_ID,
+    name: 'Custom',
+    light,
+    dark,
+    highlight: dark,
+    select: light,
+    legalDot: 'rgba(0,0,0,0.22)',
+    legalRing: 'rgba(0,0,0,0.22)',
+    checkBg: 'rgba(229,57,53,0.45)',
+    lastMoveBg: `${dark}88`,
+    preview: `linear-gradient(135deg, ${light} 50%, ${dark} 50%)`,
+  };
+}
+
+export function buildCustomTheme(colors: CustomColors): BoardTheme {
+  return deriveTheme(colors.light, colors.dark);
+}
+
 export function applyThemeCSS(theme: BoardTheme): void {
   const root = document.documentElement;
   root.style.setProperty('--board-light', theme.light);
@@ -150,5 +195,16 @@ export function applyThemeCSS(theme: BoardTheme): void {
 }
 
 export function getThemeById(id: string): BoardTheme {
+  if (id === CUSTOM_ID) {
+    const custom = getCustomColors();
+    if (custom) return buildCustomTheme(custom);
+  }
   return BOARD_THEMES.find((t) => t.id === id) ?? BOARD_THEMES[0];
+}
+
+export function getAllThemes(): BoardTheme[] {
+  const custom = getCustomColors();
+  const list = [...BOARD_THEMES];
+  if (custom) list.push(buildCustomTheme(custom));
+  return list;
 }
