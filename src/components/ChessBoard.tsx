@@ -53,7 +53,9 @@ export function ChessBoard({
     return out;
   }, [board]);
 
+  const wrapRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [boardPx, setBoardPx] = useState(0);
   const [cellSize, setCellSize] = useState(0);
   const prevPositions = useRef<Map<number, { r: number; c: number }>>(new Map());
 
@@ -66,12 +68,21 @@ export function ChessBoard({
   const dragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const e of entries) setCellSize(e.contentRect.width / 8);
-    });
-    ro.observe(el);
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const compute = () => {
+      const parent = wrap.parentElement;
+      if (!parent) return;
+      const parentRect = parent.getBoundingClientRect();
+      const availW = parentRect.width;
+      const availH = parentRect.height;
+      const size = Math.max(120, Math.floor(Math.min(availW, availH)));
+      setBoardPx(size);
+      setCellSize(size / 8);
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(wrap.parentElement ?? wrap);
     return () => ro.disconnect();
   }, []);
 
@@ -181,11 +192,11 @@ export function ChessBoard({
   const draggingFrom = drag ? `${drag.from[0]}-${drag.from[1]}` : null;
 
   return (
-    <div className="chess-board-wrap mx-auto w-full max-w-full">
+    <div ref={wrapRef} className="chess-board-wrap mx-auto flex w-full justify-center" style={{ maxWidth: boardPx || undefined }}>
       <div
         ref={containerRef}
         className="chess-board-inner relative grid touch-none select-none grid-cols-8 overflow-hidden border border-black/30 shadow-2xl"
-        style={{ aspectRatio: '1 / 1', touchAction: 'none', borderRadius: 0 }}
+        style={{ width: boardPx || '100%', height: boardPx || undefined, aspectRatio: boardPx ? undefined : '1 / 1', touchAction: 'none', borderRadius: 0 }}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
