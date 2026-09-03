@@ -451,14 +451,14 @@ export default function App() {
         <Features />
 
         {/* PLAY SECTION — 3-column chess.com style layout */}
-        <section id="play" className="px-2 py-4 sm:px-4 lg:flex lg:h-[calc(100vh-4rem)] lg:w-full lg:items-center lg:justify-center lg:gap-2 lg:px-3 lg:py-2 lg:overflow-hidden">
+        <section id="play" className="px-2 py-4 sm:px-4 lg:flex lg:h-[calc(100vh-4rem)] lg:w-full lg:items-stretch lg:justify-center lg:gap-1.5 lg:px-2 lg:py-1 lg:overflow-hidden">
           {/* Left icon rail */}
           <aside className="hidden w-14 shrink-0 lg:block lg:self-stretch">
             <PlaySidebar active="play" onNavigate={() => navigate('play')} />
           </aside>
 
           {/* Center: board + player bars — clean, no clutter */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center gap-1.5 overflow-hidden lg:self-stretch lg:justify-center">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center gap-1 overflow-hidden lg:self-stretch lg:justify-center">
             {/* Top player HUD (opponent) */}
             <PlayerHUD
               player={{
@@ -478,22 +478,24 @@ export default function App() {
             />
 
             {/* Board container — fills remaining vertical space between player bars */}
-            <div className="flex w-full flex-1 items-center justify-center min-h-0">
-              <ChessBoard
-                board={game.board}
-                selected={game.selected}
-                legal={game.legal}
-                lastMove={game.lastMove}
-                status={game.status}
-                orientation={orientation}
-                turn={game.state.turn}
-                onSquareClick={game.selectSquare}
-                onDrop={game.dropPiece}
-                promotion={game.promotion}
-                onChoosePromotion={game.choosePromotion}
-                onCancelPromotion={game.cancelPromotion}
-                thinking={game.thinking}
-              />
+            <div className="relative flex w-full flex-1 items-center justify-center overflow-hidden min-h-0">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <ChessBoard
+                  board={game.board}
+                  selected={game.selected}
+                  legal={game.legal}
+                  lastMove={game.lastMove}
+                  status={game.status}
+                  orientation={orientation}
+                  turn={game.state.turn}
+                  onSquareClick={game.selectSquare}
+                  onDrop={game.dropPiece}
+                  promotion={game.promotion}
+                  onChoosePromotion={game.choosePromotion}
+                  onCancelPromotion={game.cancelPromotion}
+                  thinking={game.thinking}
+                />
+              </div>
             </div>
 
             {/* Bottom player HUD (you) */}
