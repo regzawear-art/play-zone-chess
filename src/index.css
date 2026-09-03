@@ -195,26 +195,33 @@ body {
 /* Responsive board: fit within viewport on all screen sizes */
 @media (max-width: 1023px) {
   .chess-board-wrap {
-    max-width: min(calc(100vw - 2rem), calc(100svh - 280px)) !important;
+    max-width: min(calc(100vw - 2rem), calc(100svh - 260px)) !important;
   }
 }
 
 @media (min-width: 1024px) {
   .chess-board-wrap {
-    /* Desktop 3-column: reserve space for left rail (~4rem) + right sidebar (~19rem)
-       + gaps + padding. Vertically reserve ~12rem for two player bars + controls. */
-    max-width: min(calc(100vw - 26rem), calc(100vh - 11rem)) !important;
+    /* Desktop 3-column: reserve space for left rail (~4rem) + right sidebar (~17rem)
+       + gaps + padding. Vertically reserve ~9rem for two player bars + controls. */
+    max-width: min(calc(100vw - 23rem), calc(100vh - 9rem)) !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .chess-board-wrap {
+    /* Large screens: allow board to grow further */
+    max-width: min(calc(100vw - 24rem), calc(100vh - 9rem), 760px) !important;
   }
 }
 
 @media (max-width: 640px) {
   .chess-board-wrap {
-    max-width: min(calc(100vw - 1.5rem), calc(100svh - 240px)) !important;
+    max-width: min(calc(100vw - 1.5rem), calc(100svh - 230px)) !important;
   }
 }
 
 @media (max-width: 380px) {
   .chess-board-wrap {
-    max-width: min(calc(100vw - 1rem), calc(100svh - 220px)) !important;
+    max-width: min(calc(100vw - 1rem), calc(100svh - 210px)) !important;
   }
 }
