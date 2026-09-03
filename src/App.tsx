@@ -691,22 +691,24 @@ export default function App() {
             </h2>
             <p className="mt-2 text-navy-300">Customize your avatar, sound, and gameplay.</p>
           </div>
-          <Settings
-            user={user}
-            userAvatar={userAvatar}
-            onUploadAvatar={setUserAvatar}
-            muted={muted}
-            onToggleMute={onToggleMute}
-            volume={volume}
-            onChangeVolume={onChangeVolume}
-            autoFlip={autoFlip}
-            onToggleAutoFlip={() => setAutoFlip((v) => !v)}
-            notifications={notifications}
-            onToggleNotifications={() => setNotifications((v) => !v)}
-            onResetSettings={onResetSettings}
-            matchCount={game.matches.length}
-            onClearHistory={game.clearMatchHistory}
-          />
+          <div className="flex justify-center">
+            <Settings
+              user={user}
+              userAvatar={userAvatar}
+              onUploadAvatar={setUserAvatar}
+              muted={muted}
+              onToggleMute={onToggleMute}
+              volume={volume}
+              onChangeVolume={onChangeVolume}
+              autoFlip={autoFlip}
+              onToggleAutoFlip={() => setAutoFlip((v) => !v)}
+              notifications={notifications}
+              onToggleNotifications={() => setNotifications((v) => !v)}
+              onResetSettings={onResetSettings}
+              matchCount={game.matches.length}
+              onClearHistory={game.clearMatchHistory}
+            />
+          </div>
         </section>
       </main>
 
