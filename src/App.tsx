@@ -3,6 +3,7 @@ import type { Board, Color, GameMode, GameStage, PieceType, TimeControl, AIDiffi
 import { useChess } from './hooks/useChess';
 import { PLAYERS, CURRENT_USER } from './data/players';
 import { Navbar } from './components/Navbar';
+import { PlaySidebar } from './components/PlaySidebar';
 import { Hero } from './components/Hero';
 import { Features } from './components/Features';
 import { ChessBoard } from './components/ChessBoard';
@@ -371,7 +372,21 @@ export default function App() {
 
   if (footerPage) {
     return (
-      <div className="min-h-screen bg-navy-800">
+      <div className="flex min-h-screen bg-navy-800">
+      {/* Desktop left sidebar navigation */}
+      <aside className="sticky top-0 hidden h-screen w-16 shrink-0 lg:block lg:w-56">
+        <PlaySidebar
+          active=""
+          onNavigate={navigate}
+          user={authUser}
+          onLogin={() => setAuthOpen(true)}
+          onLogout={handleLogout}
+          onWallet={() => setWalletOpen(true)}
+        />
+      </aside>
+
+      {/* Mobile top bar */}
+      <div className="fixed inset-x-0 top-0 z-40 lg:hidden">
         <Navbar
           active=""
           onNavigate={navigate}
@@ -380,10 +395,15 @@ export default function App() {
           onLogout={handleLogout}
           onWallet={() => setWalletOpen(true)}
         />
+      </div>
+
+      <main className="flex min-w-0 flex-1 flex-col pt-14 lg:pt-0">
         <FooterPage page={footerPage as any} onBack={() => { setFooterPage(null); navigate('home'); }} />
         <Footer onNavigate={navigate} onFooterPage={onFooterPage} />
-        <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onAuthed={(u) => { setAuthUser(u); setAuthOpen(false); }} />
-      </div>
+      </main>
+
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onAuthed={(u) => { setAuthUser(u); setAuthOpen(false); }} />
+    </div>
     );
   }
 
@@ -401,7 +421,21 @@ export default function App() {
       }
     };
     return (
-      <div className="min-h-screen bg-navy-800">
+      <div className="flex min-h-screen bg-navy-800">
+      {/* Desktop left sidebar navigation */}
+      <aside className="sticky top-0 hidden h-screen w-16 shrink-0 lg:block lg:w-56">
+        <PlaySidebar
+          active="play"
+          onNavigate={navigate}
+          user={authUser}
+          onLogin={() => setAuthOpen(true)}
+          onLogout={handleLogout}
+          onWallet={() => setWalletOpen(true)}
+        />
+      </aside>
+
+      {/* Mobile top bar */}
+      <div className="fixed inset-x-0 top-0 z-40 lg:hidden">
         <Navbar
           active="play"
           onNavigate={navigate}
@@ -410,6 +444,9 @@ export default function App() {
           onLogout={handleLogout}
           onWallet={() => setWalletOpen(true)}
         />
+      </div>
+
+      <main className="flex min-w-0 flex-1 flex-col pt-14 lg:pt-0">
         <OnlineGameView
           config={onlineGameConfig}
           themeId={boardThemeId}
@@ -418,8 +455,9 @@ export default function App() {
           onRematch={handleRematch}
         />
         <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onAuthed={(u) => { setAuthUser(u); setAuthOpen(false); }} />
-      </div>
-    );
+      </main>
+    </div>
+  );
   }
 
   const gameDuration = formatDuration(
@@ -427,17 +465,32 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-navy-800">
-      <Navbar
-        active={view}
-        onNavigate={navigate}
-        user={authUser}
-        onLogin={() => setAuthOpen(true)}
-        onLogout={handleLogout}
-        onWallet={() => setWalletOpen(true)}
-      />
+    <div className="flex min-h-screen overflow-x-hidden bg-navy-800">
+      {/* Desktop left sidebar navigation */}
+      <aside className="sticky top-0 hidden h-screen w-16 shrink-0 lg:block lg:w-56">
+        <PlaySidebar
+          active={view}
+          onNavigate={navigate}
+          user={authUser}
+          onLogin={() => setAuthOpen(true)}
+          onLogout={handleLogout}
+          onWallet={() => setWalletOpen(true)}
+        />
+      </aside>
 
-      <main>
+      {/* Mobile top bar (replaces sidebar on small screens) */}
+      <div className="fixed inset-x-0 top-0 z-40 lg:hidden">
+        <Navbar
+          active={view}
+          onNavigate={navigate}
+          user={authUser}
+          onLogin={() => setAuthOpen(true)}
+          onLogout={handleLogout}
+          onWallet={() => setWalletOpen(true)}
+        />
+      </div>
+
+      <main className="flex min-w-0 flex-1 flex-col pt-14 lg:pt-0">
         <Hero
           onPlay={handlePlay}
           onLeaderboard={handleLeaderboard}
@@ -450,7 +503,7 @@ export default function App() {
         <Features />
 
         {/* PLAY SECTION — 60/40 two-column: board | right panel on desktop */}
-        <section id="play" className="px-2 py-4 sm:px-4 lg:flex lg:h-[calc(100vh-4rem)] lg:w-full lg:items-stretch lg:gap-0 lg:px-2 lg:py-1 lg:overflow-hidden">
+        <section id="play" className="px-2 py-4 sm:px-4 lg:flex lg:h-screen lg:w-full lg:items-stretch lg:gap-0 lg:px-2 lg:py-1 lg:overflow-hidden">
           {/* Board area — 60% width on desktop */}
           <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center gap-1 overflow-hidden lg:flex-[13] lg:self-stretch lg:justify-center lg:pr-3">
             {/* Top player HUD (opponent) */}
@@ -710,9 +763,8 @@ export default function App() {
             />
           </div>
         </section>
+        <Footer onNavigate={navigate} onFooterPage={onFooterPage} />
       </main>
-
-      <Footer onNavigate={navigate} onFooterPage={onFooterPage} />
 
       {showPopup && game.pendingResult && (
         <GameOverPopup
