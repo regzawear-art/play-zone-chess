@@ -452,7 +452,7 @@ export default function App() {
         {/* PLAY SECTION — 60/40 two-column: board | right panel on desktop */}
         <section id="play" className="px-2 py-4 sm:px-4 lg:flex lg:h-[calc(100vh-4rem)] lg:w-full lg:items-stretch lg:gap-0 lg:px-2 lg:py-1 lg:overflow-hidden">
           {/* Board area — 60% width on desktop */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center gap-1 overflow-hidden lg:flex-[3] lg:self-stretch lg:justify-center lg:pr-3">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center gap-1 overflow-hidden lg:flex-[13] lg:self-stretch lg:justify-center lg:pr-3">
             {/* Top player HUD (opponent) */}
             <PlayerHUD
               player={{
@@ -560,7 +560,7 @@ export default function App() {
           </div>
 
           {/* Right sidebar: action cards + game panel — 40% width on desktop */}
-          <aside className="flex w-full flex-col gap-3 overflow-y-auto no-scrollbar lg:flex-[2] lg:self-stretch lg:border-l lg:border-navy-600/40 lg:pl-3 lg:pr-1">
+          <aside className="flex w-full flex-col gap-2.5 overflow-y-auto no-scrollbar lg:flex-[7] lg:self-stretch lg:border-l lg:border-navy-600/40 lg:pl-2.5 lg:pr-1">
             <PlayActionCards
               onPlayOnline={() => { setGameMode('online'); setMatchmakingOpen(true); }}
               onPlayBots={() => { setGameMode('ai'); }}
