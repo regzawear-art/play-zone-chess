@@ -90,7 +90,7 @@ export function Hero({ onPlay, onLeaderboard, onAuth, onOnline, onRooms, onAI }:
   return (
     <section
       id="home"
-      className="relative overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20 lg:pt-40"
+      className="relative overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20 lg:pt-20"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-roledescription="carousel"
