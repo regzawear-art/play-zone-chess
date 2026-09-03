@@ -60,6 +60,7 @@ export default {
         'glass-grad':
           'linear-gradient(135deg, rgba(49,46,43,0.92) 0%, rgba(38,37,34,0.85) 100%)',
         'blue-grad': 'linear-gradient(135deg, #81B64C 0%, #6ba238 100%)',
+        'amber-grad': 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
         'navy-grad': 'linear-gradient(160deg, #312E2B 0%, #1c1b18 100%)',
       },
       keyframes: {

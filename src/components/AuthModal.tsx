@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { X, Mail, Lock, User as UserIcon, Loader2, Crown, AlertCircle, Phone, KeyRound, ShieldCheck } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { X, Mail, Lock, User as UserIcon, Loader2, Crown, AlertCircle, Phone, KeyRound, ShieldCheck, ChevronDown, Coins } from 'lucide-react';
 import { supabase, type AppUser } from '@/lib/supabase';
+import { COUNTRIES, getStoredCurrency, storeCurrency, getStoredCountryCode, storeCountryCode, type Country } from '@/data/countries';
 
 interface Props {
   open: boolean;
@@ -24,6 +25,33 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
+  const [selectedCountry, setSelectedCountry] = useState<Country>(
+    COUNTRIES.find((c) => c.code === getStoredCountryCode()) ?? COUNTRIES[0],
+  );
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+
+  const [currency, setCurrency] = useState(getStoredCurrency());
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+
+  const filteredCountries = useMemo(() => {
+    const q = countrySearch.toLowerCase();
+    return COUNTRIES.filter((c) =>
+      c.name.toLowerCase().includes(q) ||
+      c.dialCode.includes(q) ||
+      c.code.toLowerCase().includes(q),
+    );
+  }, [countrySearch]);
+
+  const currencies = useMemo(() => {
+    const seen = new Set<string>();
+    return COUNTRIES.filter((c) => {
+      if (seen.has(c.currency)) return false;
+      seen.add(c.currency);
+      return true;
+    }).sort((a, b) => a.currency.localeCompare(b.currency));
+  }, []);
+
   useEffect(() => {
     if (!open) {
       setEmail('');
@@ -36,19 +64,32 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
       setInfo(null);
       setLoading(false);
       setGoogleLoading(false);
+      setCountryOpen(false);
+      setCurrencyOpen(false);
     }
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
   if (!open) return null;
+
+  const selectCountry = (c: Country) => {
+    setSelectedCountry(c);
+    setCountryOpen(false);
+    setCountrySearch('');
+    storeCountryCode(c.code);
+  };
+
+  const selectCurrency = (cur: string) => {
+    setCurrency(cur);
+    setCurrencyOpen(false);
+    storeCurrency(cur);
+  };
 
   const signInWithGoogle = async () => {
     setGoogleLoading(true);
@@ -69,20 +110,9 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
   const submitEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    if (!email.trim() || !password) {
-      setError('Please enter your email and password.');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
-    }
-    if (mode === 'signup' && password !== confirm) {
-      setError('Passwords do not match.');
-      return;
-    }
-
+    if (!email.trim() || !password) { setError('Please enter your email and password.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (mode === 'signup' && password !== confirm) { setError('Passwords do not match.'); return; }
     setLoading(true);
     try {
       if (mode === 'login') {
@@ -92,13 +122,10 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
       } else {
         const { data, error: err } = await supabase.auth.signUp({ email: email.trim(), password });
         if (err) throw err;
-        if (data.user) {
-          onAuthed({ id: data.user.id, email: data.user.email ?? '' });
-        }
+        if (data.user) onAuthed({ id: data.user.id, email: data.user.email ?? '' });
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
-      setError(friendlyError(msg));
+      setError(friendlyError(err instanceof Error ? err.message : 'Something went wrong.'));
     } finally {
       setLoading(false);
     }
@@ -108,26 +135,16 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
     e.preventDefault();
     setError(null);
     setInfo(null);
-
-    const trimmed = phone.trim();
-    if (!trimmed) {
-      setError('Please enter your mobile number.');
-      return;
-    }
-    const formatted = trimmed.startsWith('+') ? trimmed : `+${trimmed}`;
-
+    if (!phone.trim()) { setError('Please enter your mobile number.'); return; }
+    const fullPhone = `${selectedCountry.dialCode}${phone.trim().replace(/\D/g, '')}`;
     setLoading(true);
     try {
-      const { error: err } = await supabase.auth.signInWithOtp({
-        phone: formatted,
-        options: { channel: 'sms' },
-      });
+      const { error: err } = await supabase.auth.signInWithOtp({ phone: fullPhone, options: { channel: 'sms' } });
       if (err) throw err;
       setOtpSent(true);
-      setInfo(`Verification code sent to ${formatted}`);
+      setInfo(`Verification code sent to ${fullPhone}`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to send OTP. Please try again.';
-      setError(friendlyError(msg));
+      setError(friendlyError(err instanceof Error ? err.message : 'Failed to send OTP.'));
     } finally {
       setLoading(false);
     }
@@ -137,28 +154,15 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
     e.preventDefault();
     setError(null);
     setInfo(null);
-
-    if (!otp.trim() || otp.trim().length < 6) {
-      setError('Please enter the 6-digit verification code.');
-      return;
-    }
-
-    const formatted = phone.trim().startsWith('+') ? phone.trim() : `+${phone.trim()}`;
-
+    if (!otp.trim() || otp.trim().length < 6) { setError('Please enter the 6-digit verification code.'); return; }
+    const fullPhone = `${selectedCountry.dialCode}${phone.trim().replace(/\D/g, '')}`;
     setLoading(true);
     try {
-      const { data, error: err } = await supabase.auth.verifyOtp({
-        phone: formatted,
-        token: otp.trim(),
-        type: 'sms',
-      });
+      const { data, error: err } = await supabase.auth.verifyOtp({ phone: fullPhone, token: otp.trim(), type: 'sms' });
       if (err) throw err;
-      if (data.user) {
-        onAuthed({ id: data.user.id, email: data.user.phone ?? data.user.email ?? '' });
-      }
+      if (data.user) onAuthed({ id: data.user.id, email: data.user.phone ?? data.user.email ?? '' });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Verification failed. Please try again.';
-      setError(friendlyError(msg));
+      setError(friendlyError(err instanceof Error ? err.message : 'Verification failed.'));
     } finally {
       setLoading(false);
     }
@@ -174,22 +178,13 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* backdrop */}
-      <div
-        className="absolute inset-0 bg-navy-900/50 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-navy-900/50 backdrop-blur-sm animate-fade-in" onClick={onClose} />
 
-      {/* modal */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-navy-700 shadow-card-lg backdrop-blur-2xl animate-pop-in">
-        {/* header band */}
+      <div className="relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/10 bg-navy-700 shadow-card-lg backdrop-blur-2xl animate-pop-in">
+        {/* header */}
         <div className="relative overflow-hidden bg-blue-grad px-6 pb-8 pt-7">
           <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
-          <button
-            onClick={onClose}
-            className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30"
-            aria-label="Close"
-          >
+          <button onClick={onClose} className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30" aria-label="Close">
             <X size={16} />
           </button>
           <div className="flex items-center gap-2.5">
@@ -199,72 +194,103 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
             <div>
               <p className="font-display text-lg font-extrabold leading-none text-white">Gambit Royale</p>
               <p className="mt-1 text-xs font-medium text-royal-100">
-                {method === 'phone'
-                  ? 'Sign in with your mobile number'
-                  : mode === 'login'
-                    ? 'Welcome back'
-                    : 'Create your account & claim $50 bonus'}
+                {method === 'phone' ? 'Sign in with your mobile number' : mode === 'login' ? 'Welcome back' : 'Create your account & claim bonus'}
               </p>
             </div>
           </div>
         </div>
 
-        {/* body */}
         <div className="px-6 py-6">
-          {/* Method toggle: Email vs Phone */}
+          {/* Method toggle */}
           <div className="mb-4 flex rounded-full bg-navy-600 p-1">
-            <button
-              onClick={() => switchMethod('email')}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-bold transition-all ${
-                method === 'email' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'
-              }`}
-            >
-              <Mail size={14} />
-              Email
+            <button onClick={() => switchMethod('email')} className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-bold transition-all ${method === 'email' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'}`}>
+              <Mail size={14} /> Email
             </button>
-            <button
-              onClick={() => switchMethod('phone')}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-bold transition-all ${
-                method === 'phone' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'
-              }`}
-            >
-              <Phone size={14} />
-              Mobile OTP
+            <button onClick={() => switchMethod('phone')} className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-bold transition-all ${method === 'phone' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'}`}>
+              <Phone size={14} /> Mobile OTP
             </button>
           </div>
 
-          {/* ---- EMAIL METHOD ---- */}
+          {/* Country & Currency selectors — always visible */}
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            {/* Country selector */}
+            <div className="relative">
+              <button
+                onClick={() => { setCountryOpen(!countryOpen); setCurrencyOpen(false); }}
+                className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-navy-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-500"
+              >
+                <span className="text-lg">{selectedCountry.flag}</span>
+                <span className="truncate">{selectedCountry.dialCode}</span>
+                <ChevronDown size={14} className="ml-auto text-navy-400" />
+              </button>
+              {countryOpen && (
+                <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-56 overflow-hidden rounded-xl border border-white/10 bg-navy-600 shadow-card-lg">
+                  <input
+                    type="text"
+                    placeholder="Search country..."
+                    value={countrySearch}
+                    onChange={(e) => setCountrySearch(e.target.value)}
+                    className="w-full border-b border-white/10 bg-navy-700 px-3 py-2 text-sm text-white outline-none placeholder:text-navy-400"
+                    autoFocus
+                  />
+                  <div className="max-h-40 overflow-y-auto">
+                    {filteredCountries.map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() => selectCountry(c)}
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-navy-500 ${c.code === selectedCountry.code ? 'bg-navy-500 text-royal-300' : 'text-white'}`}
+                      >
+                        <span className="text-lg">{c.flag}</span>
+                        <span className="truncate text-left flex-1">{c.name}</span>
+                        <span className="text-navy-400">{c.dialCode}</span>
+                      </button>
+                    ))}
+                    {filteredCountries.length === 0 && (
+                      <p className="px-3 py-4 text-center text-sm text-navy-400">No countries found</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Currency selector */}
+            <div className="relative">
+              <button
+                onClick={() => { setCurrencyOpen(!currencyOpen); setCountryOpen(false); }}
+                className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-navy-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-500"
+              >
+                <Coins size={16} className="text-royal-400" />
+                <span className="truncate">{currency}</span>
+                <ChevronDown size={14} className="ml-auto text-navy-400" />
+              </button>
+              {currencyOpen && (
+                <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-xl border border-white/10 bg-navy-600 shadow-card-lg">
+                  {currencies.map((c) => (
+                    <button
+                      key={c.currency}
+                      onClick={() => selectCurrency(c.currency)}
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-navy-500 ${c.currency === currency ? 'bg-navy-500 text-royal-300' : 'text-white'}`}
+                    >
+                      <span className="text-lg">{c.flag}</span>
+                      <span className="flex-1 text-left">{c.currency}</span>
+                      <span className="text-navy-400">{c.currencySymbol}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ---- EMAIL ---- */}
           {method === 'email' && (
             <>
-              {/* mode toggle */}
               <div className="mb-5 flex rounded-full bg-navy-600 p-1">
-                <button
-                  onClick={() => { setMode('login'); setError(null); }}
-                  className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${
-                    mode === 'login' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'
-                  }`}
-                >
-                  Log In
-                </button>
-                <button
-                  onClick={() => { setMode('signup'); setError(null); }}
-                  className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${
-                    mode === 'signup' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'
-                  }`}
-                >
-                  Sign Up
-                </button>
+                <button onClick={() => { setMode('login'); setError(null); }} className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${mode === 'login' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'}`}>Log In</button>
+                <button onClick={() => { setMode('signup'); setError(null); }} className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${mode === 'signup' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'}`}>Sign Up</button>
               </div>
 
-              {/* Google sign-in */}
-              <button
-                onClick={signInWithGoogle}
-                disabled={googleLoading || loading}
-                className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-navy-600 py-3 text-sm font-bold text-white transition-all hover:bg-navy-500 hover:shadow-card disabled:opacity-60"
-              >
-                {googleLoading ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
+              <button onClick={signInWithGoogle} disabled={googleLoading || loading} className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-navy-600 py-3 text-sm font-bold text-white transition-all hover:bg-navy-500 disabled:opacity-60">
+                {googleLoading ? <Loader2 size={18} className="animate-spin" /> : (
                   <svg width="18" height="18" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -284,156 +310,86 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
               <form onSubmit={submitEmail} className="space-y-3.5">
                 <Field icon={Mail} type="email" placeholder="Email address" value={email} onChange={setEmail} autoComplete="email" />
                 <Field icon={Lock} type="password" placeholder="Password" value={password} onChange={setPassword} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
-                {mode === 'signup' && (
-                  <Field icon={Lock} type="password" placeholder="Confirm password" value={confirm} onChange={setConfirm} autoComplete="new-password" />
-                )}
-
+                {mode === 'signup' && <Field icon={Lock} type="password" placeholder="Confirm password" value={confirm} onChange={setConfirm} autoComplete="new-password" />}
                 {error && <ErrorBox text={error} />}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 size={18} className="animate-spin" />
-                      Please wait…
-                    </>
-                  ) : mode === 'login' ? (
-                    <>
-                      <UserIcon size={18} />
-                      Log In
-                    </>
-                  ) : (
-                    <>
-                      <Crown size={18} />
-                      Create Account
-                    </>
-                  )}
+                <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-60">
+                  {loading ? <><Loader2 size={18} className="animate-spin" /> Please wait...</> : mode === 'login' ? <><UserIcon size={18} /> Log In</> : <><Crown size={18} /> Create Account</>}
                 </button>
               </form>
 
               {mode === 'signup' && (
                 <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-amber-500/10 py-2.5 text-xs font-semibold text-amber-400">
-                  <Crown size={14} />
-                  Get $50 welcome bonus on sign-up!
+                  <Crown size={14} /> Get welcome bonus on sign-up!
                 </div>
               )}
 
               <p className="mt-4 text-center text-xs text-navy-400">
                 {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-                <button
-                  onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); }}
-                  className="font-bold text-royal-400 hover:underline"
-                >
+                <button onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); }} className="font-bold text-royal-400 hover:underline">
                   {mode === 'login' ? 'Sign up' : 'Log in'}
                 </button>
               </p>
             </>
           )}
 
-          {/* ---- PHONE OTP METHOD ---- */}
+          {/* ---- PHONE OTP ---- */}
           {method === 'phone' && (
             <>
               {!otpSent ? (
                 <form onSubmit={sendOtp} className="space-y-4">
                   <div className="rounded-xl bg-navy-600 p-4">
                     <div className="mb-3 flex items-center gap-2">
-                      <span className="grid h-8 w-8 place-items-center rounded-lg bg-royal-500/20">
-                        <Phone size={16} className="text-royal-400" />
-                      </span>
+                      <span className="grid h-8 w-8 place-items-center rounded-lg bg-royal-500/20"><Phone size={16} className="text-royal-400" /></span>
                       <p className="text-sm font-bold text-white">Enter your mobile number</p>
                     </div>
-                    <p className="mb-3 text-xs text-navy-300">
-                      Include your country code, e.g. +1 for US, +44 for UK, +91 for India.
-                    </p>
-                    <Field
-                      icon={Phone}
-                      type="tel"
-                      placeholder="+1 555 123 4567"
-                      value={phone}
-                      onChange={setPhone}
-                      autoComplete="tel"
-                    />
+                    <div className="flex items-stretch gap-2">
+                      <div className="flex shrink-0 items-center gap-1.5 rounded-xl border border-white/10 bg-navy-700 px-3 py-3 text-sm font-bold text-white">
+                        <span className="text-lg">{selectedCountry.flag}</span>
+                        <span>{selectedCountry.dialCode}</span>
+                      </div>
+                      <input
+                        type="tel"
+                        placeholder="555 123 4567"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        autoComplete="tel-national"
+                        className="w-full rounded-xl border border-white/10 bg-navy-700 px-4 py-3 text-sm font-medium text-white outline-none transition-all placeholder:text-navy-400 focus:border-royal-400 focus:ring-2 focus:ring-royal-400/20"
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-navy-300">Selected: {selectedCountry.name} ({selectedCountry.dialCode}). Change country above.</p>
                   </div>
-
                   {error && <ErrorBox text={error} />}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 size={18} className="animate-spin" />
-                        Sending code…
-                      </>
-                    ) : (
-                      <>
-                        <ShieldCheck size={18} />
-                        Send Verification Code
-                      </>
-                    )}
+                  <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-60">
+                    {loading ? <><Loader2 size={18} className="animate-spin" /> Sending code...</> : <><ShieldCheck size={18} /> Send Verification Code</>}
                   </button>
                 </form>
               ) : (
                 <form onSubmit={verifyOtpCode} className="space-y-4">
                   <div className="rounded-xl bg-navy-600 p-4">
                     <div className="mb-3 flex items-center gap-2">
-                      <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/20">
-                        <KeyRound size={16} className="text-emerald-400" />
-                      </span>
+                      <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/20"><KeyRound size={16} className="text-emerald-400" /></span>
                       <div>
                         <p className="text-sm font-bold text-white">Enter verification code</p>
-                        <p className="text-xs text-navy-300">Sent to {phone.startsWith('+') ? phone : `+${phone}`}</p>
+                        <p className="text-xs text-navy-300">Sent to {selectedCountry.dialCode}{phone.trim().replace(/\D/g, '')}</p>
                       </div>
                     </div>
                     <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      placeholder="123456"
-                      value={otp}
+                      type="text" inputMode="numeric" maxLength={6} placeholder="123456" value={otp}
                       onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                       className="w-full rounded-xl border border-white/10 bg-navy-700 py-4 text-center text-2xl font-bold tracking-[0.5em] text-white outline-none transition-all placeholder:tracking-normal placeholder:text-navy-500 focus:border-royal-400 focus:ring-2 focus:ring-royal-400/20"
                       autoFocus
                     />
                   </div>
-
                   {info && (
                     <div className="flex items-start gap-2 rounded-xl bg-emerald-500/10 px-3.5 py-2.5 text-sm text-emerald-400">
-                      <ShieldCheck size={16} className="mt-0.5 shrink-0" />
-                      <span>{info}</span>
+                      <ShieldCheck size={16} className="mt-0.5 shrink-0" /><span>{info}</span>
                     </div>
                   )}
-
                   {error && <ErrorBox text={error} />}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 size={18} className="animate-spin" />
-                        Verifying…
-                      </>
-                    ) : (
-                      <>
-                        <ShieldCheck size={18} />
-                        Verify & Sign In
-                      </>
-                    )}
+                  <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-60">
+                    {loading ? <><Loader2 size={18} className="animate-spin" /> Verifying...</> : <><ShieldCheck size={18} /> Verify & Sign In</>}
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => { setOtpSent(false); setOtp(''); setError(null); setInfo(null); }}
-                    className="w-full text-center text-xs font-semibold text-navy-400 transition-colors hover:text-white"
-                  >
+                  <button type="button" onClick={() => { setOtpSent(false); setOtp(''); setError(null); setInfo(null); }} className="w-full text-center text-xs font-semibold text-navy-400 transition-colors hover:text-white">
                     Use a different number
                   </button>
                 </form>
@@ -449,40 +405,17 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
 function ErrorBox({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-2 rounded-xl bg-red-500/10 px-3.5 py-2.5 text-sm text-red-400">
-      <AlertCircle size={16} className="mt-0.5 shrink-0" />
-      <span>{text}</span>
+      <AlertCircle size={16} className="mt-0.5 shrink-0" /><span>{text}</span>
     </div>
   );
 }
 
-function Field({
-  icon: Icon,
-  type,
-  placeholder,
-  value,
-  onChange,
-  autoComplete,
-}: {
-  icon: typeof Mail;
-  type: string;
-  placeholder: string;
-  value: string;
-  onChange: (v: string) => void;
-  autoComplete?: string;
-}) {
+function Field({ icon: Icon, type, placeholder, value, onChange, autoComplete }: { icon: typeof Mail; type: string; placeholder: string; value: string; onChange: (v: string) => void; autoComplete?: string }) {
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-400">
-        <Icon size={18} />
-      </span>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete={autoComplete}
-        className="w-full rounded-xl border border-white/10 bg-navy-600 py-3 pl-11 pr-4 text-sm font-medium text-white outline-none transition-all placeholder:text-navy-400 focus:border-royal-400 focus:ring-2 focus:ring-royal-400/20"
-      />
+      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-400"><Icon size={18} /></span>
+      <input type={type} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} autoComplete={autoComplete}
+        className="w-full rounded-xl border border-white/10 bg-navy-600 py-3 pl-11 pr-4 text-sm font-medium text-white outline-none transition-all placeholder:text-navy-400 focus:border-royal-400 focus:ring-2 focus:ring-royal-400/20" />
     </div>
   );
 }

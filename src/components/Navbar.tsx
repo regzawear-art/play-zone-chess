@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Crown, Home, LayoutGrid, Trophy, User, Menu, X, Settings as SettingsIcon, LogOut, Users } from 'lucide-react';
+import { Crown, Home, LayoutGrid, Trophy, User, Menu, X, Settings as SettingsIcon, LogOut, Users, Wallet, CreditCard, Gift } from 'lucide-react';
 import { SoundControls } from './SoundControls';
 import type { AppUser } from '@/lib/supabase';
 
@@ -14,6 +14,8 @@ const LINKS: NavLink[] = [
   { id: 'play', label: 'Play', icon: LayoutGrid },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   { id: 'clubs', label: 'Clubs', icon: Users },
+  { id: 'pricing', label: 'Pricing', icon: CreditCard },
+  { id: 'referral', label: 'Refer', icon: Gift },
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ];
@@ -24,9 +26,10 @@ interface Props {
   user: AppUser | null;
   onLogin: () => void;
   onLogout: () => void;
+  onWallet: () => void;
 }
 
-export function Navbar({ active, onNavigate, user, onLogin, onLogout }: Props) {
+export function Navbar({ active, onNavigate, user, onLogin, onLogout, onWallet }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -93,6 +96,15 @@ export function Navbar({ active, onNavigate, user, onLogin, onLogout }: Props) {
           {/* Right cluster */}
           <div className="flex items-center gap-2">
             <SoundControls />
+            {user && (
+              <button
+                onClick={onWallet}
+                className="hidden items-center gap-1.5 rounded-full border border-royal-500/25 bg-navy-700 px-3 py-2.5 text-sm font-bold text-royal-400 transition-all hover:border-royal-500/50 hover:shadow-glow-sm sm:inline-flex"
+              >
+                <Wallet size={16} />
+                Wallet
+              </button>
+            )}
 
             {/* Auth: user avatar dropdown or Log In button */}
             {user ? (

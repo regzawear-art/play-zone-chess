@@ -23,6 +23,11 @@ import { RoomPanel } from './components/RoomPanel';
 import { GameChat } from './components/GameChat';
 import { Clubs } from './components/Clubs';
 import { MatchmakingPanel } from './components/MatchmakingPanel';
+import { PricingPlans } from './components/PricingPlans';
+import { ReferralSection } from './components/ReferralSection';
+import { WalletModalDB } from './components/WalletModalDB';
+import { useWalletDB } from './hooks/useWalletDB';
+import { CreditCard, Gift } from 'lucide-react';
 import { sound } from './game/sound';
 import { legalMoves } from './game/engine';
 import { supabase, type AppUser } from './lib/supabase';
@@ -100,6 +105,9 @@ export default function App() {
   // Auth state
   const [authUser, setAuthUser] = useState<AppUser | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
+
+  const walletDB = useWalletDB(authUser);
 
   const { profile, showBonusPopup, setShowBonusPopup, updateProfile, claimBonus } = useProfile(authUser);
 
@@ -417,6 +425,7 @@ export default function App() {
         user={authUser}
         onLogin={() => setAuthOpen(true)}
         onLogout={handleLogout}
+        onWallet={() => setWalletOpen(true)}
       />
 
       <main>
@@ -610,6 +619,40 @@ export default function App() {
           <Leaderboard />
         </section>
 
+        {/* PRICING */}
+        <section id="pricing" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+          <div className="mb-8 text-center">
+            <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
+              <CreditCard size={13} />
+              Plans
+            </span>
+            <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              Choose Your <span className="shimmer-text">Plan</span>
+            </h2>
+            <p className="mt-2 text-navy-300">Free for AI play. Upgrade for multiplayer, tournaments, and premium features.</p>
+          </div>
+          <PricingPlans userId={authUser?.id ?? null} onLogin={() => setAuthOpen(true)} />
+        </section>
+
+        {/* REFERRAL */}
+        <section id="referral" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+          <div className="mb-8 text-center">
+            <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
+              <Gift size={13} />
+              Referrals
+            </span>
+            <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              Refer & <span className="shimmer-text">Earn</span>
+            </h2>
+            <p className="mt-2 text-navy-300">Invite friends and earn a bonus for every successful referral.</p>
+          </div>
+          <ReferralSection
+            userId={authUser?.id ?? null}
+            onLogin={() => setAuthOpen(true)}
+            onReferralComplete={(email) => walletDB.processReferralBonus(email)}
+          />
+        </section>
+
         {/* CLUBS */}
         <section id="clubs" className="py-8 lg:py-12">
           <Clubs userId={authUser?.id ?? null} onLogin={() => setAuthOpen(true)} />
@@ -684,6 +727,13 @@ export default function App() {
       )}
 
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onAuthed={(u) => { setAuthUser(u); setAuthOpen(false); }} />
+
+      <WalletModalDB
+        open={walletOpen}
+        onClose={() => setWalletOpen(false)}
+        balanceInr={walletDB.balanceInr}
+        transactions={walletDB.transactions}
+      />
 
       <RoomPanel
         open={roomOpen}
