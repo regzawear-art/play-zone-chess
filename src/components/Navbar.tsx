@@ -53,23 +53,25 @@ export function Navbar({ active, onNavigate, user, onLogin, onLogout, onWallet }
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <nav
-          className={`flex items-center justify-between gap-3 rounded-2xl px-3 py-2.5 transition-all duration-500 sm:px-4 ${
+          className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-all duration-500 sm:px-4 ${
             scrolled ? 'glass shadow-card' : 'bg-navy-800/80 backdrop-blur-md border border-white/5'
           }`}
         >
-          {/* Logo */}
-          <button onClick={() => go('home')} className="flex items-center gap-2.5" aria-label="Gambit Royale home">
-            <span className="relative grid h-10 w-10 place-items-center rounded-xl bg-blue-grad shadow-glow-sm">
-              <Crown size={20} className="text-white" />
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-royal-300 ring-2 ring-navy-800" />
-            </span>
-            <span className="hidden flex-col leading-none sm:flex">
-              <span className="font-display text-lg font-extrabold tracking-tight text-white">Gambit</span>
-              <span className="font-display text-[10px] font-semibold uppercase tracking-[0.25em] text-royal-400">Royale</span>
-            </span>
-          </button>
+          {/* Logo — left, flex-1 to balance center */}
+          <div className="flex flex-1 items-center justify-start">
+            <button onClick={() => go('home')} className="flex items-center gap-2.5" aria-label="Gambit Royale home">
+              <span className="relative grid h-10 w-10 place-items-center rounded-xl bg-blue-grad shadow-glow-sm">
+                <Crown size={20} className="text-white" />
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-royal-300 ring-2 ring-navy-800" />
+              </span>
+              <span className="hidden flex-col leading-none sm:flex">
+                <span className="font-display text-lg font-extrabold tracking-tight text-white">Gambit</span>
+                <span className="font-display text-[10px] font-semibold uppercase tracking-[0.25em] text-royal-400">Royale</span>
+              </span>
+            </button>
+          </div>
 
-          {/* Desktop links */}
+          {/* Desktop links — perfectly centered */}
           <ul className="hidden items-center gap-1 md:flex">
             {LINKS.map((l) => {
               const Icon = l.icon;
@@ -93,8 +95,8 @@ export function Navbar({ active, onNavigate, user, onLogin, onLogout, onWallet }
             })}
           </ul>
 
-          {/* Right cluster */}
-          <div className="flex items-center gap-2">
+          {/* Right cluster — flex-1 to balance center, justify-end */}
+          <div className="flex flex-1 items-center justify-end gap-2">
             <SoundControls />
             {user && (
               <button
