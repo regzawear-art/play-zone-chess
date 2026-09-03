@@ -27,6 +27,9 @@ import { PricingPlans } from './components/PricingPlans';
 import { ReferralSection } from './components/ReferralSection';
 import { WalletModalDB } from './components/WalletModalDB';
 import { useWalletDB } from './hooks/useWalletDB';
+import { PlaySidebar } from './components/PlaySidebar';
+import { PlayActionCards } from './components/PlayActionCards';
+import { PremiumOfferPopup } from './components/PremiumOfferPopup';
 import { CreditCard, Gift } from 'lucide-react';
 import { sound } from './game/sound';
 import { legalMoves } from './game/engine';
@@ -95,6 +98,7 @@ export default function App() {
   const [boardThemeId, setBoardThemeId] = useState<string>(getStoredTheme());
   const [onlineGameConfig, setOnlineGameConfig] = useState<OnlineGameConfig | null>(null);
   const [onlineRoomCode, setOnlineRoomCode] = useState<string>('');
+  const [showPremiumOffer, setShowPremiumOffer] = useState(false);
 
   // Settings state
   const [muted, setMuted] = useState(sound.muted);
@@ -125,7 +129,11 @@ export default function App() {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        const wasAlreadyAuthed = authUser !== null;
         setAuthUser({ id: session.user.id, email: session.user.email ?? '' });
+        if (_event === 'SIGNED_IN' && !wasAlreadyAuthed) {
+          setShowPremiumOffer(true);
+        }
       } else {
         setAuthUser(null);
       }
@@ -371,6 +379,7 @@ export default function App() {
           user={authUser}
           onLogin={() => setAuthOpen(true)}
           onLogout={handleLogout}
+          onWallet={() => setWalletOpen(true)}
         />
         <FooterPage page={footerPage as any} onBack={() => { setFooterPage(null); navigate('home'); }} />
         <Footer onNavigate={navigate} onFooterPage={onFooterPage} />
@@ -400,6 +409,7 @@ export default function App() {
           user={authUser}
           onLogin={() => setAuthOpen(true)}
           onLogout={handleLogout}
+          onWallet={() => setWalletOpen(true)}
         />
         <OnlineGameView
           config={onlineGameConfig}
@@ -440,167 +450,175 @@ export default function App() {
 
         <Features />
 
-        {/* PLAY SECTION */}
-        <section id="play" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:flex lg:min-h-[calc(100vh-4rem)] lg:flex-col lg:justify-center lg:py-12">
-          <div className="mb-3 text-center sm:mb-4">
-            <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
-              <Swords size={13} />
-              Live Board
-            </span>
-            <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight text-white sm:mt-3 sm:text-3xl lg:text-4xl">
-              Play a <span className="shimmer-text">Game</span>
-            </h2>
-            <p className="mt-1.5 text-sm text-navy-300 sm:mt-2">Drag pieces or tap to move. Pick your mode, time control and color.</p>
+        {/* PLAY SECTION — 3-column chess.com style layout */}
+        <section id="play" className="mx-auto max-w-7xl px-2 py-6 sm:px-4 lg:flex lg:min-h-[calc(100vh-4rem)] lg:items-stretch lg:justify-center lg:gap-3 lg:py-4">
+          {/* Left icon rail */}
+          <aside className="hidden w-16 shrink-0 lg:block">
+            <PlaySidebar active={gameMode === 'ai' ? 'play' : 'play'} onNavigate={() => navigate('play')} />
+          </aside>
+
+          {/* Center: board + player bars */}
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-2 lg:max-w-[min(640px,60vh)]">
+            {/* Top player HUD */}
+            <PlayerHUD
+              player={{
+                name: topPlayer.name,
+                avatar: topPlayer.avatar,
+                flag: topPlayer.flag,
+                rating: topPlayer.rating,
+                title: topPlayer.title,
+                online: topPlayer.online,
+                capturedPieces: topCaptured,
+                materialDiff: topDiff,
+              }}
+              ms={topMs}
+              active={topActive}
+              running={game.running}
+              align="top"
+            />
+
+            <ChessBoard
+              board={game.board}
+              selected={game.selected}
+              legal={game.legal}
+              lastMove={game.lastMove}
+              status={game.status}
+              orientation={orientation}
+              turn={game.state.turn}
+              onSquareClick={game.selectSquare}
+              onDrop={game.dropPiece}
+              promotion={game.promotion}
+              onChoosePromotion={game.choosePromotion}
+              onCancelPromotion={game.cancelPromotion}
+              thinking={game.thinking}
+            />
+
+            {/* Bottom player HUD */}
+            <PlayerHUD
+              player={{
+                name: bottomPlayer.name,
+                avatar: bottomPlayer.avatar,
+                flag: bottomPlayer.flag,
+                rating: bottomPlayer.rating,
+                title: bottomPlayer.title,
+                online: bottomPlayer.online,
+                capturedPieces: bottomCaptured,
+                materialDiff: bottomDiff,
+              }}
+              ms={bottomMs}
+              active={bottomActive}
+              running={game.running}
+              align="bottom"
+            />
+
+            {/* Game controls bar */}
+            <div className="flex w-full flex-wrap items-center gap-2 rounded-xl glass p-2.5 shadow-card">
+              <button onClick={game.startGame} className="flex items-center gap-1.5 rounded-lg bg-blue-grad px-3 py-2 text-xs font-bold text-white shadow-glow-sm transition-transform hover:translate-y-[-1px]">
+                <Swords size={14} />
+                {game.started ? 'New' : 'Play'}
+              </button>
+              <button onClick={() => navigate('leaderboard')} className="flex items-center gap-1.5 rounded-lg bg-navy-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy-500">
+                <LayoutGrid size={14} className="text-royal-400" />
+                Players
+              </button>
+              <button onClick={() => navigate('profile')} className="flex items-center gap-1.5 rounded-lg bg-navy-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy-500">
+                <History size={14} className="text-royal-400" />
+                Games
+              </button>
+              {/* Move history playback nav */}
+              <div className="ml-auto flex items-center gap-1 rounded-lg bg-navy-600 p-1">
+                <button onClick={() => game.jumpToMove(-1)} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="First move">
+                  {'|\u226A'}
+                </button>
+                <button onClick={game.undo} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Previous move">
+                  {'\u226A'}
+                </button>
+                <button onClick={game.redo} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Next move">
+                  {'\u226B'}
+                </button>
+                <button onClick={() => game.jumpToMove(game.history.length - 1)} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Last move">
+                  {'\u226B|'}
+                </button>
+              </div>
+              <BoardThemeSwitcher
+                currentThemeId={boardThemeId}
+                onThemeChange={(id) => { setBoardThemeId(id); storeTheme(id); }}
+              />
+              <button
+                onClick={onToggleMusic}
+                className={`grid h-9 w-9 place-items-center rounded-lg transition-all ${
+                  musicOn ? 'bg-blue-grad text-white shadow-glow-sm' : 'bg-navy-600 text-white hover:bg-navy-500'
+                }`}
+                title="Background music"
+              >
+                {musicOn ? <Music2 size={16} /> : <Music size={16} />}
+              </button>
+            </div>
+
+            {/* In-game chat for online/room modes */}
+            {(gameMode === 'online' || gameMode === 'room') && (
+              <GameChat
+                roomId={activeRoomId}
+                currentUser={authUser ? {
+                  id: authUser.id,
+                  username: profile?.username || authUser.email,
+                  avatar: profile?.avatar_url || '',
+                } : null}
+                compact
+              />
+            )}
           </div>
 
-          {/* Game mode selector */}
-          <div className="mb-3 w-full sm:mb-4">
+          {/* Right sidebar: action cards + game panel */}
+          <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-72">
+            <PlayActionCards
+              onPlayOnline={() => { setGameMode('online'); setMatchmakingOpen(true); }}
+              onPlayBots={() => { setGameMode('ai'); }}
+              onPlayCoach={() => { setGameMode('ai'); setAiDifficulty('advanced'); }}
+              onTournaments={() => navigate('leaderboard')}
+            />
+
+            {/* Game mode selector (compact, below action cards) */}
+            <div className="hidden lg:block">
+              <GameModeSelector
+                mode={gameMode}
+                aiDifficulty={aiDifficulty}
+                onChangeMode={onChangeMode}
+                onChangeDifficulty={onChangeDifficulty}
+              />
+            </div>
+
+            <GamePanel
+              status={game.status}
+              whiteMs={game.whiteMs}
+              blackMs={game.blackMs}
+              running={game.running}
+              started={game.started}
+              thinking={game.thinking}
+              turn={game.state.turn}
+              playerColor={playerColor}
+              timeControl={timeControl}
+              customMinutes={customMinutes}
+              history={game.history}
+              stageLabel={stageForPanel}
+              onStart={game.startGame}
+              onResign={game.resign}
+              onUndo={game.undo}
+              onChangeTimeControl={onChangeTimeControl}
+              onChangeCustomMinutes={setCustomMinutes}
+              onFlip={() => setOrientation((o) => (o === 'w' ? 'b' : 'w'))}
+              onChangeColor={onChangeColor}
+            />
+          </aside>
+
+          {/* Mobile game mode selector */}
+          <div className="w-full lg:hidden">
             <GameModeSelector
               mode={gameMode}
               aiDifficulty={aiDifficulty}
               onChangeMode={onChangeMode}
               onChangeDifficulty={onChangeDifficulty}
             />
-          </div>
-
-          <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-6">
-            {/* Board column */}
-            <div className="flex flex-col gap-2.5 sm:gap-3">
-              {/* Top player HUD (Chess.com style) */}
-              <PlayerHUD
-                player={{
-                  name: topPlayer.name,
-                  avatar: topPlayer.avatar,
-                  flag: topPlayer.flag,
-                  rating: topPlayer.rating,
-                  title: topPlayer.title,
-                  online: topPlayer.online,
-                  capturedPieces: topCaptured,
-                  materialDiff: topDiff,
-                }}
-                ms={topMs}
-                active={topActive}
-                running={game.running}
-                align="top"
-              />
-
-              <ChessBoard
-                board={game.board}
-                selected={game.selected}
-                legal={game.legal}
-                lastMove={game.lastMove}
-                status={game.status}
-                orientation={orientation}
-                turn={game.state.turn}
-                onSquareClick={game.selectSquare}
-                onDrop={game.dropPiece}
-                promotion={game.promotion}
-                onChoosePromotion={game.choosePromotion}
-                onCancelPromotion={game.cancelPromotion}
-                thinking={game.thinking}
-              />
-
-              {/* Bottom player HUD */}
-              <PlayerHUD
-                player={{
-                  name: bottomPlayer.name,
-                  avatar: bottomPlayer.avatar,
-                  flag: bottomPlayer.flag,
-                  rating: bottomPlayer.rating,
-                  title: bottomPlayer.title,
-                  online: bottomPlayer.online,
-                  capturedPieces: bottomCaptured,
-                  materialDiff: bottomDiff,
-                }}
-                ms={bottomMs}
-                active={bottomActive}
-                running={game.running}
-                align="bottom"
-              />
-
-              {/* Game controls bar */}
-              <div className="flex flex-wrap items-center gap-2 rounded-xl glass p-2.5 shadow-card">
-                <button onClick={game.startGame} className="flex items-center gap-1.5 rounded-lg bg-blue-grad px-3 py-2 text-xs font-bold text-white shadow-glow-sm transition-transform hover:translate-y-[-1px]">
-                  <Swords size={14} />
-                  {game.started ? 'New' : 'Play'}
-                </button>
-                <button onClick={() => navigate('leaderboard')} className="flex items-center gap-1.5 rounded-lg bg-navy-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy-500">
-                  <LayoutGrid size={14} className="text-royal-400" />
-                  Players
-                </button>
-                <button onClick={() => navigate('profile')} className="flex items-center gap-1.5 rounded-lg bg-navy-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy-500">
-                  <History size={14} className="text-royal-400" />
-                  Games
-                </button>
-                {/* Move history playback nav */}
-                <div className="ml-auto flex items-center gap-1 rounded-lg bg-navy-600 p-1">
-                  <button onClick={() => game.jumpToMove(-1)} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="First move">
-                    {'|\u226A'}
-                  </button>
-                  <button onClick={game.undo} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Previous move">
-                    {'\u226A'}
-                  </button>
-                  <button onClick={game.redo} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Next move">
-                    {'\u226B'}
-                  </button>
-                  <button onClick={() => game.jumpToMove(game.history.length - 1)} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Last move">
-                    {'\u226B|'}
-                  </button>
-                </div>
-                {/* Board theme switcher */}
-                <BoardThemeSwitcher
-                  currentThemeId={boardThemeId}
-                  onThemeChange={(id) => { setBoardThemeId(id); storeTheme(id); }}
-                />
-                {/* Music toggle */}
-                <button
-                  onClick={onToggleMusic}
-                  className={`grid h-9 w-9 place-items-center rounded-lg transition-all ${
-                    musicOn ? 'bg-blue-grad text-white shadow-glow-sm' : 'bg-navy-600 text-white hover:bg-navy-500'
-                  }`}
-                  title="Background music"
-                >
-                  {musicOn ? <Music2 size={16} /> : <Music size={16} />}
-                </button>
-              </div>
-
-              {/* In-game chat for online/room modes */}
-              {(gameMode === 'online' || gameMode === 'room') && (
-                <GameChat
-                  roomId={activeRoomId}
-                  currentUser={authUser ? {
-                    id: authUser.id,
-                    username: profile?.username || authUser.email,
-                    avatar: profile?.avatar_url || '',
-                  } : null}
-                  compact
-                />
-              )}
-            </div>
-
-            <div>
-              <GamePanel
-                status={game.status}
-                whiteMs={game.whiteMs}
-                blackMs={game.blackMs}
-                running={game.running}
-                started={game.started}
-                thinking={game.thinking}
-                turn={game.state.turn}
-                playerColor={playerColor}
-                timeControl={timeControl}
-                customMinutes={customMinutes}
-                history={game.history}
-                stageLabel={stageForPanel}
-                onStart={game.startGame}
-                onResign={game.resign}
-                onUndo={game.undo}
-                onChangeTimeControl={onChangeTimeControl}
-                onChangeCustomMinutes={setCustomMinutes}
-                onFlip={() => setOrientation((o) => (o === 'w' ? 'b' : 'w'))}
-                onChangeColor={onChangeColor}
-              />
-            </div>
           </div>
         </section>
 
@@ -822,6 +840,13 @@ export default function App() {
         <WelcomeBonusPopup
           onClose={() => setShowBonusPopup(false)}
           onClaim={claimBonus}
+        />
+      )}
+
+      {showPremiumOffer && (
+        <PremiumOfferPopup
+          onClose={() => setShowPremiumOffer(false)}
+          onClaim={() => setShowPremiumOffer(false)}
         />
       )}
     </div>
