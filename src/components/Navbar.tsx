@@ -120,12 +120,6 @@ export function Navbar({ active, onNavigate, user, onLogin, onLogout, onWallet }
               </button>
             )}
 
-            <button
-              onClick={() => go('play')}
-              className="hidden rounded-full bg-blue-grad px-5 py-2.5 text-sm font-bold text-white shadow-glow-sm transition-all hover:translate-y-[-2px] hover:shadow-glow sm:inline-flex"
-            >
-              Play Now
-            </button>
             {/* Mobile menu toggle */}
             <button
               onClick={() => setMenuOpen((o) => !o)}
@@ -158,14 +152,6 @@ export function Navbar({ active, onNavigate, user, onLogin, onLogout, onWallet }
                   </li>
                 );
               })}
-              <li>
-                <button
-                  onClick={() => go('play')}
-                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-grad px-4 py-3 text-sm font-bold text-white shadow-glow-sm"
-                >
-                  Play Now
-                </button>
-              </li>
               {user ? (
                 <li>
                   <button
