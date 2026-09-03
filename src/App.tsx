@@ -450,15 +450,15 @@ export default function App() {
 
         <Features />
 
-        {/* PLAY SECTION — 3-column chess.com style layout */}
-        <section id="play" className="px-2 py-4 sm:px-4 lg:flex lg:h-[calc(100vh-4rem)] lg:w-full lg:items-stretch lg:justify-center lg:gap-1.5 lg:px-2 lg:py-1 lg:overflow-hidden">
+        {/* PLAY SECTION — 50/50 split: board | right panel on desktop */}
+        <section id="play" className="px-2 py-4 sm:px-4 lg:flex lg:h-[calc(100vh-4rem)] lg:w-full lg:items-stretch lg:gap-0 lg:px-0 lg:py-1 lg:overflow-hidden">
           {/* Left icon rail */}
           <aside className="hidden w-14 shrink-0 lg:block lg:self-stretch">
             <PlaySidebar active="play" onNavigate={() => navigate('play')} />
           </aside>
 
-          {/* Center: board + player bars — clean, no clutter */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center gap-1 overflow-hidden lg:self-stretch lg:justify-center">
+          {/* Center: board + player bars — 50% width on desktop */}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center gap-1 overflow-hidden lg:self-stretch lg:justify-center lg:pr-2">
             {/* Top player HUD (opponent) */}
             <PlayerHUD
               player={{
@@ -565,8 +565,8 @@ export default function App() {
             )}
           </div>
 
-          {/* Right sidebar: action cards + game panel */}
-          <aside className="flex w-full shrink-0 flex-col gap-2.5 overflow-y-auto no-scrollbar lg:w-64 lg:self-stretch">
+          {/* Right sidebar: action cards + game panel — 50% width on desktop */}
+          <aside className="flex w-full flex-col gap-2.5 overflow-y-auto no-scrollbar lg:flex-1 lg:self-stretch lg:border-l lg:border-navy-600/40 lg:pl-2">
             <PlayActionCards
               onPlayOnline={() => { setGameMode('online'); setMatchmakingOpen(true); }}
               onPlayBots={() => { setGameMode('ai'); }}
