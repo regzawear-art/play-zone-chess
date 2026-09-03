@@ -432,20 +432,20 @@ export default function App() {
         <Features />
 
         {/* PLAY SECTION */}
-        <section id="play" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
-          <div className="mb-8 text-center">
+        <section id="play" className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-12 lg:py-16">
+          <div className="mb-5 text-center sm:mb-8">
             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
               <Swords size={13} />
               Live Board
             </span>
-            <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight text-white sm:mt-3 sm:text-3xl lg:text-4xl">
               Play a <span className="shimmer-text">Game</span>
             </h2>
-            <p className="mt-2 text-navy-300">Drag pieces or tap to move. Pick your mode, time control and color.</p>
+            <p className="mt-1.5 text-sm text-navy-300 sm:mt-2">Drag pieces or tap to move. Pick your mode, time control and color.</p>
           </div>
 
           {/* Game mode selector */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <GameModeSelector
               mode={gameMode}
               aiDifficulty={aiDifficulty}
@@ -454,9 +454,9 @@ export default function App() {
             />
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8">
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8">
             {/* Board column */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5 sm:gap-3">
               {/* Top player HUD (Chess.com style) */}
               <PlayerHUD
                 player={{

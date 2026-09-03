@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Board, Color, GameStatus, Move, Piece, PieceType } from '../game/types';
 import { pieceSVG } from '../game/pieces';
+import { Trophy, Handshake } from 'lucide-react';
 
 interface Props {
   board: Board;
@@ -180,10 +181,10 @@ export function ChessBoard({
   const draggingFrom = drag ? `${drag.from[0]}-${drag.from[1]}` : null;
 
   return (
-    <div className="chess-board-wrap mx-auto w-full" style={{ maxWidth: 'min(100vw - 2rem, 600px)' }}>
+    <div className="chess-board-wrap mx-auto w-full" style={{ maxWidth: 'min(calc(100vw - 2rem), 600px)' }}>
       <div
         ref={containerRef}
-        className="relative grid touch-none select-none grid-cols-8 overflow-hidden border border-black/30 shadow-2xl"
+        className="chess-board-inner relative grid touch-none select-none grid-cols-8 overflow-hidden border border-black/30 shadow-2xl"
         style={{ aspectRatio: '1 / 1', touchAction: 'none', borderRadius: 0 }}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -245,6 +246,29 @@ export function ChessBoard({
           <div className="pointer-events-none absolute right-2 top-2 z-20 flex items-center gap-1.5 rounded-full bg-navy-800/85 px-3 py-1.5 text-[11px] font-semibold text-white shadow-glow-sm backdrop-blur">
             <span className="h-1.5 w-1.5 animate-ping rounded-full bg-royal-300" />
             Opponent thinking…
+          </div>
+        )}
+
+        {(status.phase === 'checkmate' || status.phase === 'stalemate') && (
+          <div className="absolute inset-0 z-40 grid place-items-center bg-navy-900/55 backdrop-blur-[2px] animate-fade-in">
+            <div className="flex flex-col items-center gap-2 px-4 text-center">
+              <div className={`grid h-14 w-14 place-items-center rounded-2xl shadow-card-lg animate-pop-in sm:h-16 sm:w-16 ${status.phase === 'checkmate' ? 'bg-gradient-to-br from-amber-400 to-amber-600' : 'bg-gradient-to-br from-navy-400 to-navy-600'}`}>
+                {status.phase === 'checkmate'
+                  ? <Trophy size={28} className="text-white sm:size-8" />
+                  : <Handshake size={28} className="text-white" />}
+              </div>
+              <p className="font-display text-xl font-extrabold text-white drop-shadow-lg sm:text-2xl">
+                {status.phase === 'checkmate' ? 'Checkmate!' : 'Stalemate'}
+              </p>
+              {status.phase === 'checkmate' && status.winner && (
+                <p className="text-sm font-bold text-amber-300 drop-shadow sm:text-base">
+                  {status.winner === 'w' ? 'White' : 'Black'} wins
+                </p>
+              )}
+              {status.phase === 'stalemate' && (
+                <p className="text-sm font-bold text-navy-200 drop-shadow">Draw — no legal moves</p>
+              )}
+            </div>
           </div>
         )}
 

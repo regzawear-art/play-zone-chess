@@ -187,6 +187,30 @@ body {
   user-select: none;
   -webkit-touch-callout: none;
 }
-.chess-board-wrap > div > .grid {
+.chess-board-wrap > div > .grid,
+.chess-board-inner {
   touch-action: none;
+}
+
+/* Responsive board: fit within viewport on mobile/tablet without scrolling */
+@media (max-width: 1023px) {
+  .chess-board-wrap {
+    /* Board + HUDs + controls must fit in viewport height.
+       Reserve ~220px for two HUDs + controls bar + section heading.
+       Use min() so it never exceeds available width either. */
+    max-width: min(calc(100vw - 2rem), calc(100svh - 280px)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .chess-board-wrap {
+    max-width: min(calc(100vw - 1.5rem), calc(100svh - 240px)) !important;
+  }
+}
+
+/* On very small phones, squeeze tighter */
+@media (max-width: 380px) {
+  .chess-board-wrap {
+    max-width: min(calc(100vw - 1rem), calc(100svh - 220px)) !important;
+  }
 }

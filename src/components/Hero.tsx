@@ -109,22 +109,6 @@ export function Hero({ onPlay, onLeaderboard, onAuth, onOnline, onRooms, onAI }:
         <div className="grid items-center gap-8 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
           {/* Text + CTAs */}
           <div className="relative">
-            {/* Arrow nav */}
-            <button
-              onClick={prev}
-              aria-label="Previous slide"
-              className="absolute -left-2 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full glass text-white shadow-card transition-all hover:shadow-glow-sm sm:-left-4"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              onClick={next}
-              aria-label="Next slide"
-              className="absolute -right-2 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full glass text-white shadow-card transition-all hover:shadow-glow-sm sm:-right-4"
-            >
-              <ChevronRight size={20} />
-            </button>
-
             <div className="relative grid">
               {SLIDES.map((s, i) => (
                 <div
@@ -174,19 +158,35 @@ export function Hero({ onPlay, onLeaderboard, onAuth, onOnline, onRooms, onAI }:
               ))}
             </div>
 
-            {/* dots */}
-            <div className="mt-6 flex items-center gap-2">
-              {SLIDES.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => goTo(i)}
-                  aria-label={`Go to slide ${i + 1}: ${s.title}`}
-                  className={`h-2 rounded-full transition-all duration-500 ${
-                    i === index ? 'w-8 bg-blue-grad shadow-glow-sm' : 'w-2 bg-navy-500 hover:bg-navy-400'
-                  }`}
-                />
-              ))}
-              <span className="ml-2 text-xs font-semibold text-navy-400">
+            {/* Navigation: arrows + dots in a clean row */}
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                onClick={prev}
+                aria-label="Previous slide"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full glass text-white shadow-card transition-all hover:shadow-glow-sm hover:bg-navy-600"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <div className="flex items-center gap-2">
+                {SLIDES.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goTo(i)}
+                    aria-label={`Go to slide ${i + 1}: ${s.title}`}
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      i === index ? 'w-8 bg-blue-grad shadow-glow-sm' : 'w-2 bg-navy-500 hover:bg-navy-400'
+                    }`}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={next}
+                aria-label="Next slide"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full glass text-white shadow-card transition-all hover:shadow-glow-sm hover:bg-navy-600"
+              >
+                <ChevronRight size={18} />
+              </button>
+              <span className="ml-1 text-xs font-semibold text-navy-400">
                 {String(index + 1).padStart(2, '0')} / {String(SLIDES.length).padStart(2, '0')}
               </span>
             </div>
