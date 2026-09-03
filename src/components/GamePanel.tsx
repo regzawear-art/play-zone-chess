@@ -207,7 +207,7 @@ export function GamePanel(props: Props) {
           <p className="text-xs font-semibold uppercase tracking-wide text-navy-400">Moves</p>
           <span className="text-xs font-bold text-royal-400">{history.length}</span>
         </div>
-        <div className="no-scrollbar max-h-44 overflow-y-auto pr-1">
+        <div className="no-scrollbar max-h-32 overflow-y-auto pr-1 sm:max-h-44">
           {history.length === 0 ? (
             <p className="py-4 text-center text-sm text-navy-400">No moves yet — press Start Game.</p>
           ) : (

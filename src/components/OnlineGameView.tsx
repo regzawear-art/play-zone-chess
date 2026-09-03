@@ -68,18 +68,18 @@ export function OnlineGameView({ config, themeId, onThemeChange, onExit, onRemat
   };
 
   return (
-    <div className="min-h-screen bg-navy-800 pt-16">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+    <div className="min-h-[100svh] bg-navy-800 pt-16">
+      <div className="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
         {/* Header bar */}
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <button onClick={onExit} className="flex items-center gap-2 rounded-lg bg-navy-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-navy-600">
+        <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4 sm:gap-3">
+          <button onClick={onExit} className="flex items-center gap-1.5 rounded-lg bg-navy-700 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy-600 sm:px-3 sm:text-sm">
             <ArrowLeft size={16} />
             <span className="hidden sm:inline">Exit Game</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Connection status */}
-            <div className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+            <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-bold sm:px-3 sm:text-xs ${
               game.opponentConnected ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'
             }`}>
               {game.opponentConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
@@ -96,15 +96,15 @@ export function OnlineGameView({ config, themeId, onThemeChange, onExit, onRemat
         </div>
 
         {/* Status banner */}
-        <div className="mb-4 rounded-2xl glass-dark p-3 text-center sm:p-4">
-          <p className={`font-display text-lg font-bold sm:text-xl ${statusColor()}`}>
+        <div className="mb-3 rounded-2xl glass-dark p-2.5 text-center sm:mb-4 sm:p-4">
+          <p className={`font-display text-base font-bold sm:text-lg sm:text-xl ${statusColor()}`}>
             {statusText()}
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.7fr] lg:gap-8">
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.7fr] lg:gap-8">
           {/* Board column */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2.5 sm:gap-3">
             <PlayerHUD
               player={topPlayer}
               ms={topMs}
