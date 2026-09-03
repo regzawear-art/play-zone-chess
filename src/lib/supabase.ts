@@ -31,6 +31,14 @@ const stubClient = {
       data: { user: null, session: null },
       error: { message: 'Authentication is not configured.' } as never,
     }),
+    signInWithOtp: async () => ({
+      data: { user: null, session: null },
+      error: { message: 'Authentication is not configured.' } as never,
+    }),
+    verifyOtp: async () => ({
+      data: { user: null, session: null },
+      error: { message: 'Authentication is not configured.' } as never,
+    }),
     signOut: async () => ({ error: null }),
   },
 };

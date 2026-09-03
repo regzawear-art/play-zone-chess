@@ -192,13 +192,18 @@ body {
   touch-action: none;
 }
 
-/* Responsive board: fit within viewport on mobile/tablet without scrolling */
+/* Responsive board: fit within viewport on all screen sizes */
 @media (max-width: 1023px) {
   .chess-board-wrap {
-    /* Board + HUDs + controls must fit in viewport height.
-       Reserve ~220px for two HUDs + controls bar + section heading.
-       Use min() so it never exceeds available width either. */
     max-width: min(calc(100vw - 2rem), calc(100svh - 280px)) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chess-board-wrap {
+    /* Laptop: board must fit vertically alongside HUDs + controls.
+       Reserve ~200px for two HUDs + controls bar + heading. */
+    max-width: min(calc(100vw - 30rem), calc(100vh - 16rem)) !important;
   }
 }
 
@@ -208,7 +213,6 @@ body {
   }
 }
 
-/* On very small phones, squeeze tighter */
 @media (max-width: 380px) {
   .chess-board-wrap {
     max-width: min(calc(100vw - 1rem), calc(100svh - 220px)) !important;
