@@ -192,25 +192,11 @@ body {
   touch-action: none;
 }
 
-/* Responsive board: fit within viewport on all screen sizes */
+/* Responsive board: JS-driven sizing via ResizeObserver handles desktop.
+   These rules are fallbacks for mobile/tablet and pre-hydration. */
 @media (max-width: 1023px) {
   .chess-board-wrap {
     max-width: min(calc(100vw - 2rem), calc(100svh - 260px)) !important;
-  }
-}
-
-@media (min-width: 1024px) {
-  .chess-board-wrap {
-    /* Desktop 3-column: reserve space for left rail (~4rem) + right sidebar (~17rem)
-       + gaps + padding. Vertically reserve ~9rem for two player bars + controls. */
-    max-width: min(calc(100vw - 23rem), calc(100vh - 9rem)) !important;
-  }
-}
-
-@media (min-width: 1280px) {
-  .chess-board-wrap {
-    /* Large screens: allow board to grow further */
-    max-width: min(calc(100vw - 24rem), calc(100vh - 9rem), 760px) !important;
   }
 }
 

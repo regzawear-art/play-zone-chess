@@ -458,7 +458,7 @@ export default function App() {
           </aside>
 
           {/* Center: board + player bars — clean, no clutter */}
-          <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 lg:self-center">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center gap-1.5 overflow-hidden lg:self-stretch lg:justify-center">
             {/* Top player HUD (opponent) */}
             <PlayerHUD
               player={{
@@ -477,21 +477,24 @@ export default function App() {
               align="top"
             />
 
-            <ChessBoard
-              board={game.board}
-              selected={game.selected}
-              legal={game.legal}
-              lastMove={game.lastMove}
-              status={game.status}
-              orientation={orientation}
-              turn={game.state.turn}
-              onSquareClick={game.selectSquare}
-              onDrop={game.dropPiece}
-              promotion={game.promotion}
-              onChoosePromotion={game.choosePromotion}
-              onCancelPromotion={game.cancelPromotion}
-              thinking={game.thinking}
-            />
+            {/* Board container — fills remaining vertical space between player bars */}
+            <div className="flex w-full flex-1 items-center justify-center min-h-0">
+              <ChessBoard
+                board={game.board}
+                selected={game.selected}
+                legal={game.legal}
+                lastMove={game.lastMove}
+                status={game.status}
+                orientation={orientation}
+                turn={game.state.turn}
+                onSquareClick={game.selectSquare}
+                onDrop={game.dropPiece}
+                promotion={game.promotion}
+                onChoosePromotion={game.choosePromotion}
+                onCancelPromotion={game.cancelPromotion}
+                thinking={game.thinking}
+              />
+            </div>
 
             {/* Bottom player HUD (you) */}
             <PlayerHUD
