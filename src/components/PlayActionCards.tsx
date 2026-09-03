@@ -43,23 +43,23 @@ export function PlayActionCards({
   };
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2">
       {/* Primary action cards — 2x2 grid for clean proportional layout */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-2">
         {PRIMARY_CARDS.map((card) => {
           const Icon = card.icon;
           return (
             <button
               key={card.id}
               onClick={handlers[card.id]}
-              className="group flex flex-col items-start gap-2 rounded-xl border border-white/8 bg-navy-750 p-3.5 text-left transition-all duration-200 hover:border-white/15 hover:bg-navy-700"
+              className="group flex flex-col items-start gap-1.5 rounded-xl border border-white/8 bg-navy-750 p-3 text-left transition-all duration-200 hover:border-white/15 hover:bg-navy-700"
             >
-              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${card.accent} transition-transform group-hover:scale-105`}>
-                <Icon size={20} className="text-white" />
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${card.accent} transition-transform group-hover:scale-105`}>
+                <Icon size={18} className="text-white" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-white">{card.label}</p>
-                <p className="truncate text-[11px] text-navy-400">{card.sub}</p>
+                <p className="text-[13px] font-bold text-white leading-tight">{card.label}</p>
+                <p className="truncate text-[10px] text-navy-400">{card.sub}</p>
               </div>
             </button>
           );
