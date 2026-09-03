@@ -14,7 +14,7 @@ const ITEMS = [
 
 export function PlaySidebar({ active, onNavigate }: Props) {
   return (
-    <nav className="flex h-full flex-col items-center gap-1 rounded-2xl bg-navy-700/80 p-2 backdrop-blur-xl">
+    <nav className="flex h-full flex-col items-center gap-1 rounded-2xl border border-white/5 bg-navy-750 p-2">
       {ITEMS.map((item) => {
         const Icon = item.icon;
         const isActive = active === item.id;
@@ -22,13 +22,15 @@ export function PlaySidebar({ active, onNavigate }: Props) {
           <button
             key={item.id}
             onClick={() => onNavigate(item.id)}
-            className={`group flex w-full flex-col items-center gap-1 rounded-xl px-1 py-3 transition-all ${
-              isActive ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-300 hover:bg-navy-600 hover:text-white'
+            className={`group flex w-full flex-col items-center gap-1 rounded-xl px-1 py-2.5 transition-all duration-200 ${
+              isActive
+                ? 'bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/30'
+                : 'text-navy-400 hover:bg-navy-600/60 hover:text-white'
             }`}
             title={item.label}
           >
-            <Icon size={22} className={isActive ? 'text-white' : 'text-navy-300 group-hover:text-white'} />
-            <span className="text-[10px] font-bold tracking-wide">{item.label}</span>
+            <Icon size={22} />
+            <span className="text-[9px] font-bold tracking-wide">{item.label}</span>
           </button>
         );
       })}

@@ -451,15 +451,15 @@ export default function App() {
         <Features />
 
         {/* PLAY SECTION — 3-column chess.com style layout */}
-        <section id="play" className="mx-auto max-w-7xl px-2 py-6 sm:px-4 lg:flex lg:min-h-[calc(100vh-4rem)] lg:items-stretch lg:justify-center lg:gap-3 lg:py-4">
+        <section id="play" className="mx-auto max-w-7xl px-2 py-4 sm:px-4 lg:flex lg:h-[calc(100vh-4rem)] lg:items-center lg:justify-center lg:gap-3 lg:py-2 lg:overflow-hidden">
           {/* Left icon rail */}
-          <aside className="hidden w-16 shrink-0 lg:block">
-            <PlaySidebar active={gameMode === 'ai' ? 'play' : 'play'} onNavigate={() => navigate('play')} />
+          <aside className="hidden w-14 shrink-0 lg:block lg:self-stretch">
+            <PlaySidebar active="play" onNavigate={() => navigate('play')} />
           </aside>
 
-          {/* Center: board + player bars */}
-          <div className="flex min-w-0 flex-1 flex-col items-center gap-2 lg:max-w-[min(640px,60vh)]">
-            {/* Top player HUD */}
+          {/* Center: board + player bars — clean, no clutter */}
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 lg:max-w-[min(560px,calc(100vh-5rem))]">
+            {/* Top player HUD (opponent) */}
             <PlayerHUD
               player={{
                 name: topPlayer.name,
@@ -493,7 +493,7 @@ export default function App() {
               thinking={game.thinking}
             />
 
-            {/* Bottom player HUD */}
+            {/* Bottom player HUD (you) */}
             <PlayerHUD
               player={{
                 name: bottomPlayer.name,
@@ -511,32 +511,23 @@ export default function App() {
               align="bottom"
             />
 
-            {/* Game controls bar */}
-            <div className="flex w-full flex-wrap items-center gap-2 rounded-xl glass p-2.5 shadow-card">
-              <button onClick={game.startGame} className="flex items-center gap-1.5 rounded-lg bg-blue-grad px-3 py-2 text-xs font-bold text-white shadow-glow-sm transition-transform hover:translate-y-[-1px]">
-                <Swords size={14} />
+            {/* Minimal game controls bar — play button + move nav only */}
+            <div className="flex w-full items-center gap-1.5 rounded-lg bg-navy-700/70 p-1.5">
+              <button onClick={game.startGame} className="flex items-center gap-1.5 rounded-md bg-blue-grad px-3 py-1.5 text-xs font-bold text-white shadow-glow-sm transition-transform hover:translate-y-[-1px]">
+                <Swords size={13} />
                 {game.started ? 'New' : 'Play'}
               </button>
-              <button onClick={() => navigate('leaderboard')} className="flex items-center gap-1.5 rounded-lg bg-navy-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy-500">
-                <LayoutGrid size={14} className="text-royal-400" />
-                Players
-              </button>
-              <button onClick={() => navigate('profile')} className="flex items-center gap-1.5 rounded-lg bg-navy-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy-500">
-                <History size={14} className="text-royal-400" />
-                Games
-              </button>
-              {/* Move history playback nav */}
-              <div className="ml-auto flex items-center gap-1 rounded-lg bg-navy-600 p-1">
-                <button onClick={() => game.jumpToMove(-1)} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="First move">
+              <div className="ml-auto flex items-center gap-0.5 rounded-md bg-navy-600 p-0.5">
+                <button onClick={() => game.jumpToMove(-1)} disabled={game.history.length === 0} className="grid h-6 w-6 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="First move">
                   {'|\u226A'}
                 </button>
-                <button onClick={game.undo} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Previous move">
+                <button onClick={game.undo} disabled={game.history.length === 0} className="grid h-6 w-6 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Previous move">
                   {'\u226A'}
                 </button>
-                <button onClick={game.redo} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Next move">
+                <button onClick={game.redo} disabled={game.history.length === 0} className="grid h-6 w-6 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Next move">
                   {'\u226B'}
                 </button>
-                <button onClick={() => game.jumpToMove(game.history.length - 1)} disabled={game.history.length === 0} className="grid h-7 w-7 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Last move">
+                <button onClick={() => game.jumpToMove(game.history.length - 1)} disabled={game.history.length === 0} className="grid h-6 w-6 place-items-center rounded text-white transition-colors hover:bg-navy-500 disabled:opacity-30" title="Last move">
                   {'\u226B|'}
                 </button>
               </div>
@@ -546,12 +537,12 @@ export default function App() {
               />
               <button
                 onClick={onToggleMusic}
-                className={`grid h-9 w-9 place-items-center rounded-lg transition-all ${
+                className={`grid h-8 w-8 place-items-center rounded-md transition-all ${
                   musicOn ? 'bg-blue-grad text-white shadow-glow-sm' : 'bg-navy-600 text-white hover:bg-navy-500'
                 }`}
                 title="Background music"
               >
-                {musicOn ? <Music2 size={16} /> : <Music size={16} />}
+                {musicOn ? <Music2 size={14} /> : <Music size={14} />}
               </button>
             </div>
 
@@ -570,28 +561,20 @@ export default function App() {
           </div>
 
           {/* Right sidebar: action cards + game panel */}
-          <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-72">
+          <aside className="flex w-full shrink-0 flex-col gap-2.5 overflow-y-auto no-scrollbar lg:w-72 lg:self-stretch">
             <PlayActionCards
               onPlayOnline={() => { setGameMode('online'); setMatchmakingOpen(true); }}
               onPlayBots={() => { setGameMode('ai'); }}
               onPlayCoach={() => { setGameMode('ai'); setAiDifficulty('advanced'); }}
               onTournaments={() => navigate('leaderboard')}
+              mode={gameMode}
+              aiDifficulty={aiDifficulty}
+              onChangeMode={onChangeMode}
+              onChangeDifficulty={onChangeDifficulty}
             />
-
-            {/* Game mode selector (compact, below action cards) */}
-            <div className="hidden lg:block">
-              <GameModeSelector
-                mode={gameMode}
-                aiDifficulty={aiDifficulty}
-                onChangeMode={onChangeMode}
-                onChangeDifficulty={onChangeDifficulty}
-              />
-            </div>
 
             <GamePanel
               status={game.status}
-              whiteMs={game.whiteMs}
-              blackMs={game.blackMs}
               running={game.running}
               started={game.started}
               thinking={game.thinking}
