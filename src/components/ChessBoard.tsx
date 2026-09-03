@@ -181,7 +181,7 @@ export function ChessBoard({
   const draggingFrom = drag ? `${drag.from[0]}-${drag.from[1]}` : null;
 
   return (
-    <div className="chess-board-wrap mx-auto w-full" style={{ maxWidth: 'min(calc(100vw - 2rem), 600px)' }}>
+    <div className="chess-board-wrap mx-auto w-full max-w-full">
       <div
         ref={containerRef}
         className="chess-board-inner relative grid touch-none select-none grid-cols-8 overflow-hidden border border-black/30 shadow-2xl"

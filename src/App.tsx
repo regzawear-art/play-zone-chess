@@ -458,7 +458,7 @@ export default function App() {
           </aside>
 
           {/* Center: board + player bars — clean, no clutter */}
-          <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 lg:max-w-[min(560px,calc(100vh-5rem))]">
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 lg:max-w-[min(540px,calc(100vh-12rem))] lg:self-center">
             {/* Top player HUD (opponent) */}
             <PlayerHUD
               player={{

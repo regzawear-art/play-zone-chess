@@ -201,9 +201,9 @@ body {
 
 @media (min-width: 1024px) {
   .chess-board-wrap {
-    /* Laptop: board must fit vertically alongside HUDs + controls.
-       Reserve ~200px for two HUDs + controls bar + heading. */
-    max-width: min(calc(100vw - 30rem), calc(100vh - 16rem)) !important;
+    /* Desktop 3-column: reserve space for left rail (~4rem) + right sidebar (~19rem)
+       + gaps + padding. Vertically reserve ~12rem for two player bars + controls. */
+    max-width: min(calc(100vw - 26rem), calc(100vh - 11rem)) !important;
   }
 }
 
