@@ -432,8 +432,8 @@ export default function App() {
         <Features />
 
         {/* PLAY SECTION */}
-        <section id="play" className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-12 lg:py-16">
-          <div className="mb-5 text-center sm:mb-8">
+        <section id="play" className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:flex lg:min-h-[calc(100vh-4rem)] lg:flex-col lg:items-center lg:justify-center lg:py-4">
+          <div className="mb-3 text-center sm:mb-4">
             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
               <Swords size={13} />
               Live Board
@@ -445,7 +445,7 @@ export default function App() {
           </div>
 
           {/* Game mode selector */}
-          <div className="mb-4 sm:mb-6">
+          <div className="mb-3 sm:mb-4">
             <GameModeSelector
               mode={gameMode}
               aiDifficulty={aiDifficulty}
@@ -454,7 +454,7 @@ export default function App() {
             />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-6">
             {/* Board column */}
             <div className="flex flex-col gap-2.5 sm:gap-3">
               {/* Top player HUD (Chess.com style) */}
