@@ -71,18 +71,23 @@ export function ChessBoard({
     const wrap = wrapRef.current;
     if (!wrap) return;
     const compute = () => {
-      const parent = wrap.parentElement;
-      if (!parent) return;
-      const parentRect = parent.getBoundingClientRect();
-      const availW = parentRect.width;
-      const availH = parentRect.height;
+      // Walk up to the sizing container (the flex-1 area between player bars).
+      // wrap -> absolute-center-div -> relative-flex-container
+      const sizingEl = wrap.parentElement?.parentElement;
+      if (!sizingEl) return;
+      const availW = sizingEl.clientWidth;
+      const availH = sizingEl.clientHeight;
+      if (availW === 0 || availH === 0) return;
       const size = Math.max(120, Math.floor(Math.min(availW, availH)));
       setBoardPx(size);
       setCellSize(size / 8);
     };
     compute();
     const ro = new ResizeObserver(compute);
-    ro.observe(wrap.parentElement ?? wrap);
+    // Observe the sizing container, not the board wrapper itself
+    const sizingEl = wrap.parentElement?.parentElement;
+    if (sizingEl) ro.observe(sizingEl);
+    else ro.observe(wrap);
     return () => ro.disconnect();
   }, []);
 
