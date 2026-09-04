@@ -83,7 +83,8 @@ export function ChessBoard({
       const availW = sizingEl.clientWidth;
       const availH = sizingEl.clientHeight;
       if (availW === 0) return;
-      // On mobile the container may have 0 height (auto layout) — size by width only
+      // Use the full available dimension — the board is square so take the
+      // constraining axis but allow it to fill aggressively.
       const size = availH > 0
         ? Math.max(120, Math.floor(Math.min(availW, availH)))
         : Math.max(120, Math.floor(availW));
@@ -209,8 +210,8 @@ export function ChessBoard({
     <div ref={wrapRef} className="chess-board-wrap mx-auto flex w-full justify-center" style={{ maxWidth: boardPx || undefined }}>
       <div
         ref={containerRef}
-        className="chess-board-inner relative grid touch-none select-none grid-cols-8 overflow-hidden border-2 border-black/40 shadow-2xl"
-        style={{ width: boardPx || '100%', height: boardPx || undefined, aspectRatio: boardPx ? undefined : '1 / 1', touchAction: 'none', borderRadius: 4 }}
+        className="chess-board-inner relative grid touch-none select-none grid-cols-8 overflow-hidden border border-black/30 shadow-2xl"
+        style={{ width: boardPx || '100%', height: boardPx || undefined, aspectRatio: boardPx ? undefined : '1 / 1', touchAction: 'none', borderRadius: 6 }}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
