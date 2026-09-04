@@ -99,6 +99,7 @@ export default function App() {
   const [onlineGameConfig, setOnlineGameConfig] = useState<OnlineGameConfig | null>(null);
   const [onlineRoomCode, setOnlineRoomCode] = useState<string>('');
   const [showPremiumOffer, setShowPremiumOffer] = useState(false);
+  const [boardPx, setBoardPx] = useState(0);
 
   // Settings state
   const [muted, setMuted] = useState(sound.muted);
@@ -382,6 +383,7 @@ export default function App() {
           onLogin={() => setAuthOpen(true)}
           onLogout={handleLogout}
           onWallet={() => setWalletOpen(true)}
+          walletBalanceInr={walletDB.balanceInr}
         />
       </aside>
 
@@ -394,6 +396,7 @@ export default function App() {
           onLogin={() => setAuthOpen(true)}
           onLogout={handleLogout}
           onWallet={() => setWalletOpen(true)}
+          walletBalanceInr={walletDB.balanceInr}
         />
       </div>
 
@@ -431,6 +434,7 @@ export default function App() {
           onLogin={() => setAuthOpen(true)}
           onLogout={handleLogout}
           onWallet={() => setWalletOpen(true)}
+          walletBalanceInr={walletDB.balanceInr}
         />
       </aside>
 
@@ -443,6 +447,7 @@ export default function App() {
           onLogin={() => setAuthOpen(true)}
           onLogout={handleLogout}
           onWallet={() => setWalletOpen(true)}
+          walletBalanceInr={walletDB.balanceInr}
         />
       </div>
 
@@ -475,6 +480,7 @@ export default function App() {
           onLogin={() => setAuthOpen(true)}
           onLogout={handleLogout}
           onWallet={() => setWalletOpen(true)}
+          walletBalanceInr={walletDB.balanceInr}
         />
       </aside>
 
@@ -487,6 +493,7 @@ export default function App() {
           onLogin={() => setAuthOpen(true)}
           onLogout={handleLogout}
           onWallet={() => setWalletOpen(true)}
+          walletBalanceInr={walletDB.balanceInr}
         />
       </div>
 
@@ -504,9 +511,10 @@ export default function App() {
 
         {/* PLAY SECTION — 60/40 two-column: board | right panel on desktop */}
         <section id="play" className="px-2 py-4 sm:px-4 lg:flex lg:h-screen lg:w-full lg:items-stretch lg:gap-0 lg:px-2 lg:py-1 lg:overflow-hidden">
-          {/* Board area — 60% width on desktop */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center gap-1 overflow-hidden lg:flex-[13] lg:self-stretch lg:justify-center lg:pr-3">
-            {/* Top player HUD (opponent) */}
+          {/* Board area — 60% width on desktop, auto-height on mobile */}
+          <div className="flex min-w-0 flex-col items-center gap-1.5 lg:flex-[13] lg:self-stretch lg:justify-center lg:overflow-hidden lg:pr-3 lg:min-h-0">
+            {/* Top player HUD (opponent) — constrained to board width */}
+            <div className="flex w-full justify-center" style={{ maxWidth: boardPx || undefined }}>
             <PlayerHUD
               player={{
                 name: topPlayer.name,
@@ -523,10 +531,11 @@ export default function App() {
               running={game.running}
               align="top"
             />
+            </div>
 
-            {/* Board container — fills remaining vertical space between player bars */}
-            <div className="relative flex w-full flex-1 items-center justify-center overflow-hidden min-h-0">
-              <div className="absolute inset-0 flex items-center justify-center">
+            {/* Board container — fills remaining vertical space between player bars on desktop; fixed aspect on mobile */}
+            <div className="relative flex w-full items-center justify-center lg:flex-1 lg:overflow-hidden lg:min-h-0">
+              <div className="w-full lg:absolute lg:inset-0 lg:flex lg:items-center lg:justify-center">
                 <ChessBoard
                   board={game.board}
                   selected={game.selected}
@@ -541,11 +550,13 @@ export default function App() {
                   onChoosePromotion={game.choosePromotion}
                   onCancelPromotion={game.cancelPromotion}
                   thinking={game.thinking}
+                  onSizeChange={setBoardPx}
                 />
               </div>
             </div>
 
-            {/* Bottom player HUD (you) */}
+            {/* Bottom player HUD (you) — constrained to board width */}
+            <div className="flex w-full justify-center" style={{ maxWidth: boardPx || undefined }}>
             <PlayerHUD
               player={{
                 name: bottomPlayer.name,
@@ -562,8 +573,10 @@ export default function App() {
               running={game.running}
               align="bottom"
             />
+            </div>
 
-            {/* Minimal game controls bar — play button + move nav only */}
+            {/* Minimal game controls bar — play button + move nav only, constrained to board width */}
+            <div className="flex w-full justify-center" style={{ maxWidth: boardPx || undefined }}>
             <div className="flex w-full items-center gap-1.5 rounded-lg bg-navy-700/70 p-1.5">
               <button onClick={game.startGame} className="flex items-center gap-1.5 rounded-md bg-blue-grad px-3 py-1.5 text-xs font-bold text-white shadow-glow-sm transition-transform hover:translate-y-[-1px]">
                 <Swords size={13} />
@@ -596,6 +609,7 @@ export default function App() {
               >
                 {musicOn ? <Music2 size={14} /> : <Music size={14} />}
               </button>
+            </div>
             </div>
 
             {/* In-game chat for online/room modes */}
@@ -650,15 +664,13 @@ export default function App() {
           <div className="w-full lg:hidden">
             <GameModeSelector
               mode={gameMode}
-              aiDifficulty={aiDifficulty}
               onChangeMode={onChangeMode}
-              onChangeDifficulty={onChangeDifficulty}
             />
           </div>
         </section>
 
         {/* LEADERBOARD */}
-        <section id="leaderboard" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+        <section id="leaderboard" className="mx-auto max-w-7xl min-w-0 px-4 py-12 sm:px-6 lg:py-16" style={{ boxSizing: 'border-box' }}>
           <div className="mb-8 text-center">
             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
               <LayoutGrid size={13} />
@@ -787,6 +799,7 @@ export default function App() {
         onClose={() => setWalletOpen(false)}
         balanceInr={walletDB.balanceInr}
         transactions={walletDB.transactions}
+        onRedeemCoupon={walletDB.redeemCoupon}
       />
 
       <RoomPanel

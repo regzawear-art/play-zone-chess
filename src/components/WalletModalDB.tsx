@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Wallet, X, TrendingUp, TrendingDown, Gift, ArrowDownToLine, Coins } from 'lucide-react';
+import { Wallet, X, TrendingUp, TrendingDown, Gift, ArrowDownToLine, Coins, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { formatCurrency, getStoredCurrency } from '@/data/countries';
 import type { WalletTx } from '@/hooks/useWalletDB';
 
@@ -8,15 +8,20 @@ interface Props {
   onClose: () => void;
   balanceInr: number;
   transactions: WalletTx[];
+  onRedeemCoupon: (code: string) => Promise<{ success: boolean; message: string }>;
 }
 
-export function WalletModalDB({ open, onClose, balanceInr, transactions }: Props) {
+export function WalletModalDB({ open, onClose, balanceInr, transactions, onRedeemCoupon }: Props) {
   const [animateBalance, setAnimateBalance] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
+  const [couponStatus, setCouponStatus] = useState<{ type: 'idle' | 'success' | 'error' | 'loading'; message: string }>({ type: 'idle', message: '' });
   const currency = getStoredCurrency();
 
   useEffect(() => {
     if (open) {
       setAnimateBalance(false);
+      setCouponInput('');
+      setCouponStatus({ type: 'idle', message: '' });
       const t = setTimeout(() => setAnimateBalance(true), 100);
       return () => clearTimeout(t);
     }
@@ -30,7 +35,19 @@ export function WalletModalDB({ open, onClose, balanceInr, transactions }: Props
 
   if (!open) return null;
 
-  const isCredit = (type: WalletTx['type']) => type === 'bonus' || type === 'credit' || type === 'referral';
+  const isCredit = (type: WalletTx['type']) => type === 'bonus' || type === 'credit' || type === 'referral' || type === 'coupon';
+
+  const handleRedeem = async () => {
+    if (!couponInput.trim()) return;
+    setCouponStatus({ type: 'loading', message: 'Redeeming...' });
+    const result = await onRedeemCoupon(couponInput);
+    if (result.success) {
+      setCouponStatus({ type: 'success', message: result.message });
+      setCouponInput('');
+    } else {
+      setCouponStatus({ type: 'error', message: result.message });
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-navy-900/70 p-4 backdrop-blur-sm animate-fade-in">
@@ -57,7 +74,46 @@ export function WalletModalDB({ open, onClose, balanceInr, transactions }: Props
           </div>
         </div>
 
-        <div className="max-h-80 overflow-y-auto px-6 py-5">
+        {/* Coupon Redemption Section */}
+        <div className="border-b border-white/10 px-6 py-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Coins size={16} className="text-royal-400" />
+            <h3 className="text-sm font-bold text-white">Redeem Coupon Code</h3>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={couponInput}
+              onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponStatus({ type: 'idle', message: '' }); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && couponStatus.type !== 'loading') handleRedeem(); }}
+              placeholder="Enter coupon code"
+              disabled={couponStatus.type === 'loading'}
+              className="flex-1 rounded-xl border border-white/10 bg-navy-600 px-3 py-2.5 text-sm font-semibold uppercase tracking-wide text-white placeholder:text-navy-400 focus:border-royal-500/50 focus:outline-none focus:ring-1 focus:ring-royal-500/30 disabled:opacity-50"
+            />
+            <button
+              onClick={handleRedeem}
+              disabled={couponStatus.type === 'loading' || !couponInput.trim()}
+              className="flex shrink-0 items-center gap-1.5 rounded-xl bg-blue-grad px-4 py-2.5 text-sm font-bold text-white shadow-glow-sm transition-transform hover:translate-y-[-1px] disabled:opacity-50 disabled:hover:translate-y-0"
+            >
+              {couponStatus.type === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <Gift size={14} />}
+              Redeem
+            </button>
+          </div>
+          {couponStatus.type === 'success' && (
+            <div className="mt-2.5 flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-400 ring-1 ring-emerald-500/20 animate-fade-in">
+              <CheckCircle2 size={14} className="shrink-0" />
+              {couponStatus.message}
+            </div>
+          )}
+          {couponStatus.type === 'error' && (
+            <div className="mt-2.5 flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 ring-1 ring-red-500/20 animate-fade-in">
+              <AlertCircle size={14} className="shrink-0" />
+              {couponStatus.message}
+            </div>
+          )}
+        </div>
+
+        <div className="max-h-64 overflow-y-auto px-6 py-5">
           <h3 className="mb-3 text-sm font-bold text-white">Transaction History</h3>
           {transactions.length === 0 ? (
             <div className="py-8 text-center">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Crown, Home, LayoutGrid, Trophy, User, Menu, X, Settings as SettingsIcon, LogOut, Users, Wallet, CreditCard, Gift } from 'lucide-react';
 import { SoundControls } from './SoundControls';
+import { formatCurrency, getStoredCurrency } from '@/data/countries';
 import type { AppUser } from '@/lib/supabase';
 
 interface NavLink {
@@ -27,9 +28,10 @@ interface Props {
   onLogin: () => void;
   onLogout: () => void;
   onWallet: () => void;
+  walletBalanceInr?: number;
 }
 
-export function Navbar({ active, onNavigate, user, onLogin, onLogout, onWallet }: Props) {
+export function Navbar({ active, onNavigate, user, onLogin, onLogout, onWallet, walletBalanceInr }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -101,10 +103,15 @@ export function Navbar({ active, onNavigate, user, onLogin, onLogout, onWallet }
             {user && (
               <button
                 onClick={onWallet}
-                className="hidden items-center gap-1.5 rounded-full border border-royal-500/25 bg-navy-700 px-3 py-2.5 text-sm font-bold text-royal-400 transition-all hover:border-royal-500/50 hover:shadow-glow-sm sm:inline-flex"
+                className="hidden items-center gap-2 rounded-full border border-royal-500/25 bg-navy-700 px-3 py-2.5 text-sm font-bold text-royal-400 transition-all hover:border-royal-500/50 hover:shadow-glow-sm sm:inline-flex"
               >
                 <Wallet size={16} />
-                Wallet
+                <span className="hidden lg:inline">Wallet</span>
+                {walletBalanceInr !== undefined && (
+                  <span className="rounded-full bg-royal-500/20 px-2 py-0.5 text-xs font-extrabold text-royal-300 tabular-nums">
+                    {formatCurrency(walletBalanceInr, getStoredCurrency())}
+                  </span>
+                )}
               </button>
             )}
 

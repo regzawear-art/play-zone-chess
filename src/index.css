@@ -136,7 +136,7 @@ body {
   width: 100%;
   height: 100%;
   display: block;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
 }
 
 .square-light {
@@ -149,15 +149,16 @@ body {
 /* Inner coordinate labels — like Chess.com */
 .coord-label {
   position: absolute;
-  font-size: clamp(8px, 1.2vw, 12px);
-  font-weight: 700;
+  font-size: clamp(7px, 1vw, 11px);
+  font-weight: 800;
   line-height: 1;
   pointer-events: none;
   user-select: none;
   z-index: 1;
+  opacity: 0.85;
 }
-.coord-file { bottom: 2px; right: 4px; }
-.coord-rank { top: 2px; left: 4px; }
+.coord-file { bottom: 3px; right: 4px; }
+.coord-rank { top: 3px; left: 4px; }
 .coord-light { color: var(--board-dark); }
 .coord-dark { color: var(--board-light); }
 
@@ -192,22 +193,5 @@ body {
   touch-action: none;
 }
 
-/* Responsive board: JS-driven sizing via ResizeObserver handles desktop.
-   These rules are fallbacks for mobile/tablet and pre-hydration. */
-@media (max-width: 1023px) {
-  .chess-board-wrap {
-    max-width: min(calc(100vw - 2rem), calc(100svh - 260px)) !important;
-  }
-}
-
-@media (max-width: 640px) {
-  .chess-board-wrap {
-    max-width: min(calc(100vw - 1.5rem), calc(100svh - 230px)) !important;
-  }
-}
-
-@media (max-width: 380px) {
-  .chess-board-wrap {
-    max-width: min(calc(100vw - 1rem), calc(100svh - 210px)) !important;
-  }
-}
+/* Responsive board: JS-driven sizing via ResizeObserver handles all screen sizes.
+   No CSS max-width overrides — the inline style from boardPx is authoritative. */
