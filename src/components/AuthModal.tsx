@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { X, Mail, Lock, User as UserIcon, Loader2, Crown, AlertCircle, Phone, KeyRound, ShieldCheck, ChevronDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, Mail, Lock, User as UserIcon, Loader2, Crown, AlertCircle, KeyRound, ArrowLeft } from 'lucide-react';
 import { supabase, type AppUser } from '@/lib/supabase';
-import { COUNTRIES, getStoredCountryCode, storeCountryCode, type Country } from '@/data/countries';
 
 interface Props {
   open: boolean;
@@ -9,50 +8,28 @@ interface Props {
   onAuthed: (user: AppUser) => void;
 }
 
-type AuthMethod = 'email' | 'phone';
+type View = 'login' | 'signup' | 'forgot';
 
 export function AuthModal({ open, onClose, onAuthed }: Props) {
-  const [method, setMethod] = useState<AuthMethod>('email');
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [view, setView] = useState<View>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-
-  const [selectedCountry, setSelectedCountry] = useState<Country>(
-    COUNTRIES.find((c) => c.code === getStoredCountryCode()) ?? COUNTRIES[0],
-  );
-  const [countryOpen, setCountryOpen] = useState(false);
-  const [countrySearch, setCountrySearch] = useState('');
-
-  const filteredCountries = useMemo(() => {
-    const q = countrySearch.toLowerCase();
-    return COUNTRIES.filter((c) =>
-      c.name.toLowerCase().includes(q) ||
-      c.dialCode.includes(q) ||
-      c.code.toLowerCase().includes(q),
-    );
-  }, [countrySearch]);
 
   useEffect(() => {
     if (!open) {
       setEmail('');
       setPassword('');
       setConfirm('');
-      setPhone('');
-      setOtp('');
-      setOtpSent(false);
       setError(null);
       setInfo(null);
       setLoading(false);
       setGoogleLoading(false);
-      setCountryOpen(false);
+      setView('login');
     }
   }, [open]);
 
@@ -65,11 +42,10 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
 
   if (!open) return null;
 
-  const selectCountry = (c: Country) => {
-    setSelectedCountry(c);
-    setCountryOpen(false);
-    setCountrySearch('');
-    storeCountryCode(c.code);
+  const switchView = (v: View) => {
+    setView(v);
+    setError(null);
+    setInfo(null);
   };
 
   const signInWithGoogle = async () => {
@@ -82,8 +58,7 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
       });
       if (err) throw err;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Google sign-in failed. Please try again.';
-      setError(friendlyError(msg));
+      setError(friendlyError(err instanceof Error ? err.message : 'Google sign-in failed.'));
       setGoogleLoading(false);
     }
   };
@@ -93,10 +68,10 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
     setError(null);
     if (!email.trim() || !password) { setError('Please enter your email and password.'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
-    if (mode === 'signup' && password !== confirm) { setError('Passwords do not match.'); return; }
+    if (view === 'signup' && password !== confirm) { setError('Passwords do not match.'); return; }
     setLoading(true);
     try {
-      if (mode === 'login') {
+      if (view === 'login') {
         const { data, error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (err) throw err;
         if (data.user) onAuthed({ id: data.user.id, email: data.user.email ?? '' });
@@ -112,57 +87,37 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
     }
   };
 
-  const sendOtp = async (e: React.FormEvent) => {
+  const submitForgot = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setInfo(null);
-    if (!phone.trim()) { setError('Please enter your mobile number.'); return; }
-    const fullPhone = `${selectedCountry.dialCode}${phone.trim().replace(/\D/g, '')}`;
+    if (!email.trim()) { setError('Please enter your email address.'); return; }
     setLoading(true);
     try {
-      const { error: err } = await supabase.auth.signInWithOtp({ phone: fullPhone, options: { channel: 'sms' } });
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}`,
+      });
       if (err) throw err;
-      setOtpSent(true);
-      setInfo(`Verification code sent to ${fullPhone}`);
+      setInfo('Password reset link sent! Check your inbox.');
     } catch (err) {
-      setError(friendlyError(err instanceof Error ? err.message : 'Failed to send OTP.'));
+      setError(friendlyError(err instanceof Error ? err.message : 'Failed to send reset email.'));
     } finally {
       setLoading(false);
     }
   };
 
-  const verifyOtpCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setInfo(null);
-    if (!otp.trim() || otp.trim().length < 6) { setError('Please enter the 6-digit verification code.'); return; }
-    const fullPhone = `${selectedCountry.dialCode}${phone.trim().replace(/\D/g, '')}`;
-    setLoading(true);
-    try {
-      const { data, error: err } = await supabase.auth.verifyOtp({ phone: fullPhone, token: otp.trim(), type: 'sms' });
-      if (err) throw err;
-      if (data.user) onAuthed({ id: data.user.id, email: data.user.phone ?? data.user.email ?? '' });
-    } catch (err) {
-      setError(friendlyError(err instanceof Error ? err.message : 'Verification failed.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const switchMethod = (m: AuthMethod) => {
-    setMethod(m);
-    setError(null);
-    setInfo(null);
-    setOtpSent(false);
-    setOtp('');
-  };
+  const subtitle = view === 'login'
+    ? 'Welcome back'
+    : view === 'signup'
+      ? 'Create your account & claim bonus'
+      : 'Reset your password';
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-navy-900/50 backdrop-blur-sm animate-fade-in" onClick={onClose} />
 
       <div className="relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/10 bg-navy-700 shadow-card-lg backdrop-blur-2xl animate-pop-in">
-        {/* header */}
+        {/* Header */}
         <div className="relative overflow-hidden bg-blue-grad px-6 pb-8 pt-7">
           <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
           <button onClick={onClose} className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30" aria-label="Close">
@@ -174,72 +129,55 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
             </span>
             <div>
               <p className="font-display text-lg font-extrabold leading-none text-white">Gambit Royale</p>
-              <p className="mt-1 text-xs font-medium text-royal-100">
-                {method === 'phone' ? 'Sign in with your mobile number' : mode === 'login' ? 'Welcome back' : 'Create your account & claim bonus'}
-              </p>
+              <p className="mt-1 text-xs font-medium text-royal-100">{subtitle}</p>
             </div>
           </div>
         </div>
 
         <div className="px-6 py-6">
-          {/* Method toggle */}
-          <div className="mb-4 flex rounded-full bg-navy-600 p-1">
-            <button onClick={() => switchMethod('email')} className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-bold transition-all ${method === 'email' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'}`}>
-              <Mail size={14} /> Email
-            </button>
-            <button onClick={() => switchMethod('phone')} className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-bold transition-all ${method === 'phone' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'}`}>
-              <Phone size={14} /> Mobile OTP
-            </button>
-          </div>
-
-          {/* Country selector for dial code */}
-          <div className="mb-4">
-            <div className="relative">
+          {/* ---- FORGOT PASSWORD ---- */}
+          {view === 'forgot' && (
+            <>
               <button
-                onClick={() => setCountryOpen(!countryOpen)}
-                className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-navy-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-500"
+                onClick={() => switchView('login')}
+                className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-navy-400 transition-colors hover:text-white"
               >
-                <span className="text-lg">{selectedCountry.flag}</span>
-                <span className="truncate">{selectedCountry.dialCode}</span>
-                <ChevronDown size={14} className="ml-auto text-navy-400" />
+                <ArrowLeft size={14} /> Back to Log In
               </button>
-              {countryOpen && (
-                <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-56 overflow-hidden rounded-xl border border-white/10 bg-navy-600 shadow-card-lg">
-                  <input
-                    type="text"
-                    placeholder="Search country..."
-                    value={countrySearch}
-                    onChange={(e) => setCountrySearch(e.target.value)}
-                    className="w-full border-b border-white/10 bg-navy-700 px-3 py-2 text-sm text-white outline-none placeholder:text-navy-400"
-                    autoFocus
-                  />
-                  <div className="max-h-40 overflow-y-auto">
-                    {filteredCountries.map((c) => (
-                      <button
-                        key={c.code}
-                        onClick={() => selectCountry(c)}
-                        className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-navy-500 ${c.code === selectedCountry.code ? 'bg-navy-500 text-royal-300' : 'text-white'}`}
-                      >
-                        <span className="text-lg">{c.flag}</span>
-                        <span className="truncate text-left flex-1">{c.name}</span>
-                        <span className="text-navy-400">{c.dialCode}</span>
-                      </button>
-                    ))}
-                    {filteredCountries.length === 0 && (
-                      <p className="px-3 py-4 text-center text-sm text-navy-400">No countries found</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* ---- EMAIL ---- */}
-          {method === 'email' && (
+              <div className="mb-4 rounded-xl bg-navy-600 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-royal-500/20">
+                    <KeyRound size={16} className="text-royal-400" />
+                  </span>
+                  <p className="text-sm font-bold text-white">Forgot your password?</p>
+                </div>
+                <p className="text-xs text-navy-300">
+                  Enter the email you signed up with and we'll send you a link to reset your password.
+                </p>
+              </div>
+
+              <form onSubmit={submitForgot} className="space-y-3.5">
+                <Field icon={Mail} type="email" placeholder="Email address" value={email} onChange={setEmail} autoComplete="email" />
+                {info && (
+                  <div className="flex items-start gap-2 rounded-xl bg-emerald-500/10 px-3.5 py-2.5 text-sm text-emerald-400">
+                    <Mail size={16} className="mt-0.5 shrink-0" /><span>{info}</span>
+                  </div>
+                )}
+                {error && <ErrorBox text={error} />}
+                <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-60">
+                  {loading ? <><Loader2 size={18} className="animate-spin" /> Sending...</> : <><Mail size={18} /> Send Reset Link</>}
+                </button>
+              </form>
+            </>
+          )}
+
+          {/* ---- EMAIL LOGIN / SIGNUP ---- */}
+          {(view === 'login' || view === 'signup') && (
             <>
               <div className="mb-5 flex rounded-full bg-navy-600 p-1">
-                <button onClick={() => { setMode('login'); setError(null); }} className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${mode === 'login' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'}`}>Log In</button>
-                <button onClick={() => { setMode('signup'); setError(null); }} className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${mode === 'signup' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'}`}>Sign Up</button>
+                <button onClick={() => switchView('login')} className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${view === 'login' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'}`}>Log In</button>
+                <button onClick={() => switchView('signup')} className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${view === 'signup' ? 'bg-blue-grad text-white shadow-glow-sm' : 'text-navy-400 hover:text-white'}`}>Sign Up</button>
               </div>
 
               <button onClick={signInWithGoogle} disabled={googleLoading || loading} className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-navy-600 py-3 text-sm font-bold text-white transition-all hover:bg-navy-500 disabled:opacity-60">
@@ -262,91 +200,35 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
 
               <form onSubmit={submitEmail} className="space-y-3.5">
                 <Field icon={Mail} type="email" placeholder="Email address" value={email} onChange={setEmail} autoComplete="email" />
-                <Field icon={Lock} type="password" placeholder="Password" value={password} onChange={setPassword} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
-                {mode === 'signup' && <Field icon={Lock} type="password" placeholder="Confirm password" value={confirm} onChange={setConfirm} autoComplete="new-password" />}
+                <Field icon={Lock} type="password" placeholder="Password" value={password} onChange={setPassword} autoComplete={view === 'login' ? 'current-password' : 'new-password'} />
+                {view === 'signup' && <Field icon={Lock} type="password" placeholder="Confirm password" value={confirm} onChange={setConfirm} autoComplete="new-password" />}
                 {error && <ErrorBox text={error} />}
                 <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-60">
-                  {loading ? <><Loader2 size={18} className="animate-spin" /> Please wait...</> : mode === 'login' ? <><UserIcon size={18} /> Log In</> : <><Crown size={18} /> Create Account</>}
+                  {loading ? <><Loader2 size={18} className="animate-spin" /> Please wait...</> : view === 'login' ? <><UserIcon size={18} /> Log In</> : <><Crown size={18} /> Create Account</>}
                 </button>
               </form>
 
-              {mode === 'signup' && (
+              {view === 'login' && (
+                <button
+                  onClick={() => switchView('forgot')}
+                  className="mt-3 block w-full text-center text-xs font-semibold text-royal-400 transition-colors hover:text-royal-300 hover:underline"
+                >
+                  Forgot your password?
+                </button>
+              )}
+
+              {view === 'signup' && (
                 <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-amber-500/10 py-2.5 text-xs font-semibold text-amber-400">
                   <Crown size={14} /> Get welcome bonus on sign-up!
                 </div>
               )}
 
               <p className="mt-4 text-center text-xs text-navy-400">
-                {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-                <button onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); }} className="font-bold text-royal-400 hover:underline">
-                  {mode === 'login' ? 'Sign up' : 'Log in'}
+                {view === 'login' ? "Don't have an account? " : 'Already have an account? '}
+                <button onClick={() => switchView(view === 'login' ? 'signup' : 'login')} className="font-bold text-royal-400 hover:underline">
+                  {view === 'login' ? 'Sign up' : 'Log in'}
                 </button>
               </p>
-            </>
-          )}
-
-          {/* ---- PHONE OTP ---- */}
-          {method === 'phone' && (
-            <>
-              {!otpSent ? (
-                <form onSubmit={sendOtp} className="space-y-4">
-                  <div className="rounded-xl bg-navy-600 p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <span className="grid h-8 w-8 place-items-center rounded-lg bg-royal-500/20"><Phone size={16} className="text-royal-400" /></span>
-                      <p className="text-sm font-bold text-white">Enter your mobile number</p>
-                    </div>
-                    <div className="flex items-stretch gap-2">
-                      <div className="flex shrink-0 items-center gap-1.5 rounded-xl border border-white/10 bg-navy-700 px-3 py-3 text-sm font-bold text-white">
-                        <span className="text-lg">{selectedCountry.flag}</span>
-                        <span>{selectedCountry.dialCode}</span>
-                      </div>
-                      <input
-                        type="tel"
-                        placeholder="555 123 4567"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        autoComplete="tel-national"
-                        className="w-full rounded-xl border border-white/10 bg-navy-700 px-4 py-3 text-sm font-medium text-white outline-none transition-all placeholder:text-navy-400 focus:border-royal-400 focus:ring-2 focus:ring-royal-400/20"
-                      />
-                    </div>
-                    <p className="mt-2 text-xs text-navy-300">Selected: {selectedCountry.name} ({selectedCountry.dialCode}). Change country above.</p>
-                  </div>
-                  {error && <ErrorBox text={error} />}
-                  <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-60">
-                    {loading ? <><Loader2 size={18} className="animate-spin" /> Sending code...</> : <><ShieldCheck size={18} /> Send Verification Code</>}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={verifyOtpCode} className="space-y-4">
-                  <div className="rounded-xl bg-navy-600 p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/20"><KeyRound size={16} className="text-emerald-400" /></span>
-                      <div>
-                        <p className="text-sm font-bold text-white">Enter verification code</p>
-                        <p className="text-xs text-navy-300">Sent to {selectedCountry.dialCode}{phone.trim().replace(/\D/g, '')}</p>
-                      </div>
-                    </div>
-                    <input
-                      type="text" inputMode="numeric" maxLength={6} placeholder="123456" value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                      className="w-full rounded-xl border border-white/10 bg-navy-700 py-4 text-center text-2xl font-bold tracking-[0.5em] text-white outline-none transition-all placeholder:tracking-normal placeholder:text-navy-500 focus:border-royal-400 focus:ring-2 focus:ring-royal-400/20"
-                      autoFocus
-                    />
-                  </div>
-                  {info && (
-                    <div className="flex items-start gap-2 rounded-xl bg-emerald-500/10 px-3.5 py-2.5 text-sm text-emerald-400">
-                      <ShieldCheck size={16} className="mt-0.5 shrink-0" /><span>{info}</span>
-                    </div>
-                  )}
-                  {error && <ErrorBox text={error} />}
-                  <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-60">
-                    {loading ? <><Loader2 size={18} className="animate-spin" /> Verifying...</> : <><ShieldCheck size={18} /> Verify & Sign In</>}
-                  </button>
-                  <button type="button" onClick={() => { setOtpSent(false); setOtp(''); setError(null); setInfo(null); }} className="w-full text-center text-xs font-semibold text-navy-400 transition-colors hover:text-white">
-                    Use a different number
-                  </button>
-                </form>
-              )}
             </>
           )}
         </div>
@@ -379,8 +261,6 @@ function friendlyError(msg: string): string {
   if (lower.includes('user already registered')) return 'An account with this email already exists.';
   if (lower.includes('email not confirmed')) return 'Please confirm your email before logging in.';
   if (lower.includes('rate limit')) return 'Too many attempts. Please wait a moment and try again.';
-  if (lower.includes('phone not confirmed')) return 'Incorrect verification code. Please try again.';
-  if (lower.includes('otp') && lower.includes('expired')) return 'Verification code expired. Please request a new one.';
   if (lower.includes('network') || lower.includes('fetch')) return 'Network error. Check your connection and try again.';
   return msg;
 }
