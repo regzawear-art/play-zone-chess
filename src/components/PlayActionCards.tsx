@@ -93,7 +93,7 @@ export function PlayActionCards({
         <div className="rounded-xl border border-white/8 bg-navy-750 p-2.5">
           <div className="mb-1.5 flex items-center gap-1.5">
             <Zap size={12} className="text-royal-400" />
-            <span className="text-[10px] font-bold uppercase tracking-wide text-navy-400">AI Difficulty</span>
+            <span className="text-[10px] font-bold uppercase tracking-wide text-navy-400">Bot Level</span>
           </div>
           <div className="grid grid-cols-2 gap-1.5">
             {DIFFICULTIES.map((d) => {

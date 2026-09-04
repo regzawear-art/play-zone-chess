@@ -18,6 +18,7 @@ interface Props {
   onCancelPromotion: () => void;
   thinking?: boolean;
   showCoords?: boolean;
+  onSizeChange?: (px: number) => void;
 }
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -38,6 +39,7 @@ export function ChessBoard({
   onCancelPromotion,
   thinking,
   showCoords = true,
+  onSizeChange,
 }: Props) {
   const rows = orientation === 'w' ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
   const cols = orientation === 'w' ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
@@ -59,6 +61,9 @@ export function ChessBoard({
   const [cellSize, setCellSize] = useState(0);
   const prevPositions = useRef<Map<number, { r: number; c: number }>>(new Map());
 
+  const onSizeChangeRef = useRef(onSizeChange);
+  onSizeChangeRef.current = onSizeChange;
+
   const [drag, setDrag] = useState<{
     from: [number, number];
     x: number;
@@ -77,10 +82,14 @@ export function ChessBoard({
       if (!sizingEl) return;
       const availW = sizingEl.clientWidth;
       const availH = sizingEl.clientHeight;
-      if (availW === 0 || availH === 0) return;
-      const size = Math.max(120, Math.floor(Math.min(availW, availH)));
+      if (availW === 0) return;
+      // On mobile the container may have 0 height (auto layout) — size by width only
+      const size = availH > 0
+        ? Math.max(120, Math.floor(Math.min(availW, availH)))
+        : Math.max(120, Math.floor(availW));
       setBoardPx(size);
       setCellSize(size / 8);
+      onSizeChangeRef.current?.(size);
     };
     compute();
     const ro = new ResizeObserver(compute);
@@ -200,8 +209,8 @@ export function ChessBoard({
     <div ref={wrapRef} className="chess-board-wrap mx-auto flex w-full justify-center" style={{ maxWidth: boardPx || undefined }}>
       <div
         ref={containerRef}
-        className="chess-board-inner relative grid touch-none select-none grid-cols-8 overflow-hidden border border-black/30 shadow-2xl"
-        style={{ width: boardPx || '100%', height: boardPx || undefined, aspectRatio: boardPx ? undefined : '1 / 1', touchAction: 'none', borderRadius: 0 }}
+        className="chess-board-inner relative grid touch-none select-none grid-cols-8 overflow-hidden border-2 border-black/40 shadow-2xl"
+        style={{ width: boardPx || '100%', height: boardPx || undefined, aspectRatio: boardPx ? undefined : '1 / 1', touchAction: 'none', borderRadius: 4 }}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}

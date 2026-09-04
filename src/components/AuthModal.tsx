@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { X, Mail, Lock, User as UserIcon, Loader2, Crown, AlertCircle, Phone, KeyRound, ShieldCheck, ChevronDown, Coins } from 'lucide-react';
+import { X, Mail, Lock, User as UserIcon, Loader2, Crown, AlertCircle, Phone, KeyRound, ShieldCheck, ChevronDown } from 'lucide-react';
 import { supabase, type AppUser } from '@/lib/supabase';
-import { COUNTRIES, getStoredCurrency, storeCurrency, getStoredCountryCode, storeCountryCode, type Country } from '@/data/countries';
+import { COUNTRIES, getStoredCountryCode, storeCountryCode, type Country } from '@/data/countries';
 
 interface Props {
   open: boolean;
@@ -31,9 +31,6 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
   const [countryOpen, setCountryOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
 
-  const [currency, setCurrency] = useState(getStoredCurrency());
-  const [currencyOpen, setCurrencyOpen] = useState(false);
-
   const filteredCountries = useMemo(() => {
     const q = countrySearch.toLowerCase();
     return COUNTRIES.filter((c) =>
@@ -42,15 +39,6 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
       c.code.toLowerCase().includes(q),
     );
   }, [countrySearch]);
-
-  const currencies = useMemo(() => {
-    const seen = new Set<string>();
-    return COUNTRIES.filter((c) => {
-      if (seen.has(c.currency)) return false;
-      seen.add(c.currency);
-      return true;
-    }).sort((a, b) => a.currency.localeCompare(b.currency));
-  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -65,7 +53,6 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
       setLoading(false);
       setGoogleLoading(false);
       setCountryOpen(false);
-      setCurrencyOpen(false);
     }
   }, [open]);
 
@@ -83,12 +70,6 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
     setCountryOpen(false);
     setCountrySearch('');
     storeCountryCode(c.code);
-  };
-
-  const selectCurrency = (cur: string) => {
-    setCurrency(cur);
-    setCurrencyOpen(false);
-    storeCurrency(cur);
   };
 
   const signInWithGoogle = async () => {
@@ -211,12 +192,11 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
             </button>
           </div>
 
-          {/* Country & Currency selectors — always visible */}
-          <div className="mb-4 grid grid-cols-2 gap-2">
-            {/* Country selector */}
+          {/* Country selector for dial code */}
+          <div className="mb-4">
             <div className="relative">
               <button
-                onClick={() => { setCountryOpen(!countryOpen); setCurrencyOpen(false); }}
+                onClick={() => setCountryOpen(!countryOpen)}
                 className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-navy-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-500"
               >
                 <span className="text-lg">{selectedCountry.flag}</span>
@@ -249,33 +229,6 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
                       <p className="px-3 py-4 text-center text-sm text-navy-400">No countries found</p>
                     )}
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Currency selector */}
-            <div className="relative">
-              <button
-                onClick={() => { setCurrencyOpen(!currencyOpen); setCountryOpen(false); }}
-                className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-navy-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-500"
-              >
-                <Coins size={16} className="text-royal-400" />
-                <span className="truncate">{currency}</span>
-                <ChevronDown size={14} className="ml-auto text-navy-400" />
-              </button>
-              {currencyOpen && (
-                <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-xl border border-white/10 bg-navy-600 shadow-card-lg">
-                  {currencies.map((c) => (
-                    <button
-                      key={c.currency}
-                      onClick={() => selectCurrency(c.currency)}
-                      className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-navy-500 ${c.currency === currency ? 'bg-navy-500 text-royal-300' : 'text-white'}`}
-                    >
-                      <span className="text-lg">{c.flag}</span>
-                      <span className="flex-1 text-left">{c.currency}</span>
-                      <span className="text-navy-400">{c.currencySymbol}</span>
-                    </button>
-                  ))}
                 </div>
               )}
             </div>

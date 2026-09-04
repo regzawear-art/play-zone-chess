@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Crown, Home, Gamepad2, Puzzle, GraduationCap, MoreHorizontal, User, LogOut, Wallet, ChevronRight, Settings as SettingsIcon, Trophy, CreditCard, Gift, Users } from 'lucide-react';
 import { SoundControls } from './SoundControls';
+import { formatCurrency, getStoredCurrency } from '@/data/countries';
 import type { AppUser } from '@/lib/supabase';
 
 interface NavItem {
@@ -32,9 +33,10 @@ interface Props {
   onLogin: () => void;
   onLogout: () => void;
   onWallet: () => void;
+  walletBalanceInr?: number;
 }
 
-export function PlaySidebar({ active, onNavigate, user, onLogin, onLogout, onWallet }: Props) {
+export function PlaySidebar({ active, onNavigate, user, onLogin, onLogout, onWallet, walletBalanceInr }: Props) {
   const [moreOpen, setMoreOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const initial = user?.email?.charAt(0).toUpperCase() ?? 'U';
@@ -131,6 +133,11 @@ export function PlaySidebar({ active, onNavigate, user, onLogin, onLogout, onWal
           >
             <Wallet size={18} className="shrink-0" />
             <span>Wallet</span>
+            {walletBalanceInr !== undefined && (
+              <span className="ml-auto rounded-full bg-royal-500/20 px-2 py-0.5 text-xs font-extrabold text-royal-300 tabular-nums">
+                {formatCurrency(walletBalanceInr, getStoredCurrency())}
+              </span>
+            )}
           </button>
         </div>
       )}
