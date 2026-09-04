@@ -1,49 +1,15 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const url = import.meta.env.VITE_SUPABASE_URL || 'https://mdcgdjurerwzbdshtirc.supabase.co';
+const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kY2dkanVyZXJ3emJkc2h0aXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDA3MTksImV4cCI6MjEwMTM3NjcxOX0.z6Xr2POz-ec34wCUPQmwPM78QfQlI1Jd9OGFHuDNeWg';
 
-const isConfigured = Boolean(url && anonKey);
-
-const realClient: SupabaseClient | null = isConfigured
-  ? createClient(url, anonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-    })
-  : null;
-
-type AuthCallback = (event: string, session: unknown) => void;
-
-const stubClient = {
+export const supabase = createClient(url, anonKey, {
   auth: {
-    getSession: async () => ({ data: { session: null }, error: null }),
-    onAuthStateChange: (_cb: AuthCallback) => ({
-      data: { subscription: { unsubscribe: () => {} } },
-    }),
-    signInWithPassword: async () => ({
-      data: { user: null, session: null },
-      error: { message: 'Authentication is not configured.' } as never,
-    }),
-    signUp: async () => ({
-      data: { user: null, session: null },
-      error: { message: 'Authentication is not configured.' } as never,
-    }),
-    signInWithOtp: async () => ({
-      data: { user: null, session: null },
-      error: { message: 'Authentication is not configured.' } as never,
-    }),
-    verifyOtp: async () => ({
-      data: { user: null, session: null },
-      error: { message: 'Authentication is not configured.' } as never,
-    }),
-    signOut: async () => ({ error: null }),
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
   },
-};
-
-export const supabase = (realClient ?? stubClient) as SupabaseClient;
+});
 
 export type AppUser = {
   id: string;
