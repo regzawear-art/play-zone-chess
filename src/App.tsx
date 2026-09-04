@@ -688,7 +688,7 @@ export default function App() {
               Your <span className="shimmer-text">Profile</span>
             </h2>
           </div>
-          <div className="mx-auto max-w-4xl space-y-6">
+          <div className="w-full space-y-6">
             {profile ? (
               <EditableProfile profile={profile} onUpdate={updateProfile} />
             ) : (
