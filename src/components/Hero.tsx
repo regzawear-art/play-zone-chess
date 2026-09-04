@@ -105,7 +105,7 @@ export function Hero({ onPlay, onLeaderboard, onAuth, onOnline, onRooms, onAI }:
         {'\u265E'}
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="grid items-center gap-8 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
           {/* Text + CTAs */}
           <div className="relative">

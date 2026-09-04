@@ -54,7 +54,7 @@ export function TopHeader({ active, onNavigate, user, onLogin, onLogout, onWalle
         scrolled ? 'bg-navy-800/95 shadow-lg shadow-black/20 backdrop-blur-xl' : 'bg-navy-800/80 backdrop-blur-md'
       }`}
     >
-      <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-1 px-3 sm:px-4 lg:px-5">
+      <div className="flex h-14 w-full items-center gap-1 px-3 sm:px-4 lg:px-6">
         {/* Logo */}
         <button onClick={() => go('home')} className="mr-2 flex shrink-0 items-center gap-2" aria-label="Gambit Royale home">
           <span className="relative grid h-8 w-8 place-items-center rounded-lg bg-blue-grad shadow-glow-sm">

@@ -36,7 +36,7 @@ export function FooterPage({ page, onBack }: Props) {
 
   return (
     <div className="min-h-screen bg-navy-800 pt-28 pb-20">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <button
           onClick={onBack}
           className="mb-6 flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-semibold text-white shadow-card transition-all hover:shadow-glow-sm"

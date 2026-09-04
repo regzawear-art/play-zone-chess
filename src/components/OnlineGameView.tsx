@@ -69,7 +69,7 @@ export function OnlineGameView({ config, themeId, onThemeChange, onExit, onRemat
 
   return (
     <div className="min-h-[100svh] bg-navy-800 pt-16">
-      <div className="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
+      <div className="w-full px-3 py-4 sm:px-6 lg:px-8 sm:py-6">
         {/* Header bar */}
         <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4 sm:gap-3">
           <button onClick={onExit} className="flex items-center gap-1.5 rounded-lg bg-navy-700 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy-600 sm:px-3 sm:text-sm">

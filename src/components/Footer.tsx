@@ -82,7 +82,7 @@ export function Footer({ onNavigate, onFooterPage }: Props) {
       <div className="pointer-events-none absolute -left-10 bottom-0 select-none text-[160px] leading-none text-white/5">{'\u265A'}</div>
       <div className="pointer-events-none absolute right-10 top-10 select-none text-[100px] leading-none text-white/5">{'\u265E'}</div>
 
-      <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14">
+      <div className="relative w-full px-4 py-12 sm:px-6 lg:px-8 sm:py-14">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_2fr]">
           {/* brand */}
           <div>
