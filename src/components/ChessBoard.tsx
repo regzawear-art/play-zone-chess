@@ -207,7 +207,7 @@ export function ChessBoard({
   const draggingFrom = drag ? `${drag.from[0]}-${drag.from[1]}` : null;
 
   return (
-    <div ref={wrapRef} className="chess-board-wrap mx-auto flex w-full justify-center" style={{ maxWidth: boardPx || undefined }}>
+    <div ref={wrapRef} className="chess-board-wrap flex w-full justify-center lg:justify-start" style={{ maxWidth: boardPx || undefined }}>
       <div
         ref={containerRef}
         className="chess-board-inner relative grid touch-none select-none grid-cols-8 overflow-hidden border border-black/30 shadow-2xl"
