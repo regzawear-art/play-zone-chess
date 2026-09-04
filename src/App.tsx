@@ -374,9 +374,9 @@ export default function App() {
   if (footerPage) {
     return (
       <div className="flex min-h-screen justify-center bg-navy-800">
-      <div className="flex w-full max-w-[1920px]">
+      <div className="mx-auto flex w-full max-w-[1400px]">
       {/* Desktop left sidebar navigation */}
-      <aside className="sticky top-0 hidden h-screen w-16 shrink-0 lg:block lg:w-56">
+      <aside className="sticky top-0 hidden h-screen w-14 shrink-0 lg:block lg:w-48">
         <PlaySidebar
           active=""
           onNavigate={navigate}
@@ -427,9 +427,9 @@ export default function App() {
     };
     return (
       <div className="flex min-h-screen justify-center bg-navy-800">
-      <div className="flex w-full max-w-[1920px]">
+      <div className="mx-auto flex w-full max-w-[1400px]">
       {/* Desktop left sidebar navigation */}
-      <aside className="sticky top-0 hidden h-screen w-16 shrink-0 lg:block lg:w-56">
+      <aside className="sticky top-0 hidden h-screen w-14 shrink-0 lg:block lg:w-48">
         <PlaySidebar
           active="play"
           onNavigate={navigate}
@@ -475,9 +475,9 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen justify-center overflow-x-hidden bg-navy-800">
-    <div className="flex w-full max-w-[1920px]">
+    <div className="mx-auto flex w-full max-w-[1400px]">
       {/* Desktop left sidebar navigation */}
-      <aside className="sticky top-0 hidden h-screen w-16 shrink-0 lg:block lg:w-56">
+      <aside className="sticky top-0 hidden h-screen w-14 shrink-0 lg:block lg:w-48">
         <PlaySidebar
           active={view}
           onNavigate={navigate}
@@ -515,9 +515,9 @@ export default function App() {
         <Features />
 
         {/* PLAY SECTION — board | right panel on desktop */}
-        <section id="play" className="px-2 py-2 sm:px-3 lg:flex lg:h-screen lg:w-full lg:items-center lg:justify-center lg:gap-3 lg:px-2 lg:py-2 lg:overflow-hidden">
-          {/* Board column — board + HUDs + controls, sized by available height */}
-          <div data-board-col className="flex min-w-0 flex-col items-center lg:items-start lg:h-full lg:justify-center lg:overflow-hidden lg:min-h-0">
+        <section id="play" className="px-1 py-2 sm:px-2 lg:flex lg:h-screen lg:w-full lg:items-stretch lg:gap-0 lg:px-0 lg:py-0 lg:overflow-hidden">
+          {/* Board column — board + HUDs + controls, takes all remaining width */}
+          <div data-board-col className="flex min-w-0 flex-1 flex-col items-center lg:items-center lg:h-full lg:justify-center lg:overflow-hidden lg:min-h-0 lg:px-2">
             {/* Top player HUD */}
             <div className="w-full" style={{ maxWidth: boardPx || undefined }}>
             <PlayerHUD
@@ -632,7 +632,7 @@ export default function App() {
           </div>
 
           {/* Right sidebar — matches board column height on desktop */}
-          <aside className="flex w-full flex-col gap-2 overflow-y-auto no-scrollbar lg:w-[360px] lg:shrink-0 lg:border-l lg:border-navy-600/30 lg:pl-3 lg:self-center" style={boardPx ? { maxHeight: boardPx + 100 } : undefined}>
+          <aside className="flex w-full flex-col gap-2 overflow-y-auto no-scrollbar lg:w-[340px] lg:shrink-0 lg:border-l lg:border-navy-600/30 lg:pl-3 lg:pr-1 lg:self-center lg:my-auto" style={boardPx ? { maxHeight: boardPx + 90 } : undefined}>
             <PlayActionCards
               onPlayOnline={() => { setGameMode('online'); setMatchmakingOpen(true); }}
               onPlayBots={() => { setGameMode('ai'); }}
