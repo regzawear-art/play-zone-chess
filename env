@@ -1,0 +1,16 @@
+.env file for Vite — add your Supabase project values here
+# Replace the placeholders below with values from your Supabase project (Project URL and anon/public key)
+# Example:
+# VITE_SUPABASE_URL=https://abcd1234.supabase.co
+# VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+#VITE_SUPABASE_URL=https://znbnftywqnkgfnfrrpvp.supabase.co
+#VITE_SUPABASE_ANON_KEY=sb_publishable_TCYaUa8O0iIAb7x1njkB3A_uhu4bNMp
+
+VITE_SUPABASE_URL=https://pvtocszewuakzbymbkbq.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_5eBA2J3WD_d1UDHZsIX9ew_yI2EpSxL
+
+# Optional: if you want to force the OAuth redirect to a specific path on your site,
+# you can add a value here and pass it to signInWithOAuth(options: { redirectTo })
+# e.g. VITE_APP_REDIRECT_TO=http://localhost:5173
+# VITE_APP_REDIRECT_TO=
