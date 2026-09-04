@@ -77,10 +77,10 @@ export function ChessBoard({
     if (!wrap) return;
     const compute = () => {
       const col = wrap.closest('[data-board-col]') as HTMLElement | null;
-      const availW = col ? col.clientWidth : wrap.parentElement?.clientWidth ?? 0;
-      // Reserve ~160px for HUDs + controls; on mobile fall back to width-only
+      const availW = col ? col.clientWidth - 16 : wrap.parentElement?.clientWidth ?? 0;
+      // Reserve space for 2 HUD bars (~44px each) + controls bar (~36px) + gaps
       const viewH = window.innerHeight;
-      const hudOverhead = 160;
+      const hudOverhead = 136;
       const availH = viewH > 400 ? viewH - hudOverhead : 0;
       if (availW === 0) return;
       const size = availH > 0
@@ -204,7 +204,7 @@ export function ChessBoard({
   const draggingFrom = drag ? `${drag.from[0]}-${drag.from[1]}` : null;
 
   return (
-    <div ref={wrapRef} className="chess-board-wrap flex w-full justify-center lg:justify-start" style={{ maxWidth: boardPx || undefined }}>
+    <div ref={wrapRef} className="chess-board-wrap flex w-full justify-center" style={{ maxWidth: boardPx || undefined }}>
       <div
         ref={containerRef}
         className="chess-board-inner relative grid touch-none select-none grid-cols-8 overflow-hidden border border-black/30 shadow-2xl"
