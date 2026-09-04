@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Board, Color, GameMode, GameStage, PieceType, TimeControl, AIDifficulty } from './game/types';
 import { useChess } from './hooks/useChess';
 import { PLAYERS, CURRENT_USER } from './data/players';
-import { Navbar } from './components/Navbar';
-import { PlaySidebar } from './components/PlaySidebar';
+
+import { TopHeader } from './components/TopHeader';
 import { Hero } from './components/Hero';
 import { Features } from './components/Features';
 import { ChessBoard } from './components/ChessBoard';
@@ -373,35 +373,18 @@ export default function App() {
 
   if (footerPage) {
     return (
-      <div className="flex min-h-screen justify-center bg-navy-800">
-      <div className="mx-auto flex w-full max-w-[1400px]">
-      {/* Desktop left sidebar navigation */}
-      <aside className="sticky top-0 hidden h-screen w-14 shrink-0 lg:block lg:w-48">
-        <PlaySidebar
-          active=""
-          onNavigate={navigate}
-          user={authUser}
-          onLogin={() => setAuthOpen(true)}
-          onLogout={handleLogout}
-          onWallet={() => setWalletOpen(true)}
-          walletBalanceInr={walletDB.balanceInr}
-        />
-      </aside>
-
-      {/* Mobile top bar */}
-      <div className="fixed inset-x-0 top-0 z-40 lg:hidden">
-        <Navbar
-          active=""
-          onNavigate={navigate}
-          user={authUser}
-          onLogin={() => setAuthOpen(true)}
-          onLogout={handleLogout}
-          onWallet={() => setWalletOpen(true)}
-          walletBalanceInr={walletDB.balanceInr}
-        />
-      </div>
-
-      <main className="flex min-w-0 flex-1 flex-col pt-14 lg:pt-0">
+      <div className="min-h-screen bg-navy-800">
+      <TopHeader
+        active=""
+        onNavigate={navigate}
+        user={authUser}
+        onLogin={() => setAuthOpen(true)}
+        onLogout={handleLogout}
+        onWallet={() => setWalletOpen(true)}
+        walletBalanceInr={walletDB.balanceInr}
+      />
+      <div className="mx-auto w-full max-w-[1400px]">
+      <main className="flex min-w-0 flex-col pt-14">
         <FooterPage page={footerPage as any} onBack={() => { setFooterPage(null); navigate('home'); }} />
         <Footer onNavigate={navigate} onFooterPage={onFooterPage} />
       </main>
@@ -426,35 +409,18 @@ export default function App() {
       }
     };
     return (
-      <div className="flex min-h-screen justify-center bg-navy-800">
-      <div className="mx-auto flex w-full max-w-[1400px]">
-      {/* Desktop left sidebar navigation */}
-      <aside className="sticky top-0 hidden h-screen w-14 shrink-0 lg:block lg:w-48">
-        <PlaySidebar
-          active="play"
-          onNavigate={navigate}
-          user={authUser}
-          onLogin={() => setAuthOpen(true)}
-          onLogout={handleLogout}
-          onWallet={() => setWalletOpen(true)}
-          walletBalanceInr={walletDB.balanceInr}
-        />
-      </aside>
-
-      {/* Mobile top bar */}
-      <div className="fixed inset-x-0 top-0 z-40 lg:hidden">
-        <Navbar
-          active="play"
-          onNavigate={navigate}
-          user={authUser}
-          onLogin={() => setAuthOpen(true)}
-          onLogout={handleLogout}
-          onWallet={() => setWalletOpen(true)}
-          walletBalanceInr={walletDB.balanceInr}
-        />
-      </div>
-
-      <main className="flex min-w-0 flex-1 flex-col pt-14 lg:pt-0">
+      <div className="min-h-screen bg-navy-800">
+      <TopHeader
+        active="play"
+        onNavigate={navigate}
+        user={authUser}
+        onLogin={() => setAuthOpen(true)}
+        onLogout={handleLogout}
+        onWallet={() => setWalletOpen(true)}
+        walletBalanceInr={walletDB.balanceInr}
+      />
+      <div className="mx-auto w-full max-w-[1400px]">
+      <main className="flex min-w-0 flex-col pt-14">
         <OnlineGameView
           config={onlineGameConfig}
           themeId={boardThemeId}
@@ -474,35 +440,18 @@ export default function App() {
   );
 
   return (
-    <div className="flex min-h-screen justify-center overflow-x-hidden bg-navy-800">
-    <div className="mx-auto flex w-full max-w-[1400px]">
-      {/* Desktop left sidebar navigation */}
-      <aside className="sticky top-0 hidden h-screen w-14 shrink-0 lg:block lg:w-48">
-        <PlaySidebar
-          active={view}
-          onNavigate={navigate}
-          user={authUser}
-          onLogin={() => setAuthOpen(true)}
-          onLogout={handleLogout}
-          onWallet={() => setWalletOpen(true)}
-          walletBalanceInr={walletDB.balanceInr}
-        />
-      </aside>
-
-      {/* Mobile top bar (replaces sidebar on small screens) */}
-      <div className="fixed inset-x-0 top-0 z-40 lg:hidden">
-        <Navbar
-          active={view}
-          onNavigate={navigate}
-          user={authUser}
-          onLogin={() => setAuthOpen(true)}
-          onLogout={handleLogout}
-          onWallet={() => setWalletOpen(true)}
-          walletBalanceInr={walletDB.balanceInr}
-        />
-      </div>
-
-      <main className="flex min-w-0 flex-1 flex-col pt-14 lg:pt-0">
+    <div className="min-h-screen overflow-x-hidden bg-navy-800">
+    <TopHeader
+      active={view}
+      onNavigate={navigate}
+      user={authUser}
+      onLogin={() => setAuthOpen(true)}
+      onLogout={handleLogout}
+      onWallet={() => setWalletOpen(true)}
+      walletBalanceInr={walletDB.balanceInr}
+    />
+    <div className="mx-auto w-full max-w-[1400px]">
+      <main className="flex min-w-0 flex-col pt-14">
         <Hero
           onPlay={handlePlay}
           onLeaderboard={handleLeaderboard}
@@ -515,7 +464,7 @@ export default function App() {
         <Features />
 
         {/* PLAY SECTION — board | right panel on desktop */}
-        <section id="play" className="px-1 py-2 sm:px-2 lg:flex lg:h-screen lg:w-full lg:items-stretch lg:gap-0 lg:px-0 lg:py-0 lg:overflow-hidden">
+        <section id="play" className="px-1 py-2 sm:px-2 lg:flex lg:w-full lg:items-stretch lg:gap-0 lg:px-0 lg:py-0 lg:overflow-hidden" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
           {/* Board column — board + HUDs + controls, takes all remaining width */}
           <div data-board-col className="flex min-w-0 flex-1 flex-col items-center lg:items-center lg:h-full lg:justify-center lg:overflow-hidden lg:min-h-0 lg:px-2">
             {/* Top player HUD */}

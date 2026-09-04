@@ -78,9 +78,9 @@ export function ChessBoard({
     const compute = () => {
       const col = wrap.closest('[data-board-col]') as HTMLElement | null;
       const availW = col ? col.clientWidth - 16 : wrap.parentElement?.clientWidth ?? 0;
-      // Reserve space for 2 HUD bars (~44px each) + controls bar (~36px) + gaps
+      // Reserve: fixed header (56px) + 2 HUD bars (~40px each) + controls bar (~36px) + gaps
       const viewH = window.innerHeight;
-      const hudOverhead = 136;
+      const hudOverhead = 184;
       const availH = viewH > 400 ? viewH - hudOverhead : 0;
       if (availW === 0) return;
       const size = availH > 0
