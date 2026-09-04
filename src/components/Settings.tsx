@@ -34,7 +34,7 @@ export function Settings(props: Props) {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
+    <div className="mx-auto max-w-4xl space-y-5">
       <Section title="Avatar" icon={User}>
         <div className="flex items-center gap-4">
           <div className="relative">

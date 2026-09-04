@@ -624,7 +624,7 @@ export default function App() {
         </section>
 
         {/* LEADERBOARD */}
-        <section id="leaderboard" className="mx-auto max-w-7xl min-w-0 px-4 py-12 sm:px-6 lg:py-16" style={{ boxSizing: 'border-box' }}>
+        <section id="leaderboard" className="w-full px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
           <div className="mb-8 text-center">
             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
               <LayoutGrid size={13} />
@@ -639,7 +639,7 @@ export default function App() {
         </section>
 
         {/* PRICING */}
-        <section id="pricing" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+        <section id="pricing" className="w-full px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
           <div className="mb-8 text-center">
             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
               <CreditCard size={13} />
@@ -654,7 +654,7 @@ export default function App() {
         </section>
 
         {/* REFERRAL */}
-        <section id="referral" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+        <section id="referral" className="w-full px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
           <div className="mb-8 text-center">
             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
               <Gift size={13} />
@@ -673,12 +673,12 @@ export default function App() {
         </section>
 
         {/* CLUBS */}
-        <section id="clubs" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+        <section id="clubs" className="w-full px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
           <Clubs userId={authUser?.id ?? null} onLogin={() => setAuthOpen(true)} />
         </section>
 
         {/* PROFILE */}
-        <section id="profile" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+        <section id="profile" className="w-full px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
           <div className="mb-8 text-center">
             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
               <LayoutGrid size={13} />
@@ -688,7 +688,7 @@ export default function App() {
               Your <span className="shimmer-text">Profile</span>
             </h2>
           </div>
-          <div className="mx-auto max-w-2xl space-y-6">
+          <div className="mx-auto max-w-4xl space-y-6">
             {profile ? (
               <EditableProfile profile={profile} onUpdate={updateProfile} />
             ) : (
@@ -699,7 +699,7 @@ export default function App() {
         </section>
 
         {/* SETTINGS */}
-        <section id="settings" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+        <section id="settings" className="w-full px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
           <div className="mb-8 text-center">
             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
               <SettingsIcon size={13} />

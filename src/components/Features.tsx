@@ -11,8 +11,8 @@ const FEATURES = [
 
 export function Features() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
-      <div className="mx-auto max-w-2xl text-center">
+    <section className="w-full px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+      <div className="mx-auto max-w-3xl text-center">
         <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
           <Sparkles size={13} />
           Why Gambit Royale

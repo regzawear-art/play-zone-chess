@@ -141,7 +141,7 @@ export function ReferralSection({ userId, onLogin, onReferralComplete }: Props) 
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Bonus highlight */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-royal-500/20 via-navy-700 to-navy-700 p-6 ring-1 ring-royal-400/20">
         <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-royal-500/20 blur-3xl" />
