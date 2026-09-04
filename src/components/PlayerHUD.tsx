@@ -30,7 +30,7 @@ export function PlayerHUD({ player, ms, active, running, align }: Props) {
 
   return (
     <div
-      className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 transition-all duration-300 sm:gap-3 sm:px-3 sm:py-2 ${
+      className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1 transition-all duration-300 sm:gap-3 sm:px-3 sm:py-1.5 ${
         active
           ? 'bg-navy-600 shadow-glow-sm ring-1 ring-royal-500/40'
           : 'bg-navy-700/70'

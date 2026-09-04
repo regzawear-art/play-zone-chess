@@ -515,11 +515,11 @@ export default function App() {
         <Features />
 
         {/* PLAY SECTION — board | right panel on desktop */}
-        <section id="play" className="px-2 py-2 sm:px-3 lg:flex lg:h-screen lg:w-full lg:items-stretch lg:gap-0 lg:px-0 lg:py-0 lg:overflow-hidden">
-          {/* Board area — takes remaining space, board flush left */}
-          <div className="flex min-w-0 flex-col items-center gap-0.5 lg:flex-1 lg:self-stretch lg:justify-center lg:overflow-hidden lg:pl-1 lg:pr-2 lg:min-h-0">
-            {/* Top player HUD (opponent) — constrained to board width */}
-            <div className="flex w-full justify-center lg:justify-start" style={{ maxWidth: boardPx || undefined }}>
+        <section id="play" className="px-2 py-2 sm:px-3 lg:flex lg:h-screen lg:w-full lg:items-center lg:justify-center lg:gap-3 lg:px-2 lg:py-2 lg:overflow-hidden">
+          {/* Board column — board + HUDs + controls, sized by available height */}
+          <div data-board-col className="flex min-w-0 flex-col items-center lg:items-start lg:h-full lg:justify-center lg:overflow-hidden lg:min-h-0">
+            {/* Top player HUD */}
+            <div className="w-full" style={{ maxWidth: boardPx || undefined }}>
             <PlayerHUD
               player={{
                 name: topPlayer.name,
@@ -538,30 +538,28 @@ export default function App() {
             />
             </div>
 
-            {/* Board container — fills remaining vertical space between player bars on desktop; fixed aspect on mobile */}
-            <div className="relative flex w-full items-center justify-center lg:flex-1 lg:overflow-hidden lg:min-h-0">
-              <div className="w-full lg:absolute lg:inset-0 lg:flex lg:items-center lg:justify-start lg:p-0">
-                <ChessBoard
-                  board={game.board}
-                  selected={game.selected}
-                  legal={game.legal}
-                  lastMove={game.lastMove}
-                  status={game.status}
-                  orientation={orientation}
-                  turn={game.state.turn}
-                  onSquareClick={game.selectSquare}
-                  onDrop={game.dropPiece}
-                  promotion={game.promotion}
-                  onChoosePromotion={game.choosePromotion}
-                  onCancelPromotion={game.cancelPromotion}
-                  thinking={game.thinking}
-                  onSizeChange={setBoardPx}
-                />
-              </div>
+            {/* Board — square, sized to fill vertical space minus HUDs */}
+            <div className="relative w-full" style={{ maxWidth: boardPx || undefined, marginTop: 2, marginBottom: 2 }}>
+              <ChessBoard
+                board={game.board}
+                selected={game.selected}
+                legal={game.legal}
+                lastMove={game.lastMove}
+                status={game.status}
+                orientation={orientation}
+                turn={game.state.turn}
+                onSquareClick={game.selectSquare}
+                onDrop={game.dropPiece}
+                promotion={game.promotion}
+                onChoosePromotion={game.choosePromotion}
+                onCancelPromotion={game.cancelPromotion}
+                thinking={game.thinking}
+                onSizeChange={setBoardPx}
+              />
             </div>
 
-            {/* Bottom player HUD (you) — constrained to board width */}
-            <div className="flex w-full justify-center lg:justify-start" style={{ maxWidth: boardPx || undefined }}>
+            {/* Bottom player HUD */}
+            <div className="w-full" style={{ maxWidth: boardPx || undefined }}>
             <PlayerHUD
               player={{
                 name: bottomPlayer.name,
@@ -580,9 +578,9 @@ export default function App() {
             />
             </div>
 
-            {/* Minimal game controls bar — play button + move nav only, constrained to board width */}
-            <div className="flex w-full justify-center lg:justify-start" style={{ maxWidth: boardPx || undefined }}>
-            <div className="flex w-full items-center gap-1.5 rounded-lg bg-navy-700/70 p-1">
+            {/* Controls bar */}
+            <div className="w-full mt-1" style={{ maxWidth: boardPx || undefined }}>
+            <div className="flex w-full items-center gap-1.5 rounded-lg bg-navy-700/70 px-2 py-1">
               <button onClick={game.startGame} className="flex items-center gap-1.5 rounded-md bg-blue-grad px-3 py-1.5 text-xs font-bold text-white shadow-glow-sm transition-transform hover:translate-y-[-1px]">
                 <Swords size={13} />
                 {game.started ? 'New' : 'Play'}
@@ -619,6 +617,7 @@ export default function App() {
 
             {/* In-game chat for online/room modes */}
             {(gameMode === 'online' || gameMode === 'room') && (
+              <div className="w-full mt-1" style={{ maxWidth: boardPx || undefined }}>
               <GameChat
                 roomId={activeRoomId}
                 currentUser={authUser ? {
@@ -628,11 +627,12 @@ export default function App() {
                 } : null}
                 compact
               />
+              </div>
             )}
           </div>
 
-          {/* Right sidebar: action cards + game panel */}
-          <aside className="flex w-full flex-col gap-2.5 overflow-y-auto no-scrollbar lg:w-[340px] lg:shrink-0 lg:self-stretch lg:border-l lg:border-navy-600/40 lg:pl-3 lg:pr-2">
+          {/* Right sidebar — matches board column height on desktop */}
+          <aside className="flex w-full flex-col gap-2 overflow-y-auto no-scrollbar lg:w-[360px] lg:shrink-0 lg:border-l lg:border-navy-600/30 lg:pl-3 lg:self-center" style={boardPx ? { maxHeight: boardPx + 100 } : undefined}>
             <PlayActionCards
               onPlayOnline={() => { setGameMode('online'); setMatchmakingOpen(true); }}
               onPlayBots={() => { setGameMode('ai'); }}

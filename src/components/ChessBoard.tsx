@@ -76,15 +76,13 @@ export function ChessBoard({
     const wrap = wrapRef.current;
     if (!wrap) return;
     const compute = () => {
-      // Walk up to the sizing container (the flex-1 area between player bars).
-      // wrap -> absolute-center-div -> relative-flex-container
-      const sizingEl = wrap.parentElement?.parentElement;
-      if (!sizingEl) return;
-      const availW = sizingEl.clientWidth;
-      const availH = sizingEl.clientHeight;
+      const col = wrap.closest('[data-board-col]') as HTMLElement | null;
+      const availW = col ? col.clientWidth : wrap.parentElement?.clientWidth ?? 0;
+      // Reserve ~160px for HUDs + controls; on mobile fall back to width-only
+      const viewH = window.innerHeight;
+      const hudOverhead = 160;
+      const availH = viewH > 400 ? viewH - hudOverhead : 0;
       if (availW === 0) return;
-      // Use the full available dimension — the board is square so take the
-      // constraining axis but allow it to fill aggressively.
       const size = availH > 0
         ? Math.max(120, Math.floor(Math.min(availW, availH)))
         : Math.max(120, Math.floor(availW));
@@ -94,11 +92,10 @@ export function ChessBoard({
     };
     compute();
     const ro = new ResizeObserver(compute);
-    // Observe the sizing container, not the board wrapper itself
-    const sizingEl = wrap.parentElement?.parentElement;
-    if (sizingEl) ro.observe(sizingEl);
-    else ro.observe(wrap);
-    return () => ro.disconnect();
+    const col = wrap.closest('[data-board-col]') as HTMLElement | null;
+    ro.observe(col || wrap);
+    window.addEventListener('resize', compute);
+    return () => { ro.disconnect(); window.removeEventListener('resize', compute); };
   }, []);
 
   // FLIP animation
