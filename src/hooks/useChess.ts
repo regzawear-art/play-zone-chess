@@ -176,9 +176,18 @@ export function useChess(opts: UseChessOptions) {
     // Use a microtask delay so the thinking indicator can paint before the
     // (now near-instant) AI computation runs, keeping the UI responsive.
     const timer = setTimeout(() => {
-      const move = chooseMove(boardRef.current, stateRef.current, computerColor);
-      setThinking(false);
-      if (move) doMove(move);
+      (async () => {
+        try {
+          const move = await chooseMove(boardRef.current, stateRef.current, computerColor);
+          if (move) doMove(move);
+        } catch (e) {
+          // ignore worker errors for now
+          // eslint-disable-next-line no-console
+          console.error('AI worker error', e);
+        } finally {
+          setThinking(false);
+        }
+      })();
     }, 50);
     return () => clearTimeout(timer);
   }, [vsComputer, state.turn, status.phase, playerColor, doMove]);
