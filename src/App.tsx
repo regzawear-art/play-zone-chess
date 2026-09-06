@@ -257,23 +257,13 @@ export default function App() {
 
   // Matchmaking matched callback
   const handleMatched = useCallback((gameId: string, isHost: boolean) => {
-    setOnlineGameId(gameId);
-    setOnlineIsHost(isHost);
-    setGameMode('online');
-    setPlayerColor(isHost ? 'w' : 'b');
-    if (autoFlip) setOrientation(isHost ? 'w' : 'b');
-    if (authUser) {
-      setOnlineGameConfig({
-        gameId,
-        roomId: gameId,
-        isHost,
-        userId: authUser.id,
-        playerColor: isHost ? 'w' : 'b',
-        timeControl,
-        customMinutes,
-      });
-    }
-    navigate('play');
+    // open match in a dedicated minimal window instead of rendering inline
+    const openMatchWindow = (id: string, host: boolean) => {
+      const url = `${window.location.origin}/match?gameId=${encodeURIComponent(id)}`;
+      const w = window.open(url, '_blank', 'noopener,noreferrer');
+      if (w) w.focus();
+    };
+    openMatchWindow(gameId, isHost);
   }, [autoFlip, authUser, timeControl, customMinutes, navigate]);
 
   // Listen for invites accepted -> open online game
@@ -512,9 +502,9 @@ export default function App() {
           onPlay={handlePlay}
           onLeaderboard={handleLeaderboard}
           onAuth={() => setAuthOpen(true)}
-          onOnline={() => { setGameMode('online'); setMatchmakingOpen(true); navigate('play'); }}
+          onOnline={() => { setGameMode('online'); setMatchmakingOpen(true); }}
           onRooms={() => { setGameMode('room'); setRoomOpen(true); }}
-          onAI={() => { setGameMode('ai'); navigate('play'); }}
+          onAI={() => { setGameMode('ai'); setMatchmakingOpen(true); }}
         />
 
         <Features />
