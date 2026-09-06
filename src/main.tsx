@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import MatchPage from './pages/MatchPage';
+import ToastProvider from './components/ToastProvider';
 import './index.css';
 
 const container = document.getElementById('root')!;
@@ -10,13 +11,17 @@ const params = new URLSearchParams(window.location.search);
 if (params.get('match') === '1' || window.location.pathname.startsWith('/match')) {
   root.render(
     <StrictMode>
-      <MatchPage />
+      <ToastProvider>
+        <MatchPage />
+      </ToastProvider>
     </StrictMode>
   );
 } else {
   root.render(
     <StrictMode>
-      <App />
+      <ToastProvider>
+        <App />
+      </ToastProvider>
     </StrictMode>
   );
 }

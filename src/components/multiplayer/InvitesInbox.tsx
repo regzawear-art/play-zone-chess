@@ -21,6 +21,17 @@ export default function InvitesInbox({ onClose }: { onClose?: () => void }) {
         // eslint-disable-next-line no-console
         console.warn('failed dispatching online-game-created', e);
       }
+      // show toast
+      try {
+        // dynamic import the toast hook and call show
+        const mod = await import('../../components/ToastProvider');
+        if (mod && typeof mod.useToast === 'function') {
+          // We can't call hook directly outside react tree; instead dispatch event
+          window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Accepted invite — opening match', type: 'success' } }));
+        }
+      } catch (e) {
+        // ignore
+      }
       if (onClose) onClose();
       // provide small UI feedback by updating invite status locally until realtime updates arrive
       setLocalUpdating((s) => ({ ...s, [id]: 'accepted' }));
@@ -38,6 +49,7 @@ export default function InvitesInbox({ onClose }: { onClose?: () => void }) {
       // eslint-disable-next-line no-console
       console.log('rejected', id);
       setLocalUpdating((s) => ({ ...s, [id]: 'rejected' }));
+      window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Invite rejected', type: 'info' } }));
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error('reject failed', e);

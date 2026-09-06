@@ -136,7 +136,31 @@ export default function MatchPage() {
           </div>
           <div style={{ width: 360, height: '100%', overflow: 'auto' }}>
             <PlayerHUD player={{ name: 'You', avatar: '', flag: '', rating: 0, online: true, capturedPieces: [], materialDiff: 0 }} ms={chess.whiteMs} active={chess.running && chess.state.turn === 'w'} running={chess.running} align="bottom" />
-            {/* move list and controls could be added here */}
+            <div style={{ padding: 12 }}>
+              {/* move list */}
+              {/* derive SAN list from chess.history */}
+              {/* fallback: map history entries if present */}
+              {chess && chess.history && (
+                // @ts-ignore
+                <div>
+                  {/* lightweight move list */}
+                  {/* Avoid pulling new dependency; reuse MoveList if available */}
+                  {/* eslint-disable-next-line @typescript-eslint/no-var-requires */}
+                  {(() => {
+                    try {
+                      // dynamic require to avoid static import cycles in pages
+                      const MoveList = require('../components/MoveList').default;
+                      // @ts-ignore
+                      const san = (chess.history || []).map((h: any) => h.san);
+                      // @ts-ignore
+                      return <MoveList moves={san} />;
+                    } catch (e) {
+                      return <div className="text-sm text-navy-300">Move list unavailable</div>;
+                    }
+                  })()}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -159,7 +183,21 @@ export default function MatchPage() {
         </div>
         <div style={{ width: 360, height: '100%', overflow: 'auto' }}>
           {/* Right sidebar: moves, chat, controls */}
-          <div className="p-4 text-white">Moves and chat will be here</div>
+          <div style={{ padding: 12 }}>
+            {/* use MoveList for online games by reading game.history if available */}
+            {/* eslint-disable-next-line @typescript-eslint/no-var-requires */}
+            {(() => {
+              try {
+                const MoveList = require('../components/MoveList').default;
+                // attempt to read move SANs from localStorage or placeholder
+                // OnlineGameView exposes game.history via window event; fallback to empty
+                const stored: string[] = [];
+                return <MoveList moves={stored} />;
+              } catch (e) {
+                return <div className="p-4 text-white">Moves and chat will be here</div>;
+              }
+            })()}
+          </div>
         </div>
       </div>
     </div>

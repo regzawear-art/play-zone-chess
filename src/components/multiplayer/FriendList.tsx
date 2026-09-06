@@ -20,7 +20,16 @@ export default function FriendList({ compact }: { compact?: boolean } = {}) {
               <div className="text-xs text-navy-300">{f.status}</div>
             </div>
             <div>
-              <button onClick={async () => { try { await navigator.clipboard.writeText(f.friend_id); /* eslint-disable-next-line no-console */ console.log('copied friend id'); } catch (e) { /* eslint-disable-next-line no-console */ console.warn('copy failed', e); } }} className="text-xs text-navy-200 hover:text-white">Copy ID</button>
+              <button onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(f.friend_id);
+                  window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Friend ID copied', type: 'success' } }));
+                } catch (e) {
+                  // eslint-disable-next-line no-console
+                  console.warn('copy failed', e);
+                  window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Copy failed', type: 'error' } }));
+                }
+              }} className="text-xs text-navy-200 hover:text-white">Copy ID</button>
             </div>
           </div>
         ))}

@@ -149,11 +149,13 @@ export function TopHeader({ active, onNavigate, user, onLogin, onLogout, onWalle
                             await navigator.clipboard?.writeText(user?.id || '');
                             setCopyMsg('Copied');
                             setTimeout(() => setCopyMsg(null), 2000);
+                            window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Your ID copied to clipboard', type: 'success' } }));
                           } catch (e) {
                             // eslint-disable-next-line no-console
                             console.warn('copy failed', e);
                             setCopyMsg('Failed');
                             setTimeout(() => setCopyMsg(null), 2000);
+                            window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Copy failed', type: 'error' } }));
                           }
                         }} className="text-sm text-navy-200 hover:text-white">{copyMsg ?? 'Copy my ID'}</button>
                       </div>
