@@ -49,7 +49,7 @@ export default function InvitesInbox({ onClose }: { onClose?: () => void }) {
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-bold text-white">Invites</h3>
         <div>
-          <button onClick={() => setVisible(false)} className="text-xs text-navy-300 hover:text-white">X</button>
+          <button onClick={() => { setVisible(false); if (onClose) onClose(); }} className="text-xs text-navy-300 hover:text-white">X</button>
         </div>
       </div>
       <div className="flex flex-col gap-2">

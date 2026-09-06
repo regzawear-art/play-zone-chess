@@ -2,11 +2,11 @@ import React from 'react';
 import useFriends from '../../hooks/useFriends';
 import { UserPlus } from 'lucide-react';
 
-export default function FriendList() {
+export default function FriendList({ compact }: { compact?: boolean } = {}) {
   const { friends } = useFriends();
 
   return (
-    <div className="rounded-xl border border-white/8 bg-navy-750 p-3">
+    <div className={`rounded-xl border border-white/8 bg-navy-750 ${compact ? 'p-2' : 'p-3'}`}>
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-bold text-white">Friends</h3>
         <button className="text-navy-300 hover:text-white"><UserPlus size={14} /></button>

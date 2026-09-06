@@ -53,6 +53,32 @@ export async function pushMove(gameId: string, move: any) {
   return data;
 }
 
+export async function createOnlineGame(options: { timeControl?: string | null } = {}) {
+  const u = await supabase.auth.getUser();
+  const uid = u.data?.user?.id; if (!uid) throw new Error('not authenticated');
+  const payload: any = {};
+  if (options.timeControl) payload.time_control = options.timeControl;
+  const { data: game, error } = await supabase.from('games').insert({ white_id: uid, black_id: null, fen: 'startpos', moves: [], payload }).select().single();
+  if (error) throw error;
+  return game;
+}
+
+export async function joinOnlineGame(gameId: string) {
+  const u = await supabase.auth.getUser();
+  const uid = u.data?.user?.id; if (!uid) throw new Error('not authenticated');
+  // fetch game
+  const { data: game } = await supabase.from('games').select('*').eq('id', gameId).single();
+  if (!game) throw new Error('game not found');
+  // if black slot empty and uid is not white, join as black
+  if ((!game.black_id || game.black_id === null) && game.white_id !== uid) {
+    const { data: updated, error } = await supabase.from('games').update({ black_id: uid }).eq('id', gameId).select().single();
+    if (error) throw error;
+    return updated;
+  }
+  return game;
+}
+
 export default {
   listFriends, sendInvite, acceptInvite, subscribeToInvites, subscribeToGame, pushMove,
+  createOnlineGame, joinOnlineGame,
 };

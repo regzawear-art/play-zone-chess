@@ -160,10 +160,10 @@ export function TopHeader({ active, onNavigate, user, onLogin, onLogout, onWalle
                     </div>
                     <div className="flex gap-3">
                       <div className="w-1/2">
-                        <div className="max-h-72 overflow-auto"><FriendList /></div>
+                        <div className="max-h-72 overflow-auto"><FriendList compact /></div>
                       </div>
                       <div className="w-1/2">
-                        <div className="max-h-72 overflow-auto">{activeTab === 'invites' ? <InvitesInbox /> : <div className="text-sm text-navy-300 p-2">Select Invites to view incoming invites.</div>}</div>
+                        <div className="max-h-72 overflow-auto">{activeTab === 'invites' ? <InvitesInbox onClose={() => setFriendsOpen(false)} /> : <div className="text-sm text-navy-300 p-2">Select Invites to view incoming invites.</div>}</div>
                       </div>
                     </div>
                   </div>

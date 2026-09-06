@@ -132,22 +132,31 @@ export function Hero({ onPlay, onLeaderboard, onAuth, onOnline, onRooms, onAI }:
                   <div className="mt-7 flex flex-wrap items-center gap-3">
                     {s.cta.map((c) => {
                       const Icon = c.icon;
+                      // Open match in a new window when user clicks Play/Online/Create Room
+                      const openMatch = (action: string) => {
+                        if (action === 'online' || action === 'play') {
+                          // open a minimal match window that will show a lobby/launcher
+                          const w = window.open('/match?mode=online', '_blank', 'noopener,noreferrer');
+                          if (w) w.focus();
+                        } else if (action === 'rooms') {
+                          const w = window.open('/match?mode=room', '_blank', 'noopener,noreferrer');
+                          if (w) w.focus();
+                        } else if (action === 'ai') {
+                          const w = window.open('/match?mode=ai', '_blank', 'noopener,noreferrer');
+                          if (w) w.focus();
+                        } else {
+                          handleCta(action);
+                        }
+                      };
+
                       return c.primary ? (
-                        <button
-                          key={c.label}
-                          onClick={() => handleCta(c.action)}
-                          className="btn-primary group"
-                        >
+                        <button key={c.label} onClick={() => openMatch(c.action)} className="btn-primary group">
                           <Icon size={18} className="transition-transform group-hover:scale-110" />
                           {c.label}
                           <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
                         </button>
                       ) : (
-                        <button
-                          key={c.label}
-                          onClick={() => handleCta(c.action)}
-                          className="btn-ghost group"
-                        >
+                        <button key={c.label} onClick={() => openMatch(c.action)} className="btn-ghost group">
                           <Icon size={18} className="text-royal-400" />
                           {c.label}
                         </button>
