@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { OnlineGameView } from '../components/OnlineGameView';
 import { useProfile } from '../hooks/useProfile';
@@ -110,7 +110,12 @@ export default function MatchPage() {
   if (config.type === 'ai') {
     // AI match: use useChess hook to run a local game and render board + moves
     const aiOpts = { playerColor: config.playerColor as Color, opponentColor: config.playerColor === 'w' ? 'b' : 'w', vsComputer: true, timeControl: config.timeControl || '3min', customMinutes: config.customMinutes || 5, opponentName: 'Computer', opponentAvatar: '', opponentFlag: '', aiDifficulty: config.difficulty || 'intermediate' };
-    const chess = useChess(aiOpts as any);
+      const chess = useChess(aiOpts as any);
+      useEffect(() => {
+          if (game.pendingResult) {
+              setShowGameOver(true);
+          }
+      }, [game.pendingResult]);
     return (
       <div style={pageStyle as any}>
         <div style={contentStyle as any}>

@@ -6,6 +6,7 @@ import { chooseMove, setAIDifficulty } from '../game/ai';
 import { sound } from '../game/sound';
 import { getOpeningName } from '../game/openings';
 
+
 export const TIME_CONTROLS: Record<TimeControl, { label: string; initialMs: number; incrementMs: number }> = {
   '1min': { label: '1 Minute', initialMs: 60_000, incrementMs: 0 },
   '3min': { label: '3 Minute', initialMs: 180_000, incrementMs: 2_000 },
@@ -31,7 +32,7 @@ export interface UseChessOptions {
 let matchIdCounter = Date.now();
 
 export function useChess(opts: UseChessOptions) {
-  const { playerColor, vsComputer, timeControl, customMinutes, opponentName, opponentAvatar, opponentFlag, aiDifficulty } = opts;
+    const { playerColor, vsComputer, timeControl, customMinutes, opponentName, opponentAvatar, opponentFlag, aiDifficulty } = opts;
 
   // Set AI difficulty when it changes
   useEffect(() => {
