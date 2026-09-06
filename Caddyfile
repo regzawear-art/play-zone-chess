@@ -9,13 +9,13 @@
 
     encode gzip
 
-    @index {
-        path / /index.html
+    @no_cache {
+        path / /index.html /stockfish/stockfish.wasm
     }
 
-    header @index Cache-Control "no-cache, no-store, must-revalidate"
-    header @index Pragma "no-cache"
-    header @index Expires "0"
+    header @no_cache Cache-Control "no-cache, no-store, must-revalidate"
+    header @no_cache Pragma "no-cache"
+    header @no_cache Expires "0"
 
     try_files {path} /index.html
     file_server
