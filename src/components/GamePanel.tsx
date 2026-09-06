@@ -3,6 +3,8 @@ import type { Color, GameStatus, GameStage, TimeControl } from '../game/types';
 import { formatStage } from '../lib/format';
 import { sound } from '../game/sound';
 import { Play, RotateCcw, Flag, ChevronDown, Zap, Clock, Timer, Sliders, Layers, FlipHorizontal } from 'lucide-react';
+import FriendList from './multiplayer/FriendList';
+import InviteModal from './multiplayer/InviteModal';
 
 const TC_META: Record<TimeControl, { label: string; sub: string; icon: typeof Zap }> = {
   '1min': { label: '1 Min', sub: '1 + 0', icon: Zap },
@@ -48,6 +50,7 @@ export function GamePanel(props: Props) {
   } = props;
 
   const [tcOpen, setTcOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const statusText = () => {
     if (status.phase === 'checkmate') {

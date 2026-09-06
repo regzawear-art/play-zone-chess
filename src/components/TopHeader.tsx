@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Crown, Home, Gamepad2, Trophy, Users, User, LogOut, Menu, X, Wallet, Settings as SettingsIcon, CreditCard, Gift } from 'lucide-react';
+import FriendList from './multiplayer/FriendList';
+import InviteModal from './multiplayer/InviteModal';
+import InvitesInbox from './multiplayer/InvitesInbox';
 import { SoundControls } from './SoundControls';
 import { formatCurrency, getStoredCurrency } from '@/data/countries';
 import type { AppUser } from '@/lib/supabase';
@@ -33,6 +36,11 @@ export function TopHeader({ active, onNavigate, user, onLogin, onLogout, onWalle
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const [friendsOpen, setFriendsOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'friends' | 'invites'>('friends');
+  const [copyMsg, setCopyMsg] = useState<string | null>(null);
+  const [unreadInvites, setUnreadInvites] = useState<number>(0);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -112,6 +120,58 @@ export function TopHeader({ active, onNavigate, user, onLogin, onLogout, onWalle
             </button>
           )}
 
+          {/* Friends topbar button */}
+          {user && (
+            <div className="relative block">
+              <button
+                onClick={() => setFriendsOpen((v) => !v)}
+                className="ml-2 relative flex items-center gap-1.5 rounded-lg border border-white/8 bg-navy-700/80 py-1 pl-2 pr-2.5 transition-all hover:border-white/15"
+                title="Friends"
+              >
+                <Users size={16} className="text-navy-100" />
+                {unreadInvites > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">{unreadInvites}</span>
+                )}
+              </button>
+              {friendsOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setFriendsOpen(false)} />
+                  <div className="absolute right-0 top-12 z-20 w-96 overflow-hidden rounded-xl border border-white/10 bg-navy-700 p-3 shadow-card-lg backdrop-blur-xl animate-pop-in">
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setActiveTab('friends')} className={`px-3 py-1 rounded-md text-sm ${activeTab === 'friends' ? 'bg-navy-600 text-white' : 'text-navy-300 hover:bg-white/3'}`}>Friends</button>
+                        <button onClick={() => setActiveTab('invites')} className={`px-3 py-1 rounded-md text-sm ${activeTab === 'invites' ? 'bg-navy-600 text-white' : 'text-navy-300 hover:bg-white/3'}`}>Invites</button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setInviteOpen(true)} className="text-sm text-navy-200 hover:text-white">New Invite</button>
+                        <button onClick={async () => {
+                          try {
+                            await navigator.clipboard?.writeText(user?.id || '');
+                            setCopyMsg('Copied');
+                            setTimeout(() => setCopyMsg(null), 2000);
+                          } catch (e) {
+                            // eslint-disable-next-line no-console
+                            console.warn('copy failed', e);
+                            setCopyMsg('Failed');
+                            setTimeout(() => setCopyMsg(null), 2000);
+                          }
+                        }} className="text-sm text-navy-200 hover:text-white">{copyMsg ?? 'Copy my ID'}</button>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="w-1/2">
+                        <div className="max-h-72 overflow-auto"><FriendList /></div>
+                      </div>
+                      <div className="w-1/2">
+                        <div className="max-h-72 overflow-auto">{activeTab === 'invites' ? <InvitesInbox /> : <div className="text-sm text-navy-300 p-2">Select Invites to view incoming invites.</div>}</div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Auth */}
           {user ? (
             <div className="relative hidden sm:block">
@@ -162,6 +222,7 @@ export function TopHeader({ active, onNavigate, user, onLogin, onLogout, onWalle
               Log In
             </button>
           )}
+          {inviteOpen && <InviteModal onClose={() => setInviteOpen(false)} />}
 
           {/* Mobile hamburger */}
           <button

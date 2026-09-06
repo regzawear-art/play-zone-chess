@@ -34,6 +34,7 @@ import { CreditCard, Gift } from 'lucide-react';
 import { sound } from './game/sound';
 import { legalMoves } from './game/engine';
 import { supabase, type AppUser } from './lib/supabase';
+import useInvites from './hooks/useInvites';
 import { useProfile } from './hooks/useProfile';
 import { BoardThemeSwitcher } from './components/BoardThemeSwitcher';
 import { OnlineGameView } from './components/OnlineGameView';
@@ -141,6 +142,9 @@ export default function App() {
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  // mount invites subscription so authenticated clients receive realtime invite events
+  useInvites();
 
   // Auto-open RoomPanel when arriving via ?room=CODE shared link
   useEffect(() => {
@@ -271,6 +275,58 @@ export default function App() {
     }
     navigate('play');
   }, [autoFlip, authUser, timeControl, customMinutes, navigate]);
+
+  // Listen for invites accepted -> open online game
+  useEffect(() => {
+    const onCreated = (e: any) => {
+      const game = e.detail;
+      if (!game || !authUser) return;
+      setOnlineGameId(game.id);
+      setOnlineIsHost(game.white_id === authUser.id);
+      setGameMode('online');
+      setPlayerColor(game.white_id === authUser.id ? 'w' : 'b');
+      if (autoFlip) setOrientation(game.white_id === authUser.id ? 'w' : 'b');
+      setOnlineGameConfig({
+        gameId: game.id,
+        roomId: game.id,
+        isHost: game.white_id === authUser.id,
+        userId: authUser.id,
+        playerColor: game.white_id === authUser.id ? 'w' : 'b',
+        timeControl,
+        customMinutes,
+      });
+      navigate('play');
+    };
+    window.addEventListener('online-game-created', onCreated as EventListener);
+    const onInviteAccepted = (ev: any) => {
+      const invite = ev.detail?.invite;
+      if (!invite) return;
+      // if this client is the sender and the invite contains game_id, open the game
+      (async () => {
+        try {
+          const u = await supabase.auth.getUser();
+          const uid = u.data?.user?.id;
+          if (!uid) return;
+          if (invite.from_user === uid && invite.game_id) {
+            // fetch created game
+            const { data: game } = await supabase.from('games').select('*').eq('id', invite.game_id).single();
+            if (game) {
+              const evt = new CustomEvent('online-game-created', { detail: game });
+              window.dispatchEvent(evt);
+            }
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('invite-accepted handler failed', err);
+        }
+      })();
+    };
+    window.addEventListener('invite-accepted', onInviteAccepted as EventListener);
+    return () => {
+      window.removeEventListener('online-game-created', onCreated as EventListener);
+      window.removeEventListener('invite-accepted', onInviteAccepted as EventListener);
+    };
+  }, [authUser, autoFlip, timeControl, customMinutes, navigate]);
 
   // Broadcast local moves to the online game table
   useEffect(() => {

@@ -1,9 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = import.meta.env.VITE_SUPABASE_URL || 'https://mdcgdjurerwzbdshtirc.supabase.co';
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kY2dkanVyZXJ3emJkc2h0aXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDA3MTksImV4cCI6MjEwMTM3NjcxOX0.z6Xr2POz-ec34wCUPQmwPM78QfQlI1Jd9OGFHuDNeWg';
+const url = import.meta.env.VITE_SUPABASE_URL;
+const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(url, anonKey, {
+if (!url || !anonKey) {
+  // eslint-disable-next-line no-console
+  console.error('[supabase] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is not set. Please add them to your .env and restart the dev server.');
+}
+
+export const supabase = createClient(url || '', anonKey || '', {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
