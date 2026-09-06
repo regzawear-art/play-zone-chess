@@ -48,7 +48,9 @@ let sfWorker: Worker | null = null;
 // If that fails, fall back to the bundled wrapper (stockfish.worker.ts)
 try {
   // This will load the prebuilt JS/WASM worker served from public/stockfish/
-  sfWorker = new Worker('/stockfish/stockfish.js');
+    sfWorker = new Worker(
+        `/stockfish/stockfish.js#${encodeURIComponent('/stockfish/stockfish.wasm?v=2')}`
+    );
 } catch (e) {
   try {
     sfWorker = new Worker(new URL('./stockfish.worker.ts', import.meta.url), { type: 'module' });
