@@ -1,10 +1,22 @@
-:{$PORT} {
-    root * /app/dist
+{
+    admin off
+    persist_config off
+    auto_https off
+}
 
-    @index path /index.html
+:{$PORT:3000} {
+    root * dist
+
+    encode gzip
+
+    @index {
+        path / /index.html
+    }
+
     header @index Cache-Control "no-cache, no-store, must-revalidate"
     header @index Pragma "no-cache"
     header @index Expires "0"
 
+    try_files {path} /index.html
     file_server
 }
