@@ -1,0 +1,10 @@
+:{$PORT} {
+    root * /app/dist
+
+    @index path /index.html
+    header @index Cache-Control "no-cache, no-store, must-revalidate"
+    header @index Pragma "no-cache"
+    header @index Expires "0"
+
+    file_server
+}
