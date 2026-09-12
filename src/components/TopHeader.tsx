@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Crown, Home, Gamepad2, Trophy, Users, User, LogOut, Menu, X, Wallet, Settings as SettingsIcon, CreditCard, Gift } from 'lucide-react';
 import FriendList from './multiplayer/FriendList';
+import FriendRequestsPanel from './multiplayer/FriendRequestsPanel';
 import InviteModal from './multiplayer/InviteModal';
 import InvitesInbox from './multiplayer/InvitesInbox';
 import { SoundControls } from './SoundControls';
@@ -165,7 +166,16 @@ export function TopHeader({ active, onNavigate, user, onLogin, onLogout, onWalle
                         <div className="max-h-72 overflow-auto"><FriendList compact /></div>
                       </div>
                       <div className="w-1/2">
-                        <div className="max-h-72 overflow-auto">{activeTab === 'invites' ? <InvitesInbox onClose={() => setFriendsOpen(false)} /> : <div className="text-sm text-navy-300 p-2">Select Invites to view incoming invites.</div>}</div>
+                        <div className="max-h-72 overflow-auto">
+                          {activeTab === 'invites' ? <InvitesInbox onClose={() => setFriendsOpen(false)} /> : <div className="text-sm text-navy-300 p-2">Select Invites to view incoming invites.</div>}
+                          <div className="mt-2">
+                            <div className="text-xs text-navy-400 mb-1">Friend requests</div>
+                            <div className="rounded-lg border border-white/5 bg-navy-700/60 p-1">
+                              {/* Friend requests panel */}
+                              <FriendRequestsPanel />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

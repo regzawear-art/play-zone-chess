@@ -37,6 +37,22 @@ export function Clubs({ userId, onLogin }: Props) {
     setLoading(false);
   }, []);
 
+  // resilient load: if clubs table missing, create a minimal schema for local testing
+  useEffect(() => {
+    (async () => {
+      try {
+        await supabase.from('clubs').select('id').limit(1);
+      } catch (e) {
+        // create minimal clubs table for local/dev if supabase project allows
+        try {
+          await supabase.rpc('create_clubs_table_if_missing');
+        } catch (e2) {
+          // ignore: creating tables may be disallowed in hosted project
+        }
+      }
+    })();
+  }, []);
+
   const loadJoined = useCallback(async () => {
     if (!userId) return;
     const { data } = await supabase

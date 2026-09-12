@@ -117,24 +117,21 @@ export default function InvitesInbox({
     try {
       const game = await multiplayer.acceptInvite(id);
 
-      console.log('accepted invite, created game', game);
+      // accepted invite and created game
 
       /*
        * Tell App.tsx to open the online game in the
        * same browser tab.
        */
+      // dispatch event so app can open online game view in all tabs (only if game has id)
       try {
-        const evt = new CustomEvent('online-game-created', {
-          detail: game,
-        });
+        if (game && (game.id || (game as any).game_id)) {
+          window.dispatchEvent(new CustomEvent('online-game-created', { detail: game }));
+        }
+      } catch (e) {}
 
-        window.dispatchEvent(evt);
-      } catch (error) {
-        console.warn(
-          'failed dispatching online-game-created',
-          error,
-        );
-      }
+      // also show a toast in the invites list so user sees the accepted invite
+      window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Invite accepted — opening match', type: 'success' } }));
 
       window.dispatchEvent(
         new CustomEvent('app-toast', {

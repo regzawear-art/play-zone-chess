@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { Color } from '../game/types';
 import { ChessBoard } from './ChessBoard';
 import { PlayerHUD } from './PlayerHUD';
@@ -32,6 +32,25 @@ export function OnlineGameView({ config, themeId, onThemeChange, onExit, onRemat
 
   const captured = useMemo(() => computeCaptured(game.board), [game.board]);
 
+  // Compute responsive board size to match MatchPage layout (sidebar 360px)
+  function computeBoardSize(): number {
+    const vh = window.innerHeight;
+    const vw = window.innerWidth;
+    const sidebar = 360 + 40; // sidebar + gaps
+    const size = Math.min(vh - 40, vw - sidebar);
+    return Math.max(320, Math.floor(size));
+  }
+
+  const [boardSize, setBoardSize] = useState<number>(() => {
+    try { return computeBoardSize(); } catch (e) { return 520; }
+  });
+
+  useEffect(() => {
+    const onResize = () => setBoardSize(computeBoardSize());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const topPlayer = orientation === 'w'
     ? { name: playerColor === 'w' ? game.opponentName : 'You', avatar: playerColor === 'w' ? game.opponentAvatar : '', flag: '', rating: 0, online: game.opponentConnected, capturedPieces: playerColor === 'w' ? captured.black : captured.white, materialDiff: playerColor === 'w' ? captured.blackDiff : captured.whiteDiff }
     : { name: playerColor === 'b' ? game.opponentName : 'You', avatar: playerColor === 'b' ? game.opponentAvatar : '', flag: '', rating: 0, online: game.opponentConnected, capturedPieces: playerColor === 'b' ? captured.black : captured.white, materialDiff: playerColor === 'b' ? captured.blackDiff : captured.whiteDiff };
@@ -40,8 +59,8 @@ export function OnlineGameView({ config, themeId, onThemeChange, onExit, onRemat
     ? { name: playerColor === 'w' ? 'You' : game.opponentName, avatar: '', flag: '', rating: 0, online: true, capturedPieces: playerColor === 'w' ? captured.white : captured.black, materialDiff: playerColor === 'w' ? captured.whiteDiff : captured.blackDiff }
     : { name: playerColor === 'b' ? 'You' : game.opponentName, avatar: '', flag: '', rating: 0, online: true, capturedPieces: playerColor === 'b' ? captured.white : captured.black, materialDiff: playerColor === 'b' ? captured.whiteDiff : captured.blackDiff };
 
-  const topMs = orientation === 'w' ? game.blackMs : game.whiteMs;
-  const bottomMs = orientation === 'w' ? game.whiteMs : game.blackMs;
+  const topMs = (orientation === 'w' ? game.blackMs : game.whiteMs) ?? 0;
+  const bottomMs = (orientation === 'w' ? game.whiteMs : game.blackMs) ?? 0;
   const topActive = game.running && game.state.turn !== orientation;
   const bottomActive = game.running && game.state.turn === orientation;
 
@@ -88,7 +107,7 @@ export function OnlineGameView({ config, themeId, onThemeChange, onExit, onRemat
 
             {/* Room code */}
             <div className="hidden rounded-full bg-navy-700 px-3 py-1.5 text-xs font-bold text-white sm:block">
-              Room: {config.roomId.slice(0, 6).toUpperCase()}
+              Room: {(config.roomId || '').slice(0, 6).toUpperCase()}
             </div>
 
             <BoardThemeSwitcher currentThemeId={themeId} onThemeChange={onThemeChange} />
@@ -102,7 +121,7 @@ export function OnlineGameView({ config, themeId, onThemeChange, onExit, onRemat
           </p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.7fr] lg:gap-8">
+        <div className="grid gap-4 lg:gap-8" style={{ gridTemplateColumns: '1fr auto' }}>
           {/* Board column */}
           <div className="flex flex-col gap-2.5 sm:gap-3">
             <PlayerHUD
@@ -113,21 +132,23 @@ export function OnlineGameView({ config, themeId, onThemeChange, onExit, onRemat
               align="top"
             />
 
-            <ChessBoard
-              board={game.board}
-              selected={game.selected}
-              legal={game.legal}
-              lastMove={game.lastMove}
-              status={game.status}
-              orientation={orientation}
-              turn={game.state.turn}
-              onSquareClick={game.selectSquare}
-              onDrop={game.dropPiece}
-              promotion={game.promotion}
-              onChoosePromotion={game.choosePromotion}
-              onCancelPromotion={game.cancelPromotion}
-              showCoords
-            />
+            <div style={{ width: boardSize, height: boardSize, margin: '0 auto' }}>
+              <ChessBoard
+                board={game.board}
+                selected={game.selected}
+                legal={game.legal}
+                lastMove={game.lastMove}
+                status={game.status}
+                orientation={orientation}
+                turn={game.state.turn}
+                onSquareClick={game.selectSquare}
+                onDrop={game.dropPiece}
+                promotion={game.promotion}
+                onChoosePromotion={game.choosePromotion}
+                onCancelPromotion={game.cancelPromotion}
+                showCoords
+              />
+            </div>
 
             <PlayerHUD
               player={bottomPlayer}

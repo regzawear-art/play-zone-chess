@@ -67,6 +67,13 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
     setError(null);
     setSearching(true);
     setMatched(false);
+    // Give up after 30s if no match
+    const giveUpTimer = window.setTimeout(() => {
+      if (searching) {
+        setError('No players found. Try again later.');
+        cancelSearch();
+      }
+    }, 30000);
 
     // First, try to find an existing searching opponent
     const { data: existing } = await supabase
@@ -80,37 +87,36 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
       .maybeSingle();
 
     if (existing) {
-      // Match found — create the game as the guest (joining player)
-      const { data: game, error: gameErr } = await supabase
-        .from('online_games')
-        .insert({
-          host_id: existing.user_id,
-          guest_id: userId,
-          time_control: timeControl,
-          status: 'active',
-        })
-        .select()
-        .maybeSingle();
+      // Match found — create the online game via multiplayer helper (uses RPC when available)
+      try {
+        const game = await import('../lib/multiplayer/supabase-multiplayer').then(m => m.createOnlineGame({ timeControl }));
+        if (!game || !game.id) {
+          setError('Failed to create game. Please try again.');
+          setSearching(false);
+          return;
+        }
 
-      if (gameErr || !game) {
+        // Mark the opponent's queue entry as matched (they are subscribed to this row)
+        await supabase
+          .from('matchmaking_queue')
+          .update({ status: 'matched', game_id: game.id, opponent_id: userId, host_id: userId, matched_at: new Date().toISOString() })
+          .eq('id', existing.id);
+
+        setMatched(true);
+        setSearching(false);
+        setTimeout(() => {
+          // we created the game as host
+          onMatched(game.id, true, existing.user_id);
+          // dispatch local event; helper also dispatches when creating
+          try { if (game && game.id) window.dispatchEvent(new CustomEvent('online-game-created', { detail: game })); } catch (e) {}
+          onClose();
+        }, 1200);
+        return;
+      } catch (err) {
         setError('Failed to create game. Please try again.');
         setSearching(false);
         return;
       }
-
-      // Mark the opponent's queue entry as matched
-      await supabase
-        .from('matchmaking_queue')
-        .update({ status: 'matched', game_id: game.id, opponent_id: userId, matched_at: new Date().toISOString() })
-        .eq('id', existing.id);
-
-      setMatched(true);
-      setSearching(false);
-      setTimeout(() => {
-        onMatched(game.id, false, existing.user_id);
-        onClose();
-      }, 1200);
-      return;
     }
 
     // No existing opponent — insert ourselves into the queue
@@ -166,8 +172,13 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
           onMatched(check.game_id, true, check.opponent_id!);
           onClose();
         }, 1200);
+        if (giveUpTimer) window.clearTimeout(giveUpTimer);
       }
     }, 2000);
+    // clear giveUpTimer when leaving
+    const clearTimer = () => { if (giveUpTimer) window.clearTimeout(giveUpTimer); };
+    // ensure we clear timer when search stops
+    const observer = setInterval(() => { if (!searching) { clearTimer(); clearInterval(observer); } }, 500);
   };
 
   if (!open) return null;

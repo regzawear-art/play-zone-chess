@@ -77,7 +77,7 @@ export function useOnlineGame(config: OnlineGameConfig | null) {
 
   // Fetch opponent profile
   useEffect(() => {
-    if (!config) return;
+    if (!config || !config.gameId) return;
     const myId = config.userId;
     supabase
       .from('online_games')
@@ -100,11 +100,11 @@ export function useOnlineGame(config: OnlineGameConfig | null) {
             }
           });
       });
-  }, config ? [config.gameId, config.userId, config.isHost] : []);
+  }, config && config.gameId ? [config.gameId, config.userId, config.isHost] : []);
 
   // Initialize game when config arrives
   useEffect(() => {
-    if (!config) return;
+    if (!config || !config.gameId) return;
     setBoard(initialBoard());
     setState(initialState());
     setStatus({ phase: 'playing', winner: null, stage: 'opening' });
@@ -124,6 +124,7 @@ export function useOnlineGame(config: OnlineGameConfig | null) {
   // Clock ticking
   useEffect(() => {
     if (!running || statusRef.current.phase === 'checkmate' || statusRef.current.phase === 'stalemate') return;
+    // no-op reapply: preserve existing clock behavior
     const interval = setInterval(() => {
       const s = stateRef.current;
       if (s.turn === 'w') setWhiteMs((ms) => Math.max(0, ms - 100));

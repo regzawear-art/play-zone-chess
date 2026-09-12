@@ -13,7 +13,7 @@ export function useInvites() {
         const u = await sup.supabase.auth.getUser();
         const uid = u.data?.user?.id;
         if (uid) {
-          const { data } = await sup.supabase.from('invites').select('*').eq('to_user', uid).order('created_at', { ascending: false });
+          const { data } = await sup.supabase.from('invites').select('*').eq('to_user', uid).eq('status', 'pending').order('created_at', { ascending: false });
           if (data) setInvites(data as any[]);
         }
       } catch (e) {
@@ -26,11 +26,11 @@ export function useInvites() {
         // simple refresh strategy: reload latest invites for current user
         // eslint-disable-next-line no-console
         console.log('[invites] event', msg);
-        try {
-          const u = await (await import('../lib/supabase')).supabase.auth.getUser();
-          const uid = u.data?.user?.id;
-          if (!uid) return;
-          const { data, error } = await (await import('../lib/supabase')).supabase.from('invites').select('*').eq('to_user', uid).order('created_at', { ascending: false });
+          try {
+            const u = await (await import('../lib/supabase')).supabase.auth.getUser();
+            const uid = u.data?.user?.id;
+            if (!uid) return;
+            const { data, error } = await (await import('../lib/supabase')).supabase.from('invites').select('*').eq('to_user', uid).eq('status', 'pending').order('created_at', { ascending: false });
           if (error) {
             // eslint-disable-next-line no-console
             console.warn('failed to refresh invites', error);

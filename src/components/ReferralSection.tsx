@@ -18,6 +18,7 @@ export function ReferralSection({ userId, onLogin, onReferralComplete }: Props) 
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [suggestions, setSuggestions] = useState<{ id: string; username?: string; email?: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -59,6 +60,25 @@ export function ReferralSection({ userId, onLogin, onReferralComplete }: Props) 
     });
   };
 
+  // Autocomplete suggestions while typing
+  useEffect(() => {
+    let mounted = true;
+    const fetch = async () => {
+      // show suggestions starting from 1 character to be more responsive
+      if (!inviteEmail || inviteEmail.trim().length < 1) { setSuggestions([]); return; }
+      try {
+        const res = await import('@/lib/multiplayer/supabase-multiplayer').then(m => m.searchPlayers(inviteEmail.trim(), 6));
+        if (!mounted) return;
+        setSuggestions((res || []).map(s => ({ id: s.id, username: s.username, email: s.email })));
+      } catch (e) {
+        // ignore
+        setSuggestions([]);
+      }
+    };
+    const t = window.setTimeout(fetch, 150);
+    return () => { mounted = false; window.clearTimeout(t); };
+  }, [inviteEmail]);
+
   const shareLink = `https://${window.location.host}?ref=${referralCode}`;
 
   const copyShareLink = () => {
@@ -76,14 +96,41 @@ export function ReferralSection({ userId, onLogin, onReferralComplete }: Props) 
     if (!inviteEmail.trim()) { setError('Please enter an email address.'); return; }
     setSubmitting(true);
     try {
-      const { data: referredUser } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', inviteEmail.trim().split('@')[0])
-        .maybeSingle();
+      const input = inviteEmail.trim();
+      // Try username match first, then fallback to email match.
+      // Some deployments may not have an 'email' column on profiles; guard against that.
+      let referredUser: any = null;
+      const username = input.includes('@') ? input.split('@')[0] : input;
+      try {
+        const byUsername = await supabase.from('profiles').select('id,username,email').eq('username', username).maybeSingle();
+        if (byUsername.data) referredUser = byUsername.data;
+      } catch (err) {
+        // ignore and continue to email fallback
+        // eslint-disable-next-line no-console
+        console.warn('[referral] username lookup failed', err);
+      }
+      if (!referredUser) {
+        try {
+          const byEmail = await supabase.from('profiles').select('id,username,email').eq('email', input).maybeSingle();
+          if (byEmail.data) referredUser = byEmail.data;
+        } catch (err) {
+          // email column may not exist; fall back to searching by username local-part
+          // eslint-disable-next-line no-console
+          console.warn('[referral] email lookup failed, falling back to username local-part', err);
+          const uname = input.split('@')[0];
+          if (uname) {
+            try {
+              const byU = await supabase.from('profiles').select('id,username').eq('username', uname).maybeSingle();
+              if (byU.data) referredUser = byU.data;
+            } catch (_) {
+              // ignore
+            }
+          }
+        }
+      }
 
       if (!referredUser) {
-        setError('User not found. They need to sign up first using your referral link.');
+        setError('User not found. Ask your friend to sign up first or share your referral link.');
         setSubmitting(false);
         return;
       }
@@ -179,7 +226,7 @@ export function ReferralSection({ userId, onLogin, onReferralComplete }: Props) 
           <div className="mt-3">
             <p className="mb-1.5 text-xs font-semibold text-navy-300">Share this link:</p>
             <div className="flex items-center gap-2 min-w-0">
-              <div className="flex-1 min-w-0 truncate rounded-xl bg-navy-600 px-3 py-2.5 text-sm text-navy-200">{shareLink}</div>
+              <div className="flex-1 min-w-0 break-all rounded-xl bg-navy-600 px-3 py-2.5 text-sm text-navy-200">{shareLink}</div>
               <button onClick={copyShareLink} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-navy-600 text-white transition-colors hover:bg-navy-500" title="Copy link">
                 {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
               </button>
@@ -187,19 +234,28 @@ export function ReferralSection({ userId, onLogin, onReferralComplete }: Props) 
           </div>
         </div>
 
-        {/* Invite by email */}
-        <div className="rounded-2xl border border-white/10 bg-navy-700/50 p-5">
+        {/* Invite by username or email */}
+        <div className="relative rounded-2xl border border-white/10 bg-navy-700/50 p-5">
           <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-white">
             <Users size={16} className="text-royal-400" /> Invite a Friend
           </h4>
           <form onSubmit={submitReferral} className="space-y-3">
             <input
-              type="email"
-              placeholder="friend@example.com"
+              type="text"
+              placeholder="username, email or id"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-navy-600 px-4 py-3 text-sm font-medium text-white outline-none transition-all placeholder:text-navy-400 focus:border-royal-400 focus:ring-2 focus:ring-royal-400/20"
+              className="w-full rounded-xl border border-white/10 bg-navy-600 px-4 py-3 text-sm font-medium text-white outline-none transition-all placeholder:text-navy-400 focus:border-royal-400 focus:ring-2 focus:ring-royal-400/20 pt-3"
             />
+            {suggestions.length > 0 && (
+              <div className="absolute left-5 right-5 top-[calc(100%+0.75rem)] z-20 max-h-40 overflow-auto rounded-md border border-white/6 bg-navy-800 p-1">
+                {suggestions.map((s) => (
+                  <button key={s.id} type="button" onClick={() => { setInviteEmail(s.username || s.email || s.id); setSuggestions([]); }} className="w-full truncate rounded px-2 py-2 text-left text-sm text-navy-200 hover:bg-navy-700">
+                    {s.username ?? s.email ?? s.id}
+                  </button>
+                ))}
+              </div>
+            )}
             {error && <p className="text-sm text-red-400">{error}</p>}
             {success && <p className="text-sm text-emerald-400">{success}</p>}
             <button type="submit" disabled={submitting} className="btn-primary w-full disabled:opacity-60">

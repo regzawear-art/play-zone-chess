@@ -39,6 +39,7 @@ import { ChessGamePage } from './components/ChessGamePage';
 import { OnlineGameView } from './components/OnlineGameView';
 
 import { CreditCard, Gift, LayoutGrid, Settings as SettingsIcon } from 'lucide-react';
+import AddFriendModal from './components/multiplayer/AddFriendModal';
 
 import { sound } from './game/sound';
 import { legalMoves } from './game/engine';
@@ -46,6 +47,7 @@ import { supabase, type AppUser } from './lib/supabase';
 
 import useInvites from './hooks/useInvites';
 import { useProfile } from './hooks/useProfile';
+import usePresenceHeartbeat from './hooks/usePresenceHeartbeat';
 
 import {
     getStoredTheme,
@@ -244,6 +246,8 @@ function HomePage() {
 
     const [walletOpen, setWalletOpen] =
         useState(false);
+    const [addFriendOpen, setAddFriendOpen] =
+        useState(false);
 
     const walletDB = useWalletDB(authUser);
 
@@ -260,6 +264,9 @@ function HomePage() {
             getThemeById(boardThemeId)
         );
     }, [boardThemeId]);
+
+    // presence heartbeat: update profiles.last_active while authenticated
+    usePresenceHeartbeat(authUser?.id ?? null);
 
     /* AUTH */
     useEffect(() => {
@@ -601,35 +608,50 @@ function HomePage() {
      */
     useEffect(() => {
         const onCreated = (e: any) => {
-            const createdGame = e.detail;
+            const raw = e?.detail;
+            if (!raw || !authUser) return;
 
-            if (!createdGame || !authUser) {
+            // Normalize different RPC/insert shapes: may be { data: {...} } or array or direct row
+            const createdGame = raw.data ?? (Array.isArray(raw) ? raw[0] : raw);
+            if (!createdGame || typeof createdGame !== 'object') return;
+
+            const id = createdGame.id ?? createdGame.game_id ?? null;
+            if (!id) {
+                // nothing we can do safely without an id
+                // eslint-disable-next-line no-console
+                console.warn('[App] online-game-created event missing id', createdGame);
                 return;
             }
 
-            const isHost =
-                createdGame.white_id ===
-                authUser.id;
+            // Defensive: some deployments return slightly different shapes.
+            const hostId = createdGame.host_id ?? createdGame.host ?? null;
+            const guestId = createdGame.guest_id ?? createdGame.guest ?? null;
 
-            const color: Color =
-                isHost ? 'w' : 'b';
+            // If the backend provided a 'white_id' or 'black_id' use them as hints
+            const whiteId = createdGame.white_id ?? createdGame.white ?? null;
 
-            setOnlineGameId(createdGame.id);
+            // Determine whether current user is host (or white) using available fields
+            const isHost = hostId === authUser.id || whiteId === authUser.id || (createdGame.host_id === authUser.id);
+
+            const color: Color = isHost ? 'w' : 'b';
+
+            // Safely derive time control from returned row or payload
+            const derivedTimeControl = createdGame.time_control ?? createdGame.payload?.time_control ?? timeControl ?? null;
+
+            setOnlineGameId(id);
             setOnlineIsHost(isHost);
             setGameMode('online');
             setPlayerColor(color);
 
-            if (autoFlip) {
-                setOrientation(color);
-            }
+            if (autoFlip) setOrientation(color);
 
             setOnlineGameConfig({
-                gameId: createdGame.id,
-                roomId: createdGame.id,
+                gameId: id,
+                roomId: id,
                 isHost,
                 userId: authUser.id,
                 playerColor: color,
-                timeControl,
+                timeControl: derivedTimeControl,
                 customMinutes,
             });
         };
@@ -660,7 +682,7 @@ function HomePage() {
                     ) {
                         const { data: createdGame } =
                             await supabase
-                                .from('games')
+                                .from('online_games')
                                 .select('*')
                                 .eq(
                                     'id',
@@ -837,6 +859,24 @@ function HomePage() {
         authUser,
         game,
     ]);
+
+    useEffect(() => {
+        // lightweight invite-accepted handler (no-op here — real handling exists in other effect)
+        const onInviteAcceptedGlobal = (_ev: any) => {
+            // Intentionally left blank to ensure listener can be cleaned up reliably.
+        };
+
+        // add friend modal handler
+        const openAdd = () => setAddFriendOpen(true);
+
+        window.addEventListener('invite-accepted', onInviteAcceptedGlobal as EventListener);
+        window.addEventListener('open-add-friend', openAdd as EventListener);
+
+        return () => {
+            window.removeEventListener('open-add-friend', openAdd as EventListener);
+            window.removeEventListener('invite-accepted', onInviteAcceptedGlobal as EventListener);
+        };
+    }, []);
 
     const whitePlayer =
         playerColor === 'w'
