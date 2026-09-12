@@ -68,12 +68,10 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
     setSearching(true);
     setMatched(false);
     // Give up after 30s if no match
-    const giveUpTimer = window.setTimeout(() => {
-      if (searching) {
-        setError('No players found. Try again later.');
-        cancelSearch();
-      }
-    }, 30000);
+      const giveUpTimer = window.setTimeout(() => {
+          setError('No players found. Try again later.');
+          cancelSearch();
+      }, 30000);
 
     // First, try to find an existing searching opponent
     const { data: existing } = await supabase
@@ -113,9 +111,16 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
         }, 1200);
         return;
       } catch (err) {
-        setError('Failed to create game. Please try again.');
-        setSearching(false);
-        return;
+          console.error('[Matchmaking] create game failed:', err);
+
+          setError(
+              err instanceof Error
+                  ? err.message
+                  : 'Failed to create game'
+          );
+
+          setSearching(false);
+          return;
       }
     }
 

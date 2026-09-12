@@ -141,7 +141,7 @@ export function GameSetup({
 
     return (
         <div className="mx-auto w-full max-w-7xl">
-            <div className="overflow-hidden rounded-3xl border border-white/10 bg-navy-900/90 shadow-card-lg">
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-navy-900/90 shadow-card-lg sm:rounded-3xl">
                 {/* Header */}
                 <div className="border-b border-white/10 bg-gradient-to-r from-royal-500/10 via-transparent to-transparent px-5 py-5 sm:px-7">
                     <div className="flex items-center gap-3">
@@ -161,7 +161,7 @@ export function GameSetup({
                     </div>
                 </div>
 
-                <div className="p-5 sm:p-7">
+                <div className="p-3 sm:p-7">
                     {/* Game mode */}
                     <div>
                         <div className="mb-3 flex items-center gap-2">
@@ -171,7 +171,7 @@ export function GameSetup({
                             </h3>
                         </div>
 
-                        <div className="grid gap-3 md:grid-cols-3">
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
                             {MODES.map((mode) => {
                                 const Icon = mode.icon;
                                 const active = gameMode === mode.key;
@@ -182,7 +182,7 @@ export function GameSetup({
                                         type="button"
                                         disabled={disabled}
                                         onClick={() => onChangeMode(mode.key)}
-                                        className={`group rounded-2xl border p-4 text-left transition-all ${active
+                                        className={`group min-w-0 rounded-xl border p-3 text-left transition-all sm:rounded-2xl sm:p-4 ${active
                                                 ? 'border-royal-400/50 bg-royal-500/15 shadow-glow-sm'
                                                 : 'border-white/8 bg-navy-800 hover:border-white/15 hover:bg-navy-750'
                                             } disabled:cursor-not-allowed disabled:opacity-50`}
@@ -204,11 +204,11 @@ export function GameSetup({
                                             )}
                                         </div>
 
-                                        <p className="mt-4 text-base font-bold text-white">
+                                        <p className="mt-3 text-sm font-bold text-white sm:mt-4 sm:text-base">
                                             {mode.label}
                                         </p>
 
-                                        <p className="mt-1 text-xs text-navy-400">
+                                        <p className="mt-1 line-clamp-2 text-[11px] text-navy-400 sm:text-xs">
                                             {mode.description}
                                         </p>
                                     </button>
@@ -218,7 +218,7 @@ export function GameSetup({
                     </div>
 
                     {/* Configuration */}
-                    <div className="mt-7 grid gap-6 lg:grid-cols-3">
+                    <div className="mt-5 grid gap-4 sm:mt-7 sm:gap-6 lg:grid-cols-3">
                         {/* Time */}
                         <div>
                             <div className="mb-3 flex items-center gap-2">
@@ -425,7 +425,7 @@ export function GameSetup({
                             type="button"
                             disabled={disabled}
                             onClick={onPlay}
-                            className="flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-blue-grad px-8 text-base font-extrabold text-white shadow-glow-sm transition-all hover:-translate-y-0.5 hover:shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-grad px-6 text-sm font-extrabold text-white shadow-glow-sm transition-all hover:-translate-y-0.5 hover:shadow-glow disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-14 sm:gap-3 sm:rounded-2xl sm:px-8 sm:text-base"
                         >
                             <Play size={20} fill="currentColor" />
                             PLAY

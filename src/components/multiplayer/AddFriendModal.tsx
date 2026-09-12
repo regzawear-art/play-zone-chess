@@ -12,12 +12,18 @@ export default function AddFriendModal({ onClose }: { onClose: () => void }) {
       window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Friend request sent', type: 'success' } }));
       onClose();
     } catch (e: any) {
-      const msg = String(e?.message || e);
-      if (msg.includes('self-invite')) {
-        window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: "You can't add yourself", type: 'info' } }));
-      } else {
-        window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Failed to send friend request', type: 'error' } }));
-      }
+        const msg = String(e?.message || e);
+
+        console.error('[AddFriend]', e);
+
+        window.dispatchEvent(
+            new CustomEvent('app-toast', {
+                detail: {
+                    message: msg,
+                    type: 'error',
+                },
+            })
+        );
     } finally { setSending(false); }
   };
 

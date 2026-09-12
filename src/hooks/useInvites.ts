@@ -2,71 +2,139 @@ import { useEffect, useState } from 'react';
 import multiplayer from '../lib/multiplayer/supabase-multiplayer';
 
 export function useInvites() {
-  const [invites, setInvites] = useState<any[]>([]);
+    const [invites, setInvites] = useState<any[]>([]);
 
-  useEffect(() => {
-    let unsub: (() => void) | null = null;
-    const init = async () => {
-      // load initial invites for current user
-      try {
-        const sup = await import('../lib/supabase');
-        const u = await sup.supabase.auth.getUser();
-        const uid = u.data?.user?.id;
-        if (uid) {
-          const { data } = await sup.supabase.from('invites').select('*').eq('to_user', uid).eq('status', 'pending').order('created_at', { ascending: false });
-          if (data) setInvites(data as any[]);
-        }
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.warn('failed to load initial invites', e);
-      }
+    useEffect(() => {
+        let unsub: (() => void) | null = null;
+        let mounted = true;
 
-      // subscribe to invite events
-      unsub = multiplayer.subscribeToInvites(async (msg) => {
-        // simple refresh strategy: reload latest invites for current user
-        // eslint-disable-next-line no-console
-        console.log('[invites] event', msg);
-          try {
-            const u = await (await import('../lib/supabase')).supabase.auth.getUser();
-            const uid = u.data?.user?.id;
-            if (!uid) return;
-            const { data, error } = await (await import('../lib/supabase')).supabase.from('invites').select('*').eq('to_user', uid).eq('status', 'pending').order('created_at', { ascending: false });
-          if (error) {
-            // eslint-disable-next-line no-console
-            console.warn('failed to refresh invites', error);
-            return;
-          }
-          setInvites(data || []);
-          // notify app about invite list updates (unread badge)
-          try {
-            const evt = new CustomEvent('invites-updated', { detail: { count: (data || []).length, invites: data || [] } });
-            window.dispatchEvent(evt);
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn('failed to dispatch invites-updated', e);
-          }
-          // if this notification represents an accepted invite, notify app so sender can open the game
-          try {
-            if (msg?.eventType === 'UPDATE' && msg.new && msg.new.status === 'accepted' && msg.new.game_id) {
-              const detail = { invite: msg.new };
-              const e = new CustomEvent('invite-accepted', { detail });
-              window.dispatchEvent(e);
+        const loadInvites = async () => {
+            try {
+                const { supabase } = await import('../lib/supabase');
+
+                const { data: userData } = await supabase.auth.getUser();
+                const uid = userData?.user?.id;
+
+                if (!uid) {
+                    if (mounted) setInvites([]);
+                    return;
+                }
+
+                const { data, error } = await supabase
+                    .from('invites')
+                    .select('*')
+                    .eq('to_user', uid)
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.warn('failed to load initial invites', error);
+                    return;
+                }
+
+                if (mounted) {
+                    setInvites(data || []);
+
+                    try {
+                        const evt = new CustomEvent('invites-updated', {
+                            detail: {
+                                count: (data || []).length,
+                                invites: data || [],
+                            },
+                        });
+
+                        window.dispatchEvent(evt);
+                    } catch (e) {
+                        console.warn('failed to dispatch invites-updated event', e);
+                    }
+                }
+            } catch (e) {
+                console.warn('failed to load initial invites', e);
             }
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn('failed to dispatch invite-accepted event', e);
-          }
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.warn('invite refresh error', e);
-        }
-      });
-    };
-    init();
-    return () => { if (unsub) unsub(); };
-  }, []);
+        };
 
-  return { invites };
+        const init = async () => {
+            await loadInvites();
+
+            unsub = multiplayer.subscribeToInvites(async (msg) => {
+                console.log('[invites] event', msg);
+
+                try {
+                    const { supabase } = await import('../lib/supabase');
+
+                    const { data: userData } = await supabase.auth.getUser();
+                    const uid = userData?.user?.id;
+
+                    if (!uid) return;
+
+                    const { data, error } = await supabase
+                        .from('invites')
+                        .select('*')
+                        .eq('to_user', uid)
+                        .eq('status', 'pending')
+                        .order('created_at', { ascending: false });
+
+                    if (error) {
+                        console.warn('failed to refresh invites', error);
+                        return;
+                    }
+
+                    if (mounted) {
+                        setInvites(data || []);
+
+                        try {
+                            const evt = new CustomEvent('invites-updated', {
+                                detail: {
+                                    count: (data || []).length,
+                                    invites: data || [],
+                                },
+                            });
+
+                            window.dispatchEvent(evt);
+                        } catch (e) {
+                            console.warn('failed to dispatch invites-updated event', e);
+                        }
+                    }
+
+                    // If this notification represents an accepted invite,
+                    // notify the app so the sender can open the game.
+                    try {
+                        if (
+                            msg?.eventType === 'UPDATE' &&
+                            msg.new &&
+                            msg.new.status === 'accepted' &&
+                            msg.new.game_id
+                        ) {
+                            const event = new CustomEvent('invite-accepted', {
+                                detail: {
+                                    invite: msg.new,
+                                },
+                            });
+
+                            window.dispatchEvent(event);
+                        }
+                    } catch (e) {
+                        console.warn('failed to dispatch invite-accepted event', e);
+                    }
+                } catch (e) {
+                    console.warn('invite refresh error', e);
+                }
+            });
+        };
+
+        init();
+
+        return () => {
+            mounted = false;
+
+            if (unsub) {
+                unsub();
+                unsub = null;
+            }
+        };
+    }, []);
+
+    return { invites };
 }
 
 export default useInvites;

@@ -174,15 +174,12 @@ export async function sendInvite(toUser: string, payload: Record<string, unknown
   }
 
   // prevent self-invite: quick check
-  try {
     const me = await supabase.auth.getUser();
     const myid = me.data?.user?.id;
+
     if (myid && myid === targetId) {
-      throw new Error('self-invite');
+        throw new Error('self-invite');
     }
-  } catch (e) {
-    // ignore
-  }
 
   const res = (await (supabase.from('invites').insert({ from_user: from, to_user: targetId, payload }).select().single() as unknown)) as { data?: Record<string, unknown> | null; error?: unknown };
   // @ts-ignore
@@ -275,53 +272,113 @@ export async function acceptInvite(inviteId: string) {
 }
 
 // Friend request helpers
-export async function sendFriendRequest(toUser: string) {
-  const u = (await supabase.auth.getUser() as any);
-  const from = u?.data?.user?.id;
-  if (!from) throw new Error('not authenticated');
+export async function sendFriendRequest(target: string) {
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
 
-  // resolve target id same as sendInvite
-  let targetId: string | null = null;
-  const t = String(toUser || '').trim();
-  const looksLikeId = /^[0-9a-fA-F-]{8,}$/.test(t);
-  if (looksLikeId) targetId = t;
-  else if (t.includes('@')) {
-    try {
-      const byEmail = await supabase.from('profiles').select('id').eq('email', t).maybeSingle();
-      // @ts-ignore
-      if (byEmail?.data?.id) targetId = byEmail.data.id;
-    } catch (err) {
-      const uname = t.split('@')[0];
-      if (uname) {
-        const byUsername = await supabase.from('profiles').select('id').eq('username', uname).maybeSingle();
-        // @ts-ignore
-        if (byUsername?.data?.id) targetId = byUsername.data.id;
-      }
+    if (authError) {
+        throw authError;
     }
-  } else if (t.length > 0) {
-    const byUsername = await supabase.from('profiles').select('id').eq('username', t).maybeSingle();
-    // @ts-ignore
-    if (byUsername?.data?.id) targetId = byUsername.data.id;
-  }
 
-  if (!targetId) throw new Error('target user not found');
-  // prevent sending friend request to self
-  try {
-    const me = await supabase.auth.getUser();
-    const myid = me.data?.user?.id;
-    if (myid && myid === targetId) {
-      throw new Error('self-invite');
+    if (!user) {
+        throw new Error('Not authenticated');
     }
-  } catch (e) {
-    // ignore
-  }
-  // insert into friends table
-  const res = await supabase.from('friends').insert({ user_id: from, friend_id: targetId, status: 'pending' }).select().maybeSingle();
-  // @ts-ignore
-  if (res?.error) {
-    throw res.error;
-  }
-  return res.data;
+
+    const from = user.id;
+    const value = target.trim();
+
+    if (!value) {
+        throw new Error('Please enter a username, email, or user ID');
+    }
+
+    let targetId: string | null = null;
+
+    // UUID lookup
+    const uuidResult = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', value)
+        .maybeSingle();
+
+    if (uuidResult.error) {
+        console.error('Profile UUID lookup failed:', uuidResult.error);
+    }
+
+    if (uuidResult.data?.id) {
+        targetId = uuidResult.data.id;
+    }
+
+    // Username lookup
+    if (!targetId) {
+        const usernameResult = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', value)
+            .maybeSingle();
+
+        if (usernameResult.error) {
+            console.error(
+                'Profile username lookup failed:',
+                usernameResult.error
+            );
+        }
+
+        if (usernameResult.data?.id) {
+            targetId = usernameResult.data.id;
+        }
+    }
+
+    // Email lookup
+    if (!targetId) {
+        const emailResult = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', value)
+            .maybeSingle();
+
+        if (emailResult.error) {
+            console.error(
+                'Profile email lookup failed:',
+                emailResult.error
+            );
+        }
+
+        if (emailResult.data?.id) {
+            targetId = emailResult.data.id;
+        }
+    }
+
+    if (!targetId) {
+        throw new Error('User not found');
+    }
+
+    if (targetId === from) {
+        throw new Error('self-invite');
+    }
+
+    const { data, error } = await supabase
+        .from('friends')
+        .insert({
+            user_id: from,
+            friend_id: targetId,
+            status: 'pending',
+        })
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Friend request insert failed:', error);
+
+        if (error.code === '23505') {
+            throw new Error('Friend request already exists');
+        }
+
+        throw new Error(`Failed to send friend request: ${error.message}`);
+    }
+
+    return data;
 }
 
 export async function acceptFriendRequest(rowId: string) {
@@ -352,29 +409,83 @@ export async function pushMove(gameId: string, move: unknown) {
   return res.data;
 }
 
-export async function createOnlineGame(options: { timeControl?: string | null } = {}): Promise<Record<string, unknown>> {
-  const u = await supabase.auth.getUser();
-  const uid = u.data?.user?.id; if (!uid) throw new Error('not authenticated');
-  const payload: Record<string, unknown> = {};
-  if (options.timeControl) payload.time_control = options.timeControl;
-  // Prefer RPC for RLS-safe creation; fallback to direct insert
-  const { data: rpcData, error: rpcErr } = await supabase.rpc('create_online_game', { p_user: uid, p_time_control: options.timeControl ?? null, p_payload: payload });
-  let game = rpcData as any;
-  if (rpcErr || !game) {
-    // fallback insert: avoid setting columns that may be missing in schema
-    const insertBody: Record<string, unknown> = { host_id: uid, fen: 'startpos', payload, status: 'waiting' };
-    if (options.timeControl) insertBody.time_control = options.timeControl;
-    const { data: ins, error: err } = await supabase.from('online_games').insert(insertBody).select().maybeSingle();
-    if (err) throw err;
-    game = ins as any;
-  }
-  // dispatch local event so tab can open immediately and other tabs will get realtime
-  try {
-    if (game && (game.id || game.game_id)) {
-      window.dispatchEvent(new CustomEvent('online-game-created', { detail: game }));
+export async function createOnlineGame(options: {
+    timeControl?: string | null;
+    payload?: Record<string, any>;
+} = {}) {
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) {
+        throw userError;
     }
-  } catch (e) {}
-  return game as Record<string, unknown>;
+
+    if (!user) {
+        throw new Error('Not authenticated');
+    }
+
+    const payload = options.payload ?? {};
+
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'create_online_game',
+        {
+            p_user: user.id,
+            p_time_control: options.timeControl ?? null,
+            p_payload: payload,
+        }
+    );
+
+    if (!rpcError) {
+        // create_online_game RETURNS TABLE, so Supabase returns an array.
+        const game = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+
+        if (game?.id) {
+            window.dispatchEvent(
+                new CustomEvent('online-game-created', {
+                    detail: game,
+                })
+            );
+
+            return game;
+        }
+    }
+
+    // Keep the fallback, but don't hide the actual errors.
+    console.error('create_online_game RPC failed:', rpcError);
+
+    const insertBody = {
+        host_id: user.id,
+        guest_id: null,
+        time_control: options.timeControl ?? null,
+        status: 'waiting',
+        fen: 'startpos',
+        moves: [],
+        payload,
+    };
+
+    const { data: insertedGame, error: insertError } = await supabase
+        .from('online_games')
+        .insert(insertBody)
+        .select()
+        .single();
+
+    if (insertError) {
+        console.error('Fallback online_games insert failed:', insertError);
+
+        throw new Error(
+            `Failed to create game: ${insertError.message}`
+        );
+    }
+
+    window.dispatchEvent(
+        new CustomEvent('online-game-created', {
+            detail: insertedGame,
+        })
+    );
+
+    return insertedGame;
 }
 
 export async function joinOnlineGame(gameId: string) {

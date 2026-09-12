@@ -552,7 +552,7 @@ function GameControls({
                 <button
                     type="button"
                     onClick={toggleMusic}
-                    className={`grid h-9 w-9 place-items-center rounded-lg transition ${musicOn
+                    className={`grid h-9 w-9 place-items-center rounded-lg sm:h-11 sm:w-11 ${musicOn
                             ? 'bg-blue-grad shadow-glow-sm'
                             : 'bg-navy-700 hover:bg-navy-600'
                         }`}
