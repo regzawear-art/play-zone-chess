@@ -1,4 +1,4 @@
-import { Globe, Bot, GraduationCap, Trophy, ChevronRight, Users, DoorOpen, Zap } from 'lucide-react';
+import { Globe, Bot, GraduationCap, Trophy, Users, DoorOpen, Zap } from 'lucide-react';
 import type { GameMode, AIDifficulty } from '../game/types';
 
 interface Props {
@@ -29,6 +29,7 @@ const DIFFICULTIES: { key: AIDifficulty; label: string }[] = [
   { key: 'intermediate', label: 'Intermediate' },
   { key: 'advanced', label: 'Advanced' },
   { key: 'master', label: 'Master' },
+  { key: 'max', label: 'Max Engine' },
 ];
 
 export function PlayActionCards({

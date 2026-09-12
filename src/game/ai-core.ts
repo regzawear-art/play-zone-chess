@@ -7,23 +7,32 @@ import { PIECE_VALUE } from './pieces';
 
 const DIFFICULTY_DEPTH: Record<AIDifficulty, number> = {
   beginner: 1,
-  intermediate: 2,
-  advanced: 6,
-  master: 8,
+  // requested: intermediate ~8
+  intermediate: 8,
+  // requested: advanced ~12
+  advanced: 12,
+  // requested: master ~20
+  master: 20,
+  // requested: max - very deep
+  max: 40,
 };
 
 const DIFFICULTY_RANDOMNESS: Record<AIDifficulty, number> = {
   beginner: 120,
-  intermediate: 40,
-  advanced: 6,
-  master: 0,
+  intermediate: 6,
+  advanced: 3,
+  master: 1,
+  max: 0,
 };
 
 const DIFFICULTY_TIME_MS: Record<AIDifficulty, number> = {
   beginner: 100,
-  intermediate: 400,
-  advanced: 1200,
-  master: 2500,
+  // these are fallbacks for the JS worker; Stockfish will be used for many levels
+  intermediate: 1500,
+  advanced: 4000,
+  master: 10000,
+  // allow very long thinking time for the highest engine level
+  max: 30000,
 };
 
 let currentDifficulty: AIDifficulty = 'intermediate';
@@ -38,12 +47,33 @@ const PIECE_INDEX: Record<string, number> = { 'wp': 0, 'wn': 1, 'wb': 2, 'wr': 3
 
 function rnd32(): number { return (Math.random() * 0x100000000) >>> 0; }
 
-const ZOBRIST_PIECE: number[][] = Array.from({ length: 12 }, () => Array.from({ length: 64 }, () => (BigInt(rnd32()) << 32n) ^ BigInt(rnd32())));
-const ZOBRIST_SIDE = (BigInt(rnd32()) << 32n) ^ BigInt(rnd32());
-const ZOBRIST_CASTLING: number[] = Array.from({ length: 16 }, () => (BigInt(rnd32()) << 32n) ^ BigInt(rnd32()));
-const ZOBRIST_EP: number[] = Array.from({ length: 8 }, () => (BigInt(rnd32()) << 32n) ^ BigInt(rnd32()));
+const ZOBRIST_PIECE: bigint[][] = (() => {
+  const out: bigint[][] = [];
+  for (let i = 0; i < 12; i++) {
+    const row: bigint[] = [];
+    for (let j = 0; j < 64; j++) {
+      row.push((BigInt(rnd32()) << 32n) ^ BigInt(rnd32()));
+    }
+    out.push(row);
+  }
+  return out;
+})();
 
-function hashBoard(board: any, state: any): bigint {
+const ZOBRIST_SIDE: bigint = (BigInt(rnd32()) << 32n) ^ BigInt(rnd32());
+
+const ZOBRIST_CASTLING: bigint[] = (() => {
+  const out: bigint[] = [];
+  for (let i = 0; i < 16; i++) out.push((BigInt(rnd32()) << 32n) ^ BigInt(rnd32()));
+  return out;
+})();
+
+const ZOBRIST_EP: bigint[] = (() => {
+  const out: bigint[] = [];
+  for (let i = 0; i < 8; i++) out.push((BigInt(rnd32()) << 32n) ^ BigInt(rnd32()));
+  return out;
+})();
+
+function hashBoard(board: Board, state: GameState): bigint {
   let h = 0n;
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {

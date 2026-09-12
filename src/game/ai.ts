@@ -36,25 +36,27 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
   // If user requested Stockfish (master), prefer it but fallback to worker AI on error/null
   try {
     const cd = (chooseMove as any).currentDifficulty as AIDifficulty | undefined;
-    if (cd === 'master') {
+    // Delegate to Stockfish for stronger levels as requested.
+    // intermediate -> use limited-strength Stockfish ~ depth 8
+    if (cd === 'intermediate') {
       // eslint-disable-next-line no-console
-      console.log('[AI] delegating to Stockfish for master difficulty');
+      console.log('[AI] delegating to Stockfish for intermediate difficulty (limited, ~depth8)');
       try {
-        const move = await chooseWithStockfish(board, state, side, 3000);
+        const move = await chooseWithStockfish(board, state, side, 1200, { limitStrength: true, elo: 1600 });
         if (move) return move;
         // eslint-disable-next-line no-console
-        console.warn('[AI] Stockfish returned no move, falling back to JS worker');
+        console.warn('[AI] Stockfish (intermediate) returned no move, falling back to JS worker');
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.error('[AI] Stockfish error, falling back to JS worker', err);
+        console.error('[AI] Stockfish (intermediate) error, falling back to JS worker', err);
       }
-    } else if (cd === 'advanced') {
-      // Use Stockfish but limit strength for 'advanced'
-      // Lower movetime and set ELO/limit strength to make it weaker than master
+    }
+    // advanced -> use limited-strength Stockfish ~ depth 12
+    if (cd === 'advanced') {
       // eslint-disable-next-line no-console
-      console.log('[AI] delegating to Stockfish for advanced difficulty (limited)');
+      console.log('[AI] delegating to Stockfish for advanced difficulty (limited, ~depth12)');
       try {
-        const move = await chooseWithStockfish(board, state, side, 1600, { limitStrength: true, elo: 1600 });
+        const move = await chooseWithStockfish(board, state, side, 3000, { limitStrength: true, elo: 2000 });
         if (move) return move;
         // eslint-disable-next-line no-console
         console.warn('[AI] Stockfish (advanced) returned no move, falling back to JS worker');
@@ -62,18 +64,33 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
         // eslint-disable-next-line no-console
         console.error('[AI] Stockfish (advanced) error, falling back to JS worker', err);
       }
-    } else if (cd === 'intermediate') {
-      // Use Stockfish at low strength for intermediate to be stronger than JS but easier than advanced
+    }
+    // master -> use stronger Stockfish ~ depth 20
+    if (cd === 'master') {
       // eslint-disable-next-line no-console
-      console.log('[AI] delegating to Stockfish for intermediate difficulty (low strength)');
+      console.log('[AI] delegating to Stockfish for master difficulty (limited, ~depth20)');
       try {
-        const move = await chooseWithStockfish(board, state, side, 800, { limitStrength: true, elo: 1200 });
+        const move = await chooseWithStockfish(board, state, side, 8000, { limitStrength: true, elo: 2400 });
         if (move) return move;
         // eslint-disable-next-line no-console
-        console.warn('[AI] Stockfish (intermediate) returned no move, falling back to JS worker');
+        console.warn('[AI] Stockfish (master) returned no move, falling back to JS worker');
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.error('[AI] Stockfish (intermediate) error, falling back to JS worker', err);
+        console.error('[AI] Stockfish (master) error, falling back to JS worker', err);
+      }
+    }
+    // max -> use full-power Stockfish (no strength limit)
+    if (cd === 'max') {
+      // eslint-disable-next-line no-console
+      console.log('[AI] delegating to Stockfish for max difficulty (full strength)');
+      try {
+        const move = await chooseWithStockfish(board, state, side, 20000);
+        if (move) return move;
+        // eslint-disable-next-line no-console
+        console.warn('[AI] Stockfish (max) returned no move, falling back to JS worker');
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[AI] Stockfish (max) error, falling back to JS worker', err);
       }
     }
   } catch (e) {

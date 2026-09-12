@@ -29,7 +29,6 @@ export interface SidebarProps {
   onDraw: () => void;
   onUndo: () => void;
   onJumpFirst: () => void;
-  onJumpPrev: () => void;
   onJumpNext: () => void;
   onJumpLast: () => void;
   onChangeTimeControl: (tc: TimeControl) => void;
@@ -45,9 +44,10 @@ type Tab = 'play' | 'newgame' | 'moves' | 'chat';
 
 const AI_LEVELS: { value: AIDifficulty; label: string; elo: string }[] = [
   { value: 'beginner', label: 'Beginner', elo: '~600' },
-  { value: 'intermediate', label: 'Intermediate', elo: '~1200' },
-  { value: 'advanced', label: 'Advanced', elo: '~1800' },
-  { value: 'master', label: 'Master', elo: '~2400' },
+  { value: 'intermediate', label: 'Intermediate', elo: '~1600' },
+  { value: 'advanced', label: 'Advanced', elo: '~2000' },
+  { value: 'master', label: 'Master', elo: '2200-2600' },
+  { value: 'max', label: 'Max Engine', elo: '3000+' },
 ];
 
 const TC_PRESETS: { value: TimeControl; label: string; sub: string; icon: typeof Zap }[] = [
@@ -73,7 +73,7 @@ export function GameSidebar(props: SidebarProps) {
     status, whiteMs, blackMs, running, started, thinking, turn,
     playerColor, timeControl, customMinutes, customIncrement,
     history, stageLabel, currentOpening, aiDifficulty,
-    onStart, onResign, onDraw, onUndo, onJumpFirst, onJumpPrev, onJumpNext, onJumpLast,
+    onStart, onResign, onDraw, onUndo, onJumpFirst, onJumpNext, onJumpLast,
     onChangeTimeControl, onChangeCustomMinutes, onChangeCustomIncrement,
     onFlip, onChangeColor, onChangeDifficulty, chatPanel,
   } = props;
@@ -148,7 +148,6 @@ export function GameSidebar(props: SidebarProps) {
             onFlip={onFlip}
             history={history}
             onJumpFirst={onJumpFirst}
-            onJumpPrev={onJumpPrev}
             onJumpNext={onJumpNext}
             onJumpLast={onJumpLast}
           />
@@ -191,11 +190,11 @@ function PlayTab(props: {
   currentOpening: string; whiteMs: number; blackMs: number; running: boolean;
   turn: Color; started: boolean; onStart: () => void; onResign: () => void;
   onDraw: () => void; onUndo: () => void; onFlip: () => void; history: HistoryEntry[];
-  onJumpFirst: () => void; onJumpPrev: () => void; onJumpNext: () => void; onJumpLast: () => void;
+  onJumpFirst: () => void; onJumpNext: () => void; onJumpLast: () => void;
 }) {
   const { statusText, statusColor, status, stageLabel, stageIsLive, currentOpening,
     whiteMs, blackMs, running, turn, started, onStart, onResign, onDraw, onUndo, onFlip,
-    history, onJumpFirst, onJumpPrev, onJumpNext, onJumpLast } = props;
+    history, onJumpFirst, onJumpNext, onJumpLast } = props;
 
   const navBtn = "grid h-8 w-8 place-items-center rounded text-white transition-colors hover:bg-royal-500/20 disabled:opacity-30 disabled:hover:bg-transparent";
 

@@ -112,6 +112,11 @@ const DIFFICULTIES: {
         {
             key: 'master',
             label: 'Master',
+            sub: 'Stockfish Level 3',
+        },
+        {
+            key: 'max',
+            label: 'Max Engine',
             sub: 'Stockfish Maximum',
         },
     ];

@@ -47,7 +47,7 @@ export interface GameStatus {
 
 export type TimeControl = '1min' | '3min' | '5min' | '10min' | '30min' | 'custom';
 
-export type AIDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'master';
+export type AIDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'master' | 'max';
 
 export type GameMode = 'ai' | 'pass' | 'online' | 'room';
 

@@ -141,12 +141,12 @@ export function ReferralSection({ userId, onLogin, onReferralComplete }: Props) 
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto w-full px-4 max-w-5xl space-y-6">
       {/* Bonus highlight */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-royal-500/20 via-navy-700 to-navy-700 p-6 ring-1 ring-royal-400/20">
         <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-royal-500/20 blur-3xl" />
-        <div className="relative flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-4">
+          <div className="relative flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+          <div className="flex items-center gap-4 min-w-0">
             <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-royal-400 to-royal-600 shadow-glow-sm">
               <Gift size={28} className="text-white" />
             </div>
@@ -155,7 +155,7 @@ export function ReferralSection({ userId, onLogin, onReferralComplete }: Props) 
               <p className="text-sm text-royal-100">Earn {formatCurrency(REFERRAL_BONUS, currency)} for every friend who joins!</p>
             </div>
           </div>
-          <div className="text-center">
+          <div className="text-center min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-royal-100">Total Earned</p>
             <p className="font-display text-3xl font-extrabold text-emerald-400">{formatCurrency(totalEarned, currency)}</p>
           </div>
@@ -168,8 +168,8 @@ export function ReferralSection({ userId, onLogin, onReferralComplete }: Props) 
           <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-white">
             <Share2 size={16} className="text-royal-400" /> Your Referral Code
           </h4>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 rounded-xl border border-dashed border-royal-400/40 bg-royal-500/5 px-4 py-3 text-center font-mono text-lg font-bold text-royal-300">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex-1 min-w-0 rounded-xl border border-dashed border-royal-400/40 bg-royal-500/5 px-4 py-3 text-center font-mono text-lg font-bold text-royal-300 truncate">
               {referralCode}
             </div>
             <button onClick={copyCode} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-navy-600 text-white transition-colors hover:bg-navy-500" title="Copy code">
@@ -178,8 +178,8 @@ export function ReferralSection({ userId, onLogin, onReferralComplete }: Props) 
           </div>
           <div className="mt-3">
             <p className="mb-1.5 text-xs font-semibold text-navy-300">Share this link:</p>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 truncate rounded-xl bg-navy-600 px-3 py-2.5 text-sm text-navy-200">{shareLink}</div>
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex-1 min-w-0 truncate rounded-xl bg-navy-600 px-3 py-2.5 text-sm text-navy-200">{shareLink}</div>
               <button onClick={copyShareLink} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-navy-600 text-white transition-colors hover:bg-navy-500" title="Copy link">
                 {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
               </button>
