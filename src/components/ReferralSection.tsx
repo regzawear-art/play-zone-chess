@@ -55,7 +55,7 @@ export function ReferralSection({
 
     const username = profile?.username ?? userId.slice(0, 8);
 
-    setReferralCode(`GAMBIT - ${ username.toUpperCase() } `);
+    setReferralCode(`GAMBIT-${ username.toUpperCase() } `);
 
     const { data: refs } = await supabase
       .from('referrals')

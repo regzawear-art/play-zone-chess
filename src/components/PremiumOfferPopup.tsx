@@ -38,7 +38,7 @@ export function PremiumOfferPopup({ onClose, onClaim }: Props) {
           clearInterval(interval);
           return 0;
         }
-        return r - 1000;
+        return r-1000;
       });
     }, 1000);
     return () => clearInterval(interval);

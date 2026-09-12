@@ -63,7 +63,7 @@ export function fileChar(c: number): string {
 }
 
 export function rankChar(r: number): string {
-  return String(8 - r);
+  return String(8-r);
 }
 
 export function squareName(r: number, c: number): string {

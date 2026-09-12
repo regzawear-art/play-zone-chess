@@ -77,8 +77,8 @@ export function useChess(opts: UseChessOptions) {
     if (!running || statusRef.current.phase === 'checkmate' || statusRef.current.phase === 'stalemate') return;
     const interval = setInterval(() => {
       const s = stateRef.current;
-      if (s.turn === 'w') setWhiteMs((ms) => Math.max(0, ms - 100));
-      else setBlackMs((ms) => Math.max(0, ms - 100));
+      if (s.turn === 'w') setWhiteMs((ms) => Math.max(0, ms-100));
+      else setBlackMs((ms) => Math.max(0, ms-100));
     }, 100);
     return () => clearInterval(interval);
   }, [running, state.turn]);
@@ -297,7 +297,7 @@ export function useChess(opts: UseChessOptions) {
         setBoard(initialBoard());
         setState(initialState());
       } else {
-        const last = newHist[newHist.length - 1];
+        const last = newHist[newHist.length-1];
         setBoard(last.boardBefore);
         setState(last.stateBefore);
       }
@@ -307,8 +307,8 @@ export function useChess(opts: UseChessOptions) {
       setPromotion(null);
       setPendingResult(null);
       recomputeStatus(
-        newHist.length === 0 ? initialBoard() : newHist[newHist.length - 1].boardBefore,
-        newHist.length === 0 ? initialState() : newHist[newHist.length - 1].stateBefore,
+        newHist.length === 0 ? initialBoard() : newHist[newHist.length-1].boardBefore,
+        newHist.length === 0 ? initialState() : newHist[newHist.length-1].stateBefore,
       );
       return newHist;
     });
@@ -317,7 +317,7 @@ export function useChess(opts: UseChessOptions) {
   const redo = useCallback(() => {
     setRedoStack((r) => {
       if (r.length === 0) return r;
-      const entry = r[r.length - 1];
+      const entry = r[r.length-1];
       const newStack = r.slice(0, -1);
       // Re-apply the move by rebuilding from history
       setHistory((h) => {
@@ -352,7 +352,7 @@ export function useChess(opts: UseChessOptions) {
         setState(initialState());
         setLastMove(null);
       } else {
-        const last = kept[kept.length - 1];
+        const last = kept[kept.length-1];
         const res = makeMove(last.boardBefore, last.stateBefore, last.move);
         setBoard(res.board);
         setState(res.state);
@@ -385,7 +385,7 @@ export function useChess(opts: UseChessOptions) {
 
   const getMoveForBroadcast = useCallback((): Move | null => {
     if (history.length === 0) return null;
-    return history[history.length - 1].move;
+    return history[history.length-1].move;
   }, [history]);
 
   const clearMatchHistory = useCallback(() => setMatches([]), []);

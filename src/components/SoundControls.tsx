@@ -69,7 +69,7 @@ export function SoundControls({ className }: Props) {
         onClick={() => setOpen((o) => !o)}
         aria-label={muted ? 'Sound muted. Open sound controls' : 'Open sound controls'}
         aria-expanded={open}
-        className={`grid h - 10 w - 10 place - items - center rounded - full border bg - navy - 700 text - white transition - all ${
+        className={`grid h-10 w-10 place-items-center rounded-full border bg-navy-700 text-white transition-all ${
     open
         ? 'border-royal-500/60 shadow-glow-sm'
         : 'border-royal-500/25 hover:border-royal-500/60 hover:shadow-glow-sm'
@@ -114,7 +114,7 @@ export function SoundControls({ className }: Props) {
             <button
               type="button"
               onClick={toggleMute}
-              className={`rounded - lg py - 2 text - xs font - semibold transition - colors ${
+              className={`rounded-lg py-2 text-xs font-semibold transition-colors ${
     muted
         ? 'bg-red-500/15 text-red-300 hover:bg-red-500/25'
         : 'bg-navy-600 text-white hover:bg-navy-500'
@@ -135,12 +135,12 @@ export function SoundControls({ className }: Props) {
       )}
 
       <style>{`
-    .sound - slider {
-    -webkit - appearance: none;
+    .sound-slider {
+    -webkit-appearance: none;
     appearance: none;
     height: 6px;
-    border - radius: 999px;
-    background: linear - gradient(
+    border-radius: 999px;
+    background: linear-gradient(
         90deg,
             #81B64C 0 %,
             #6ba238 100 %
@@ -149,25 +149,25 @@ export function SoundControls({ className }: Props) {
     cursor: pointer;
 }
 
-        .sound - slider:: -webkit - slider - thumb {
-    -webkit - appearance: none;
+        .sound-slider:: -webkit-slider-thumb {
+    -webkit-appearance: none;
     appearance: none;
     width: 16px;
     height: 16px;
-    border - radius: 50 %;
+    border-radius: 50 %;
     background: #fff;
     border: 2px solid #81B64C;
-    box - shadow: 0 2px 6px rgba(129, 182, 76, 0.4);
+    box-shadow: 0 2px 6px rgba(129, 182, 76, 0.4);
     cursor: pointer;
 }
 
-        .sound - slider:: -moz - range - thumb {
+        .sound-slider:: -moz-range-thumb {
     width: 16px;
     height: 16px;
-    border - radius: 50 %;
+    border-radius: 50 %;
     background: #fff;
     border: 2px solid #81B64C;
-    box - shadow: 0 2px 6px rgba(129, 182, 76, 0.4);
+    box-shadow: 0 2px 6px rgba(129, 182, 76, 0.4);
     cursor: pointer;
 }
 `}</style>

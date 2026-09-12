@@ -127,8 +127,8 @@ export function useOnlineGame(config: OnlineGameConfig | null) {
     // no-op reapply: preserve existing clock behavior
     const interval = setInterval(() => {
       const s = stateRef.current;
-      if (s.turn === 'w') setWhiteMs((ms) => Math.max(0, ms - 100));
-      else setBlackMs((ms) => Math.max(0, ms - 100));
+      if (s.turn === 'w') setWhiteMs((ms) => Math.max(0, ms-100));
+      else setBlackMs((ms) => Math.max(0, ms-100));
     }, 100);
     return () => clearInterval(interval);
   }, [running, state.turn]);

@@ -118,9 +118,9 @@ export function ChessBoard({
      *
      * This is NOT used to size the board.
      * It is only needed for:
-     * - drag ghost
-     * - promotion picker
-     * - FLIP animation
+     *-drag ghost
+     *-promotion picker
+     *-FLIP animation
      */
     useEffect(() => {
         const element = containerRef.current;
@@ -187,29 +187,29 @@ export function ChessBoard({
             const displayedRow =
                 orientation === 'w'
                     ? currentRow
-                    : 7 - currentRow;
+                    : 7-currentRow;
 
             const displayedCol =
                 orientation === 'w'
                     ? currentCol
-                    : 7 - currentCol;
+                    : 7-currentCol;
 
             const previousDisplayedRow =
                 orientation === 'w'
                     ? previous.r
-                    : 7 - previous.r;
+                    : 7-previous.r;
 
             const previousDisplayedCol =
                 orientation === 'w'
                     ? previous.c
-                    : 7 - previous.c;
+                    : 7-previous.c;
 
             const dx =
-                (previousDisplayedCol - displayedCol) *
+                (previousDisplayedCol-displayedCol) *
                 cellSize;
 
             const dy =
-                (previousDisplayedRow - displayedRow) *
+                (previousDisplayedRow-displayedRow) *
                 cellSize;
 
             if (dx === 0 && dy === 0) return;
@@ -262,8 +262,8 @@ export function ChessBoard({
             const rect =
                 element.getBoundingClientRect();
 
-            const x = clientX - rect.left;
-            const y = clientY - rect.top;
+            const x = clientX-rect.left;
+            const y = clientY-rect.top;
 
             if (
                 x < 0 ||
@@ -283,12 +283,12 @@ export function ChessBoard({
             const logicalRow =
                 orientation === 'w'
                     ? displayedRow
-                    : 7 - displayedRow;
+                    : 7-displayedRow;
 
             const logicalCol =
                 orientation === 'w'
                     ? displayedCol
-                    : 7 - displayedCol;
+                    : 7-displayedCol;
 
             if (
                 logicalRow < 0 ||
@@ -948,12 +948,12 @@ function PromotionPicker({
     const displayedRow =
         orientation === 'w'
             ? targetRow
-            : 7 - targetRow;
+            : 7-targetRow;
 
     const displayedCol =
         orientation === 'w'
             ? targetCol
-            : 7 - targetCol;
+            : 7-targetCol;
 
     const top =
         displayedRow * cellSize;

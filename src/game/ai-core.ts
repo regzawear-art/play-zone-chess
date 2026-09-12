@@ -13,7 +13,7 @@ const DIFFICULTY_DEPTH: Record<AIDifficulty, number> = {
   advanced: 12,
   // requested: master ~20
   master: 20,
-  // requested: max - very deep
+  // requested: max-very deep
   max: 40,
 };
 
@@ -245,7 +245,7 @@ function makeMoveInPlace(board: Board, move: FastMove): UndoInfo {
 
   // handle capture/enpassant
   if (move.enPassant) {
-    const capR = p.color === 'w' ? tr + 1 : tr - 1;
+    const capR = p.color === 'w' ? tr + 1 : tr-1;
     undo.capturedPiece = board[capR][tc]; undo.capturedSquare = [capR, tc];
     board[capR][tc] = null;
   }
@@ -294,8 +294,8 @@ function evaluate(board: Board, side: Color): number {
       const p = board[r][c]; if (!p) continue;
       const sign = p.color === side ? 1 : -1;
       let v = PIECE_VALUE[p.type] * 100;
-      const tblR = p.color === 'w' ? r : 7 - r;
-      if (p.type === 'p') v += PST_PAWN[tblR][c]; else if (p.type === 'n') v += PST_KNIGHT[tblR][c]; else if (p.type === 'b') v += PST_BISHOP[tblR][c]; else { const centerDist = Math.abs(3.5 - r) + Math.abs(3.5 - c); v += (7 - centerDist); }
+      const tblR = p.color === 'w' ? r : 7-r;
+      if (p.type === 'p') v += PST_PAWN[tblR][c]; else if (p.type === 'n') v += PST_KNIGHT[tblR][c]; else if (p.type === 'b') v += PST_BISHOP[tblR][c]; else { const centerDist = Math.abs(3.5-r) + Math.abs(3.5-c); v += (7-centerDist); }
       score += sign * v;
     }
   }
@@ -323,7 +323,7 @@ function movesEqual(a: FastMove | undefined, b: FastMove | undefined): boolean {
 
 function fastScore(m: FastMove): number {
   let s = 0;
-  if (m.capture) s += PIECE_VALUE[m.capture.type] * 100 - PIECE_VALUE[m.piece.type] * 10;
+  if (m.capture) s += PIECE_VALUE[m.capture.type] * 100-PIECE_VALUE[m.piece.type] * 10;
   if (m.promotion) s += 80000;
   return s;
 }
@@ -337,13 +337,13 @@ function orderMoves(moves: FastMove[], ply: number, ttMove?: FastMove): FastMove
     s += fastScore(m);
     // killer moves
     const killers = KILLERS[ply] || [];
-    for (let i = 0; i < killers.length; i++) if (movesEqual(m, killers[i])) s += 30000 - i * 1000;
+    for (let i = 0; i < killers.length; i++) if (movesEqual(m, killers[i])) s += 30000-i * 1000;
     // history heuristic
     const hk = moveKey(m);
     s += (HISTORY.get(hk) || 0);
     return { m, s };
   });
-  scored.sort((a, b) => b.s - a.s);
+  scored.sort((a, b) => b.s-a.s);
   return scored.map((x) => x.m);
 }
 
@@ -375,7 +375,7 @@ function childGameState(state: GameState, move: FastMove): GameState {
   if (p.type === 'r') { if (fr===7 && fc===0) castling.wq=false; if (fr===7 && fc===7) castling.wk=false; if (fr===0 && fc===0) castling.bq=false; if (fr===0 && fc===7) castling.bk=false; }
   if (tr===7 && tc===0) castling.wq=false; if (tr===7 && tc===7) castling.wk=false; if (tr===0 && tc===0) castling.bq=false; if (tr===0 && tc===7) castling.bk=false;
   let enPassant: [number, number] | null = null;
-  if (p.type === 'p' && Math.abs(tr - fr) === 2) enPassant = [(fr + tr) / 2, fc];
+  if (p.type === 'p' && Math.abs(tr-fr) === 2) enPassant = [(fr + tr) / 2, fc];
   const halfmove = p.type === 'p' || move.capture ? 0 : state.halfmove + 1;
   const fullmove = state.turn === 'b' ? state.fullmove + 1 : state.fullmove;
   return { turn: nextColor, castling, enPassant, halfmove, fullmove };
@@ -388,7 +388,7 @@ function negamax(board: Board, state: GameState, depth: number, alpha: number, b
   searchNodes++;
   if (depth === 0) return quiescence(board, state, alpha, beta, rootSide, ply);
   const pseudo = genPseudoMoves(board, state, state.turn);
-  if (pseudo.length === 0) { if (isInCheckFast(board, state.turn)) return -100000 + (10 - depth); return 0; }
+  if (pseudo.length === 0) { if (isInCheckFast(board, state.turn)) return -100000 + (10-depth); return 0; }
   // Transposition table probe
   const key = hashBoard(board, state);
   const tt = TTABLE.get(key);
@@ -404,7 +404,7 @@ function negamax(board: Board, state: GameState, depth: number, alpha: number, b
     if (isInCheckFast(board, state.turn)) { unmakeMove(board, m, undo); continue; }
     legalCount++;
     const childState = childGameState(state, m);
-    const val = -negamax(board, childState, depth - 1, -beta, -alpha, rootSide, ply + 1);
+    const val = -negamax(board, childState, depth-1, -beta, -alpha, rootSide, ply + 1);
     unmakeMove(board, m, undo);
     if (val > best) { best = val; bestMove = m; }
     if (best > alpha) alpha = best;
@@ -423,7 +423,7 @@ function negamax(board: Board, state: GameState, depth: number, alpha: number, b
       break;
     }
   }
-  if (legalCount === 0) { if (isInCheckFast(board, state.turn)) return -100000 + (10 - depth); return 0; }
+  if (legalCount === 0) { if (isInCheckFast(board, state.turn)) return -100000 + (10-depth); return 0; }
   // Store in transposition table as an EXACT entry
   const entry: TTEntry = { depth, score: best, flag: 'EXACT', move: bestMove };
   TTABLE.set(key, entry);
@@ -455,9 +455,9 @@ export function chooseMoveCore(board: Board, state: GameState, side: Color): Mov
       const undo = makeMoveInPlace(work, m);
       if (isInCheckFast(work, side)) { unmakeMove(work, m, undo); continue; }
       const childState = childGameState(state, m);
-      const val = -negamax(work, childState, depth - 1, -Infinity, Infinity, side, 1);
+      const val = -negamax(work, childState, depth-1, -Infinity, Infinity, side, 1);
       unmakeMove(work, m, undo);
-      const jitter = (Math.random() - 0.5) * randomness;
+      const jitter = (Math.random()-0.5) * randomness;
       if (val + jitter > bestScore) { bestScore = val + jitter; bestFm = m; }
     }
   }

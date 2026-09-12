@@ -80,7 +80,7 @@ export function PricingPlans({ userId, onLogin }: Props) {
       const { data: wallet } = await supabase.from('wallets').select('balance_inr').eq('user_id', userId).maybeSingle();
       if (wallet) {
         await supabase.from('wallets').update({
-          balance_inr: Math.max(0, wallet.balance_inr - plan.price_inr),
+          balance_inr: Math.max(0, wallet.balance_inr-plan.price_inr),
           updated_at: new Date().toISOString(),
         }).eq('user_id', userId);
       }

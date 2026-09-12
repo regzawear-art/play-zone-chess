@@ -50,7 +50,7 @@ export function useWallet() {
       description,
     };
     setWallet((w) => ({
-      balance: +(Math.max(0, w.balance - amount)).toFixed(2),
+      balance: +(Math.max(0, w.balance-amount)).toFixed(2),
       transactions: [tx, ...w.transactions],
     }));
   }, []);

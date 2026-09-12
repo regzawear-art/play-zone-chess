@@ -112,7 +112,7 @@ function computeCaptured(
 
     (['p', 'n', 'b', 'r', 'q'] as PieceType[]).forEach(
         (t) => {
-            const missingFromBlack = 8 - counts.b[t];
+            const missingFromBlack = 8-counts.b[t];
 
             for (
                 let i = 0;
@@ -124,7 +124,7 @@ function computeCaptured(
 
             const originalWhite = t === 'p' ? 8 : 2;
             const missingFromWhite =
-                originalWhite - counts.w[t];
+                originalWhite-counts.w[t];
 
             for (
                 let i = 0;
@@ -151,11 +151,11 @@ function computeCaptured(
         black: capturedByBlack,
         whiteDiff: Math.max(
             0,
-            whiteMaterial - blackMaterial
+            whiteMaterial-blackMaterial
         ),
         blackDiff: Math.max(
             0,
-            blackMaterial - whiteMaterial
+            blackMaterial-whiteMaterial
         ),
     };
 }
@@ -772,7 +772,7 @@ function HomePage() {
                 player_id: authUser.id,
                 san:
                     game.history[
-                        game.history.length - 1
+                        game.history.length-1
                     ]?.san || '',
             })
             .then(() => { });

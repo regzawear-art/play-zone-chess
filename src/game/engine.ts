@@ -165,7 +165,7 @@ export function applyMove(board: Board, state: GameState, move: Move): Board {
   nb[fr][fc] = null;
 
   if (move.enPassant) {
-    const capR = p.color === 'w' ? tr + 1 : tr - 1;
+    const capR = p.color === 'w' ? tr + 1 : tr-1;
     nb[capR][tc] = null;
   }
   if (move.castle === 'k') {
@@ -339,7 +339,7 @@ export function makeMove(board: Board, state: GameState, move: Move): { board: B
   const nextColor: Color = state.turn === 'w' ? 'b' : 'w';
   const castling = nextCastling(state, move);
   let enPassant: [number, number] | null = null;
-  if (move.piece.type === 'p' && Math.abs(move.to[0] - move.from[0]) === 2) {
+  if (move.piece.type === 'p' && Math.abs(move.to[0]-move.from[0]) === 2) {
     enPassant = [(move.from[0] + move.to[0]) / 2, move.from[1]];
   }
   const halfmove = move.piece.type === 'p' || move.capture ? 0 : state.halfmove + 1;

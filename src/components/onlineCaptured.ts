@@ -21,10 +21,10 @@ export function computeCaptured(board: Board): {
   const capturedByWhite: PieceType[] = [];
   const capturedByBlack: PieceType[] = [];
   (['p', 'n', 'b', 'r', 'q'] as PieceType[]).forEach((t) => {
-    const missingFromBlack = 8 - counts.b[t];
+    const missingFromBlack = 8-counts.b[t];
     for (let i = 0; i < missingFromBlack; i++) capturedByWhite.push(t);
     const missingFromWhite = t === 'p' ? 8 : 2;
-    const wm = missingFromWhite - counts.w[t];
+    const wm = missingFromWhite-counts.w[t];
     for (let i = 0; i < wm; i++) capturedByBlack.push(t);
   });
   const whiteMaterial = capturedByWhite.reduce((s, p) => s + PIECE_VALUES[p], 0);
@@ -32,7 +32,7 @@ export function computeCaptured(board: Board): {
   return {
     white: capturedByWhite,
     black: capturedByBlack,
-    whiteDiff: Math.max(0, whiteMaterial - blackMaterial),
-    blackDiff: Math.max(0, blackMaterial - whiteMaterial),
+    whiteDiff: Math.max(0, whiteMaterial-blackMaterial),
+    blackDiff: Math.max(0, blackMaterial-whiteMaterial),
   };
 }

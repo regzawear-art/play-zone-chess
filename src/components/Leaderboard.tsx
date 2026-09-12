@@ -9,9 +9,9 @@ export function Leaderboard() {
   const ranked = useMemo(() => {
     const list = [...PLAYERS];
     list.sort((a, b) => {
-      if (sort === 'wins') return b.wins - a.wins;
-      if (sort === 'winRate') return winRate(b) - winRate(a);
-      return b.rating - a.rating;
+      if (sort === 'wins') return b.wins-a.wins;
+      if (sort === 'winRate') return winRate(b)-winRate(a);
+      return b.rating-a.rating;
     });
     return list;
   }, [sort]);

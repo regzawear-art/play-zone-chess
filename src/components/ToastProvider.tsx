@@ -48,5 +48,5 @@ export default ToastProvider;
 
 // Listen for app-toast events so non-react code can trigger toasts
 if (typeof window !== 'undefined') {
-  // noop - the provider itself listens for 'app-toast' events via useEffect
+  // noop-the provider itself listens for 'app-toast' events via useEffect
 }

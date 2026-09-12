@@ -10,7 +10,7 @@ function pieceChar(p: any): string {
 
 function squareName(r: number, c: number) {
   const file = 'abcdefgh'[c];
-  const rank = 8 - r;
+  const rank = 8-r;
   return `${file}${rank}`;
 }
 
@@ -102,7 +102,7 @@ if (sfWorker) {
         const parts = line.split(' ');
         const best = parts[1];
         // resolve the most recent pending request
-        const ids = Object.keys(pending).map((s) => parseInt(s, 10)).sort((a, b) => b - a);
+        const ids = Object.keys(pending).map((s) => parseInt(s, 10)).sort((a, b) => b-a);
         const id = ids.length ? ids[0] : null;
         if (id !== null) {
           const p = pending[id]; if (p) { p.resolve(best ?? null); delete pending[id]; }
@@ -170,8 +170,8 @@ export async function chooseWithStockfish(board: Board, state: GameState, side: 
     const fromFile = best[0]; const fromRank = parseInt(best[1], 10);
     const toFile = best[2]; const toRank = parseInt(best[3], 10);
     const fileToCol = (f: string) => 'abcdefgh'.indexOf(f);
-    const from: [number, number] = [8 - fromRank, fileToCol(fromFile)];
-    const to: [number, number] = [8 - toRank, fileToCol(toFile)];
+    const from: [number, number] = [8-fromRank, fileToCol(fromFile)];
+    const to: [number, number] = [8-toRank, fileToCol(toFile)];
     const promotion = best.length === 5 ? (best[4] === 'q' ? 'q' : best[4] === 'r' ? 'r' : best[4] === 'b' ? 'b' : 'n') : undefined;
     // Build a minimal Move object — engine will validate later
     // Try to match against legal moves and return the canonical Move object

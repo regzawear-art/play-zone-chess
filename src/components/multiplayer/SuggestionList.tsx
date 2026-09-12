@@ -16,8 +16,8 @@ export default function SuggestionList({ items, onSelect, renderItem, containerC
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!items || items.length === 0) return;
-      if (e.key === 'ArrowDown') { e.preventDefault(); setIdx((i) => Math.min(items.length - 1, i + 1)); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); setIdx((i) => Math.max(0, i - 1)); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); setIdx((i) => Math.min(items.length-1, i + 1)); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setIdx((i) => Math.max(0, i-1)); }
       else if (e.key === 'Enter') { if (idx >= 0 && idx < items.length) { e.preventDefault(); onSelect(items[idx]); } }
       else if (e.key === 'Escape') { setIdx(-1); }
     };

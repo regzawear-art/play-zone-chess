@@ -61,7 +61,7 @@ export async function listFriends(): Promise<{ id: string; username: string; ava
 export async function listOnlinePlayers(windowSeconds = 60): Promise<{ id: string; username: string; avatar: string }[]> {
   // Prefer last_active window over boolean 'online'
   try {
-    const threshold = new Date(Date.now() - windowSeconds * 1000).toISOString();
+    const threshold = new Date(Date.now()-windowSeconds * 1000).toISOString();
     // select only guaranteed columns to avoid schema differences
     const res = (await (supabase.from<ProfileRec>('profiles').select('id,username,last_active').gte('last_active', threshold).order('last_active', { ascending: false }).limit(50) as unknown)) as { data: ProfileRec[] | null; error: unknown };
     if (res.data) return res.data.map((p) => ({ id: p.id, username: p.username || p.id, avatar: '' }));

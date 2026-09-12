@@ -24,7 +24,7 @@ interface Props {
 const PIECE_ORDER: Record<string, number> = { p: 0, n: 1, b: 2, r: 3, q: 4, k: 5 };
 
 export function PlayerHUD({ player, ms, active, running, align }: Props) {
-  const sortedPieces = [...player.capturedPieces].sort((a, b) => (PIECE_ORDER[a] ?? 9) - (PIECE_ORDER[b] ?? 9));
+  const sortedPieces = [...player.capturedPieces].sort((a, b) => (PIECE_ORDER[a] ?? 9)-(PIECE_ORDER[b] ?? 9));
   const lowTime = ms <= 10_000;
   const online = player.online === true;
 

@@ -62,14 +62,14 @@ function computeCaptured(board: any) {
     const black: any[] = [];
 
     (['p', 'n', 'b', 'r', 'q'] as const).forEach((type) => {
-        const missingBlack = 8 - counts.b[type];
+        const missingBlack = 8-counts.b[type];
 
         for (let i = 0; i < missingBlack; i++) {
             white.push(type);
         }
 
         const originalWhite = type === 'p' ? 8 : 2;
-        const missingWhite = originalWhite - counts.w[type];
+        const missingWhite = originalWhite-counts.w[type];
 
         for (let i = 0; i < missingWhite; i++) {
             black.push(type);
@@ -91,11 +91,11 @@ function computeCaptured(board: any) {
         black,
         whiteDiff: Math.max(
             0,
-            whiteMaterial - blackMaterial
+            whiteMaterial-blackMaterial
         ),
         blackDiff: Math.max(
             0,
-            blackMaterial - whiteMaterial
+            blackMaterial-whiteMaterial
         ),
     };
 }
@@ -530,7 +530,7 @@ function GameControls({
                     type="button"
                     onClick={() =>
                         game.jumpToMove(
-                            game.history.length - 1
+                            game.history.length-1
                         )
                     }
                     disabled={game.history.length === 0}

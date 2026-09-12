@@ -37,7 +37,7 @@ export function OnlineGameView({ config, themeId, onThemeChange, onExit, onRemat
     const vh = window.innerHeight;
     const vw = window.innerWidth;
     const sidebar = 360 + 40; // sidebar + gaps
-    const size = Math.min(vh - 40, vw - sidebar);
+    const size = Math.min(vh-40, vw-sidebar);
     return Math.max(320, Math.floor(size));
   }
 

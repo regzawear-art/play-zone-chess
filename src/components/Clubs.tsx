@@ -79,7 +79,7 @@ export function Clubs({ userId, onLogin }: Props) {
     if (!userId) return;
     await supabase.from('club_members').delete().eq('club_id', clubId).eq('user_id', userId);
     setJoinedIds((prev) => { const n = new Set(prev); n.delete(clubId); return n; });
-    setClubs((prev) => prev.map((c) => (c.id === clubId ? { ...c, member_count: Math.max(0, c.member_count - 1) } : c)));
+    setClubs((prev) => prev.map((c) => (c.id === clubId ? { ...c, member_count: Math.max(0, c.member_count-1) } : c)));
   };
 
   const createClub = async () => {
