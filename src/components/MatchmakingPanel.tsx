@@ -152,7 +152,7 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
             setSearching(false);
             if (pollRef.current) { window.clearInterval(pollRef.current); pollRef.current = null; }
             setTimeout(() => {
-              onMatched(updated.game_id!, true, updated.opponent_id!);
+              onMatched(updated.game_id!, false, updated.opponent_id!);
               onClose();
             }, 1200);
           }
@@ -174,7 +174,7 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
         setMatched(true);
         setSearching(false);
         setTimeout(() => {
-          onMatched(check.game_id, true, check.opponent_id!);
+          onMatched(check.game_id, false, check.opponent_id!);
           onClose();
         }, 1200);
         if (giveUpTimer) window.clearTimeout(giveUpTimer);

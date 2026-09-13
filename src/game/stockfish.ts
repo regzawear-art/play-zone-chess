@@ -164,7 +164,8 @@ export async function chooseWithStockfish(board: Board, state: GameState, side: 
       return;
     }
     setTimeout(() => { if (pending[id]) { pending[id].resolve(null); delete pending[id]; } }, movetime + 2000);
-  }).then((best: string | null) => {
+  }).then((bestUnknown) => {
+    const best = typeof bestUnknown === 'string' ? bestUnknown : null;
     if (!best) return null;
     // best is in UCI like e2e4 or e7e8q
     const fromFile = best[0]; const fromRank = parseInt(best[1], 10);

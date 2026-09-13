@@ -1,11 +1,27 @@
+
 import { useEffect, useState } from 'react';
-import type { GameStatus, MatchRecord } from '../game/types';
-import { Trophy, Handshake, X, Clock, Target, Zap, TrendingUp, Star, PartyPopper, Flag } from 'lucide-react';
+import type {
+  GameStatus,
+  MatchRecord,
+  MatchEnding,
+} from '../game/types';
+import {
+  Trophy,
+  Handshake,
+  X,
+  Clock,
+  Target,
+  Zap,
+  TrendingUp,
+  Star,
+  PartyPopper,
+  Flag,
+} from 'lucide-react';
 import { sound } from '../game/sound';
 
 interface Props {
   status: GameStatus;
-  ending: MatchRecord['ending'];
+  ending: MatchEnding;
   onClose: () => void;
   onNewGame: () => void;
   winnerName: string;
@@ -15,87 +31,278 @@ interface Props {
   ratingChange: number;
 }
 
-const ENDING_LABELS: Record<MatchRecord['ending'], string> = {
+const ENDING_LABELS: Record<MatchEnding, string> = {
   checkmate: 'Checkmate',
   resign: 'Resignation',
-  timeout: 'Timeout',
+  resignation: 'Resignation',
+  timeout: 'Time',
   stalemate: 'Stalemate',
+  insufficient_material: 'Insufficient Material',
+  draw_agreement: 'Draw Agreement',
 };
 
-export function GameOverPopup({ status, ending, onClose, onNewGame, winnerName, playerWon, moves, duration, ratingChange }: Props) {
+export function GameOverPopup({
+  status,
+  ending,
+  onClose,
+  onNewGame,
+  winnerName,
+  playerWon,
+  moves,
+  duration,
+  ratingChange,
+}: Props) {
   const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+
+    return () =>
+      window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
   useEffect(() => {
-    if (status.phase === 'checkmate' && playerWon) sound.play('victory');
-    const t = setTimeout(() => setShowStats(true), 400);
-    return () => clearTimeout(t);
-  }, [status.phase, playerWon]);
+    if (playerWon && ending === 'checkmate') {
+      sound.play('victory');
+    }
 
-  const isMate = ending === 'checkmate';
-  const isDraw = status.phase === 'stalemate' || ending === 'stalemate';
-  const title = isDraw ? 'Draw' : playerWon ? 'Congratulations! You Won!' : ending === 'resign' ? 'You Resigned' : ending === 'timeout' ? 'Time Out' : 'Checkmate';
-  const subtitle = isDraw ? 'Stalemate — no legal moves remain' : `${winnerName} wins by ${ENDING_LABELS[ending]}`;
+    const t = setTimeout(
+      () => setShowStats(true),
+      400,
+    );
+
+    return () => clearTimeout(t);
+  }, [ending, playerWon]);
+
+  const isDraw =
+    ending === 'stalemate' ||
+    ending === 'insufficient_material' ||
+    ending === 'draw_agreement';
+
+  const isTimeout = ending === 'timeout';
+
+  const isResignation =
+    ending === 'resign' ||
+    ending === 'resignation';
+
+  const isCheckmate =
+    ending === 'checkmate';
+
+  let title: string;
+  let subtitle: string;
+
+  if (ending === 'checkmate') {
+    title = playerWon
+      ? 'Congratulations! You Won!'
+      : 'Checkmate';
+
+    subtitle = playerWon
+      ? `${ winnerName } wins by Checkmate`
+      : `${ winnerName } wins by Checkmate`;
+  } else if (ending === 'timeout') {
+    title = playerWon
+      ? 'Time — You Win!'
+      : 'Time Out';
+
+    subtitle = playerWon
+      ? `${ winnerName } wins on time`
+      : `${ winnerName } wins on time`;
+  } else if (
+    ending === 'resign' ||
+    ending === 'resignation'
+  ) {
+    title = playerWon
+      ? 'Congratulations! You Won!'
+      : 'You Resigned';
+
+    subtitle = playerWon
+      ? `${ winnerName } wins by resignation`
+      : 'You resigned the game';
+  } else if (ending === 'insufficient_material') {
+    title = 'Draw';
+
+    subtitle =
+      'Draw — insufficient material to checkmate';
+  } else if (ending === 'stalemate') {
+    title = 'Draw';
+
+    subtitle =
+      'Stalemate — no legal moves remain';
+  } else if (ending === 'draw_agreement') {
+    title = 'Draw';
+
+    subtitle =
+      'Draw agreed by both players';
+  } else {
+    title = isDraw
+      ? 'Draw'
+      : playerWon
+        ? 'Congratulations! You Won!'
+        : 'Game Over';
+
+    subtitle = isDraw
+      ? 'The game ended in a draw'
+      : `${ winnerName } wins`;
+  }
+
   const stats = [
-    { icon: Target, label: 'Moves', value: String(moves) },
-    { icon: Clock, label: 'Duration', value: duration },
-    { icon: Zap, label: 'Ending', value: ENDING_LABELS[ending] },
-    { icon: TrendingUp, label: 'Rating', value: `${ratingChange > 0 ? '+' : ''}${ratingChange}` },
+    {
+      icon: Target,
+      label: 'Moves',
+      value: String(moves),
+    },
+    {
+      icon: Clock,
+      label: 'Duration',
+      value: duration,
+    },
+    {
+      icon: Zap,
+      label: 'Ending',
+      value: ENDING_LABELS[ending],
+    },
+    {
+      icon: TrendingUp,
+      label: 'Rating',
+      value:
+        ratingChange > 0
+          ? `+ ${ ratingChange } `
+          : String(ratingChange),
+    },
   ];
 
+  const ResultIcon = isDraw
+    ? Handshake
+    : isTimeout
+      ? Clock
+      : isResignation
+        ? Flag
+        : isCheckmate
+          ? Trophy
+          : Trophy;
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-navy-900/70 p-4 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-navy-700 shadow-card-lg animate-pop-in">
-        <div className={`relative overflow-hidden px-6 pb-8 pt-8 text-center text-white ${playerWon ? 'bg-gradient-to-br from-royal-500 via-blue-grad to-navy-700' : 'bg-navy-grad'}`}>
-          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20">
-            <X size={18} />
-          </button>
-          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/20 animate-glow-pulse">
-            {playerWon ? <PartyPopper size={32} className="text-amber-300" /> : ending === 'resign' ? <Flag size={32} className="text-royal-300" /> : isMate ? <Trophy size={32} className="text-royal-300" /> : <Handshake size={32} className="text-royal-300" />}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl">
+        {/* Close */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        {/* Header */}
+        <div className="relative px-6 pb-6 pt-10 text-center">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-indigo-500/20 to-transparent" />
+
+          <div className="relative mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-white/5">
+            <ResultIcon className="h-10 w-10 text-yellow-400" />
+
+            {playerWon && !isDraw && (
+              <PartyPopper className="absolute -right-2 -top-2 h-7 w-7 text-pink-400" />
+            )}
           </div>
-          {playerWon && (
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              {[...Array(16)].map((_, i) => (
-                <span key={i} className="absolute h-2 w-2 animate-fall" style={{ left: `${(i * 6.3) % 100}%`, top: '-10px', animationDelay: `${i * 0.12}s`, background: ['#81B64C', '#fbbf24', '#34d399', '#f472b6'][i % 4], borderRadius: i % 2 ? '50%' : '2px' }} />
-              ))}
+
+          <h2 className="relative text-2xl font-bold text-white">
+            {title}
+          </h2>
+
+          <p className="relative mt-2 text-sm text-slate-400">
+            {subtitle}
+          </p>
+
+          {isDraw && (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm text-slate-300">
+              <Handshake className="h-4 w-4" />
+              Draw
             </div>
           )}
-          <h2 className="mt-4 font-display text-2xl font-extrabold sm:text-3xl">{title}</h2>
-          <p className="mt-1 text-sm text-royal-100">{subtitle}</p>
-          <div className="pointer-events-none absolute -bottom-10 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full bg-royal-400/40 blur-2xl" />
         </div>
-        <div className="px-6 py-6">
-          <div className={`grid grid-cols-2 gap-3 transition-all duration-500 sm:grid-cols-4 ${showStats ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
-            {stats.map((s) => {
-              const Icon = s.icon;
-              return (
-                <div key={s.label} className="rounded-xl bg-navy-600 p-3 text-center">
-                  <Icon size={16} className="mx-auto text-royal-400" />
-                  <p className="mt-1.5 font-display text-base font-extrabold text-white">{s.value}</p>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-navy-400">{s.label}</p>
+
+        {/* Stats */}
+        <div
+          className={`grid grid - cols - 2 gap - 3 px - 6 transition - all duration - 500 ${
+    showStats
+        ? 'translate-y-0 opacity-100'
+        : 'translate-y-2 opacity-0'
+} `}
+        >
+          {stats.map(
+            ({
+              icon: Icon,
+              label,
+              value,
+            }) => (
+              <div
+                key={label}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+              >
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
                 </div>
-              );
-            })}
-          </div>
-          {playerWon && (
-            <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-amber-500/10 py-3">
-              <Star size={18} className="text-amber-400" />
-              <span className="font-display text-sm font-bold text-amber-400">Victory! {ratingChange > 0 ? `+${ratingChange}` : ratingChange} rating</span>
-              <Star size={18} className="text-amber-400" />
-            </div>
+
+                <div className="mt-2 truncate text-sm font-semibold text-white">
+                  {value}
+                </div>
+              </div>
+            ),
           )}
-          <div className="mt-5 flex gap-2">
-            <button onClick={onNewGame} className="btn-primary flex-1"><Trophy size={16} />Play Again</button>
-            <button onClick={onClose} className="btn-ghost">Close</button>
+        </div>
+
+        {/* Rating */}
+        <div className="px-6 pt-4">
+          <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+            <div className="flex items-center gap-2 text-sm text-slate-400">
+              <Star className="h-4 w-4" />
+              Rating change
+            </div>
+
+            <span
+              className={`text - sm font - bold ${
+    ratingChange > 0
+        ? 'text-emerald-400'
+        : ratingChange < 0
+            ? 'text-red-400'
+            : 'text-slate-400'
+} `}
+            >
+              {ratingChange > 0
+                ? `+ ${ ratingChange } `
+                : ratingChange}
+            </span>
           </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 p-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
+          >
+            Close
+          </button>
+
+          <button
+            type="button"
+            onClick={onNewGame}
+            className="flex-1 rounded-2xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400"
+          >
+            New Game
+          </button>
         </div>
       </div>
-      <style>{`@keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(400px) rotate(720deg); opacity: 0; } } .animate-fall { animation: fall 2.5s linear forwards; }`}</style>
     </div>
   );
 }
+

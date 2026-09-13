@@ -38,11 +38,15 @@ import { GameSetup } from './components/GameSetup';
 import { ChessGamePage } from './components/ChessGamePage';
 import { OnlineGameView } from './components/OnlineGameView';
 
-import { CreditCard, Gift, LayoutGrid, Settings as SettingsIcon } from 'lucide-react';
+import {
+    CreditCard,
+    Gift,
+    LayoutGrid,
+    Settings as SettingsIcon,
+} from 'lucide-react';
 import AddFriendModal from './components/multiplayer/AddFriendModal';
 
 import { sound } from './game/sound';
-import { legalMoves } from './game/engine';
 import { supabase, type AppUser } from './lib/supabase';
 
 import useInvites from './hooks/useInvites';
@@ -57,6 +61,7 @@ import {
 } from './game/themes';
 
 import type { OnlineGameConfig } from './hooks/useOnlineGame';
+import { joinOnlineGame } from './lib/multiplayer/supabase-multiplayer';
 
 const PIECE_VALUES: Record<PieceType, number> = {
     p: 1,
@@ -65,6 +70,22 @@ const PIECE_VALUES: Record<PieceType, number> = {
     r: 5,
     q: 9,
     k: 0,
+};
+
+type ActiveGameItem = {
+    id: string;
+    host_id: string;
+    guest_id: string;
+    time_control: TimeControl;
+    status: string;
+    turn: Color;
+    winner: Color | null;
+    white_ms: number;
+    black_ms: number;
+    created_at: string;
+    updated_at: string;
+    payload: Record<string, any> | null;
+    opponentName: string;
 };
 
 function computeCaptured(
@@ -112,7 +133,7 @@ function computeCaptured(
 
     (['p', 'n', 'b', 'r', 'q'] as PieceType[]).forEach(
         (t) => {
-            const missingFromBlack = 8-counts.b[t];
+            const missingFromBlack = 8 - counts.b[t];
 
             for (
                 let i = 0;
@@ -122,9 +143,11 @@ function computeCaptured(
                 capturedByWhite.push(t);
             }
 
-            const originalWhite = t === 'p' ? 8 : 2;
+            const originalWhite =
+                t === 'p' ? 8 : 2;
+
             const missingFromWhite =
-                originalWhite-counts.w[t];
+                originalWhite - counts.w[t];
 
             for (
                 let i = 0;
@@ -151,24 +174,33 @@ function computeCaptured(
         black: capturedByBlack,
         whiteDiff: Math.max(
             0,
-            whiteMaterial-blackMaterial
+            whiteMaterial - blackMaterial
         ),
         blackDiff: Math.max(
             0,
-            blackMaterial-whiteMaterial
+            blackMaterial - whiteMaterial
         ),
     };
 }
 
 function formatDuration(ms: number): string {
-    const s = Math.max(0, Math.floor(ms / 1000));
+    const s = Math.max(
+        0,
+        Math.floor(ms / 1000)
+    );
+
     const m = Math.floor(s / 60);
 
-    return `${m}:${String(s % 60).padStart(2, '0')}`;
+    return `${m}:${String(s % 60).padStart(
+        2,
+        '0'
+    )}`;
 }
 
 function HomePage() {
-    const [view, setView] = useState<string>('home');
+    const [view, setView] =
+        useState<string>('home');
+
     const [footerPage, setFooterPage] =
         useState<string | null>(null);
 
@@ -246,10 +278,15 @@ function HomePage() {
 
     const [walletOpen, setWalletOpen] =
         useState(false);
+
     const [addFriendOpen, setAddFriendOpen] =
         useState(false);
 
-    const walletDB = useWalletDB(authUser);
+    const [activeGames, setActiveGames] =
+        useState<ActiveGameItem[]>([]);
+
+    const walletDB =
+        useWalletDB(authUser);
 
     const {
         profile,
@@ -265,23 +302,28 @@ function HomePage() {
         );
     }, [boardThemeId]);
 
-    // presence heartbeat: update profiles.last_active while authenticated
-    usePresenceHeartbeat(authUser?.id ?? null);
+    usePresenceHeartbeat(
+        authUser?.id ?? null
+    );
 
     /* AUTH */
     useEffect(() => {
         let mounted = true;
 
-        supabase.auth.getSession().then(({ data }) => {
-            if (!mounted) return;
+        supabase.auth
+            .getSession()
+            .then(({ data }) => {
+                if (!mounted) return;
 
-            if (data.session?.user) {
-                setAuthUser({
-                    id: data.session.user.id,
-                    email: data.session.user.email ?? '',
-                });
-            }
-        });
+                if (data.session?.user) {
+                    setAuthUser({
+                        id: data.session.user.id,
+                        email:
+                            data.session.user.email ??
+                            '',
+                    });
+                }
+            });
 
         const {
             data: { subscription },
@@ -292,7 +334,9 @@ function HomePage() {
                 if (session?.user) {
                     setAuthUser({
                         id: session.user.id,
-                        email: session.user.email ?? '',
+                        email:
+                            session.user.email ??
+                            '',
                     });
 
                     if (event === 'SIGNED_IN') {
@@ -312,13 +356,257 @@ function HomePage() {
 
     useInvites();
 
-    /* Shared room URL */
+    /*
+     * ACTIVE GAMES
+     *
+     * online_games is the source of truth for
+     * games that can be resumed.
+     */
+    const loadActiveGames = useCallback(
+        async () => {
+            if (!authUser?.id) {
+                setActiveGames([]);
+                return;
+            }
+
+            try {
+                const {
+                    data: games,
+                    error,
+                } = await supabase
+                    .from('online_games')
+                    .select(`
+                        id,
+                        host_id,
+                        guest_id,
+                        time_control,
+                        status,
+                        turn,
+                        winner,
+                        white_ms,
+                        black_ms,
+                        created_at,
+                        updated_at,
+                        payload
+                    `)
+                    .eq('status', 'active')
+                    .or(
+                        `host_id.eq.${authUser.id},guest_id.eq.${authUser.id}`
+                    )
+                    .order('updated_at', {
+                        ascending: false,
+                    });
+
+                if (error) {
+                    console.error(
+                        '[App] Failed to load active games:',
+                        error
+                    );
+                    return;
+                }
+
+                if (!games?.length) {
+                    setActiveGames([]);
+                    return;
+                }
+
+                const opponentIds =
+                    games.map((game) =>
+                        game.host_id ===
+                            authUser.id
+                            ? game.guest_id
+                            : game.host_id
+                    );
+
+                const {
+                    data: profiles,
+                } = await supabase
+                    .from('profiles')
+                    .select(
+                        'id, display_name, username'
+                    )
+                    .in(
+                        'id',
+                        opponentIds
+                    );
+
+                const profileMap =
+                    new Map(
+                        (profiles ?? []).map(
+                            (p) => [
+                                p.id,
+                                p.display_name ||
+                                p.username ||
+                                'Opponent',
+                            ]
+                        )
+                    );
+
+                const formattedGames: ActiveGameItem[] =
+                    games.map((game) => {
+                        const opponentId =
+                            game.host_id ===
+                                authUser.id
+                                ? game.guest_id
+                                : game.host_id;
+
+                        return {
+                            id: game.id,
+                            host_id:
+                                game.host_id,
+                            guest_id:
+                                game.guest_id,
+                            time_control:
+                                (game.time_control ||
+                                    '3min') as TimeControl,
+                            status:
+                                game.status,
+                            turn:
+                                (game.turn ||
+                                    'w') as Color,
+                            winner:
+                                (game.winner ||
+                                    null) as
+                                | Color
+                                | null,
+                            white_ms:
+                                game.white_ms ??
+                                180000,
+                            black_ms:
+                                game.black_ms ??
+                                180000,
+                            created_at:
+                                game.created_at,
+                            updated_at:
+                                game.updated_at,
+                            payload:
+                                game.payload ??
+                                null,
+                            opponentName:
+                                profileMap.get(
+                                    opponentId
+                                ) ||
+                                'Opponent',
+                        };
+                    });
+
+                setActiveGames(
+                    formattedGames
+                );
+            } catch (error) {
+                console.error(
+                    '[App] Active games loading failed:',
+                    error
+                );
+            }
+        },
+        [authUser?.id]
+    );
+
     useEffect(() => {
-        const params = new URLSearchParams(
-            window.location.search
+        if (!authUser?.id) {
+            setActiveGames([]);
+            return;
+        }
+
+        loadActiveGames();
+
+        const interval =
+            window.setInterval(() => {
+                loadActiveGames();
+            }, 5000);
+
+        return () => {
+            window.clearInterval(
+                interval
+            );
+        };
+    }, [
+        authUser?.id,
+        loadActiveGames,
+    ]);
+
+    /*
+     * Resume an existing online game.
+     */
+    const resumeOnlineGame =
+        useCallback(
+            (
+                gameItem: ActiveGameItem
+            ) => {
+                if (!authUser) return;
+
+                const isHost =
+                    gameItem.host_id ===
+                    authUser.id;
+
+                const color: Color =
+                    isHost ? 'w' : 'b';
+
+                const payload =
+                    gameItem.payload ?? {};
+
+                const payloadCustomMinutes =
+                    Number(
+                        payload.custom_minutes ??
+                        payload.customMinutes ??
+                        5
+                    );
+
+                const resolvedTimeControl =
+                    gameItem.time_control ||
+                    '3min';
+
+                setOnlineGameId(
+                    gameItem.id
+                );
+
+                setOnlineIsHost(
+                    isHost
+                );
+
+                setGameMode('online');
+
+                setPlayerColor(
+                    color
+                );
+
+                if (autoFlip) {
+                    setOrientation(
+                        color
+                    );
+                }
+
+                setOnlineGameConfig({
+                    gameId:
+                        gameItem.id,
+                    roomId:
+                        gameItem.id,
+                    isHost,
+                    userId:
+                        authUser.id,
+                    playerColor:
+                        color,
+                    timeControl:
+                        resolvedTimeControl,
+                    customMinutes:
+                        payloadCustomMinutes,
+                });
+
+                setView('home');
+            },
+            [authUser, autoFlip]
         );
 
-        const roomParam = params.get('room');
+    /* Shared room URL */
+    useEffect(() => {
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const roomParam =
+            params.get('room');
 
         if (roomParam) {
             setGameMode('room');
@@ -326,10 +614,12 @@ function HomePage() {
         }
     }, []);
 
-    const handleLogout = useCallback(async () => {
-        await supabase.auth.signOut();
-        setAuthUser(null);
-    }, []);
+    const handleLogout =
+        useCallback(async () => {
+            await supabase.auth.signOut();
+            setAuthUser(null);
+            setActiveGames([]);
+        }, []);
 
     const opponent = PLAYERS[1];
 
@@ -337,7 +627,8 @@ function HomePage() {
         () => ({
             ...CURRENT_USER,
             avatar:
-                profile?.avatar_url || userAvatar,
+                profile?.avatar_url ||
+                userAvatar,
             name:
                 profile?.display_name ||
                 profile?.username ||
@@ -355,303 +646,441 @@ function HomePage() {
         [profile, userAvatar]
     );
 
-    /*
-     * This hook is retained for the existing
-     * homepage history/profile functionality.
-     *
-     * The actual dedicated Bot game gets its own
-     * ChessGamePage instance using the same settings.
-     */
     const game = useChess({
         playerColor,
         opponentColor:
-            playerColor === 'w' ? 'b' : 'w',
-        vsComputer: gameMode === 'ai',
+            playerColor === 'w'
+                ? 'b'
+                : 'w',
+        vsComputer:
+            gameMode === 'ai',
         timeControl,
         customMinutes,
-        opponentName: opponent.name,
-        opponentAvatar: opponent.avatar,
-        opponentFlag: opponent.flag,
+        opponentName:
+            opponent.name,
+        opponentAvatar:
+            opponent.avatar,
+        opponentFlag:
+            opponent.flag,
         gameMode,
         aiDifficulty,
     });
 
-    const navigate = useCallback(
-        (id: string) => {
+    const navigate =
+        useCallback(
+            (id: string) => {
+                setFooterPage(null);
+                setView(id);
+
+                requestAnimationFrame(
+                    () => {
+                        const el =
+                            document.getElementById(
+                                id
+                            );
+
+                        if (el) {
+                            el.scrollIntoView({
+                                behavior:
+                                    'smooth',
+                                block: 'start',
+                            });
+                        } else {
+                            window.scrollTo({
+                                top: 0,
+                                behavior:
+                                    'smooth',
+                            });
+                        }
+                    }
+                );
+            },
+            []
+        );
+
+    /*
+     * Normal homepage Play Now.
+     */
+    const handlePlay =
+        useCallback(() => {
             setFooterPage(null);
-            setView(id);
+            setView('play');
 
-            requestAnimationFrame(() => {
-                const el =
-                    document.getElementById(id);
-
-                if (el) {
-                    el.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start',
-                    });
-                } else {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth',
-                    });
+            requestAnimationFrame(
+                () => {
+                    document
+                        .getElementById(
+                            'play'
+                        )
+                        ?.scrollIntoView({
+                            behavior:
+                                'smooth',
+                            block: 'start',
+                        });
                 }
-            });
-        },
-        []
-    );
+            );
+        }, []);
 
     /*
-     * Normal homepage Play Now:
-     * ONLY opens/scrolls to setup.
+     * Quick Match.
      */
-    const handlePlay = useCallback(() => {
-        setFooterPage(null);
-        setView('play');
+    const handleQuickMatch =
+        useCallback(() => {
+            setGameMode('online');
+            setQuickMatchSetupOpen(
+                true
+            );
+        }, []);
 
-        requestAnimationFrame(() => {
-            document
-                .getElementById('play')
-                ?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start',
-                });
-        });
-    }, []);
+    const handleLeaderboard =
+        useCallback(
+            () =>
+                navigate(
+                    'leaderboard'
+                ),
+            [navigate]
+        );
 
-    /*
-     * Quick Match:
-     * opens the setup modal instead of scrolling.
-     */
-    const handleQuickMatch = useCallback(() => {
-        setGameMode('online');
-        setQuickMatchSetupOpen(true);
-    }, []);
+    const onChangeColor =
+        useCallback(
+            (c: Color) => {
+                setPlayerColor(c);
 
-    const handleLeaderboard = useCallback(
-        () => navigate('leaderboard'),
-        [navigate]
-    );
+                if (autoFlip) {
+                    setOrientation(
+                        c
+                    );
+                }
 
-    const onChangeColor = useCallback(
-        (c: Color) => {
-            setPlayerColor(c);
+                sound.play('select');
+            },
+            [autoFlip]
+        );
 
-            if (autoFlip) {
-                setOrientation(c);
-            }
+    const onChangeTimeControl =
+        useCallback(
+            (tc: TimeControl) => {
+                setTimeControl(tc);
+                sound.play('select');
+            },
+            []
+        );
 
-            sound.play('select');
-        },
-        [autoFlip]
-    );
+    const onChangeMode =
+        useCallback(
+            (m: GameMode) => {
+                setGameMode(m);
+                sound.play('select');
+            },
+            []
+        );
 
-    const onChangeTimeControl = useCallback(
-        (tc: TimeControl) => {
-            setTimeControl(tc);
-            sound.play('select');
-        },
-        []
-    );
+    const onChangeDifficulty =
+        useCallback(
+            (d: AIDifficulty) => {
+                setAiDifficulty(d);
+                sound.play('select');
+            },
+            []
+        );
 
-    /*
-     * IMPORTANT:
-     * Selecting Online/Friends does NOT open
-     * matchmaking/room automatically.
-     */
-    const onChangeMode = useCallback(
-        (m: GameMode) => {
-            setGameMode(m);
-            sound.play('select');
-        },
-        []
-    );
-
-    const onChangeDifficulty = useCallback(
-        (d: AIDifficulty) => {
-            setAiDifficulty(d);
-            sound.play('select');
-        },
-        []
-    );
-
-    const onToggleMute = useCallback(() => {
-        sound.unlock();
-
-        const next = !muted;
-
-        sound.setMuted(next);
-        setMuted(next);
-
-        if (!next) {
-            sound.play('select');
-        }
-    }, [muted]);
-
-    const onToggleMusic = useCallback(() => {
-        sound.unlock();
-        sound.toggleMusic();
-        setMusicOn(!sound.musicMuted);
-    }, []);
-
-    const onChangeVolume = useCallback(
-        (v: number) => {
+    const onToggleMute =
+        useCallback(() => {
             sound.unlock();
-            sound.setVolume(v);
-            setVolume(v);
 
-            if (v > 0 && muted) {
-                sound.setMuted(false);
-                setMuted(false);
+            const next = !muted;
+
+            sound.setMuted(next);
+            setMuted(next);
+
+            if (!next) {
+                sound.play(
+                    'select'
+                );
             }
-        },
-        [muted]
-    );
+        }, [muted]);
 
-    const onResetSettings = useCallback(() => {
-        sound.setMuted(false);
-        sound.setVolume(0.7);
+    const onToggleMusic =
+        useCallback(() => {
+            sound.unlock();
+            sound.toggleMusic();
+            setMusicOn(
+                !sound.musicMuted
+            );
+        }, []);
 
-        setMuted(false);
-        setVolume(0.7);
-        setAutoFlip(true);
-        setNotifications(true);
-    }, []);
+    const onChangeVolume =
+        useCallback(
+            (v: number) => {
+                sound.unlock();
+                sound.setVolume(v);
+                setVolume(v);
+
+                if (v > 0 && muted) {
+                    sound.setMuted(
+                        false
+                    );
+                    setMuted(false);
+                }
+            },
+            [muted]
+        );
+
+    const onResetSettings =
+        useCallback(() => {
+            sound.setMuted(false);
+            sound.setVolume(0.7);
+
+            setMuted(false);
+            setVolume(0.7);
+            setAutoFlip(true);
+            setNotifications(true);
+        }, []);
 
     /*
      * BOT GAME
-     *
-     * We do NOT call game.startGame() here because
-     * ChessGamePage owns the dedicated game instance.
      */
-    const startBotGame = useCallback(() => {
-        setQuickMatchSetupOpen(false);
-        setGameStarted(true);
-    }, []);
+    const startBotGame =
+        useCallback(() => {
+            setQuickMatchSetupOpen(
+                false
+            );
+            setGameStarted(true);
+        }, []);
 
     /*
-     * Setup PLAY handler used by homepage setup.
+     * Setup PLAY handler.
      */
-    const handleSetupPlay = useCallback(() => {
-        if (gameMode === 'online') {
-            setQuickMatchSetupOpen(false);
+    const handleSetupPlay =
+        useCallback(() => {
+            if (
+                gameMode === 'online'
+            ) {
+                setQuickMatchSetupOpen(
+                    false
+                );
 
-            if (!authUser) {
-                setAuthOpen(true);
+                if (!authUser) {
+                    setAuthOpen(true);
+                    return;
+                }
+
+                setMatchmakingOpen(
+                    true
+                );
                 return;
             }
 
-            setMatchmakingOpen(true);
-            return;
-        }
+            if (gameMode === 'room') {
+                setQuickMatchSetupOpen(
+                    false
+                );
 
-        if (gameMode === 'room') {
-            setQuickMatchSetupOpen(false);
+                if (!authUser) {
+                    setAuthOpen(true);
+                    return;
+                }
 
-            if (!authUser) {
-                setAuthOpen(true);
+                setRoomOpen(true);
                 return;
             }
 
-            setRoomOpen(true);
-            return;
-        }
-
-        startBotGame();
-    }, [
-        gameMode,
-        authUser,
-        startBotGame,
-    ]);
+            startBotGame();
+        }, [
+            gameMode,
+            authUser,
+            startBotGame,
+        ]);
 
     /*
      * Matchmaking matched.
      */
-    const handleMatched = useCallback(
-        (gameId: string, isHost: boolean) => {
-            if (!authUser) return;
+    const handleMatched =
+        useCallback(
+            async (
+                gameId: string,
+                isHost: boolean
+            ) => {
+                if (!authUser) return;
 
-            const color: Color =
-                isHost ? 'w' : 'b';
+                if (!isHost) {
+                    try {
+                        await joinOnlineGame(
+                            gameId
+                        );
+                    } catch (error) {
+                        console.error(
+                            '[App] failed to join matched game:',
+                            error
+                        );
 
-            setOnlineGameId(gameId);
-            setOnlineIsHost(isHost);
-            setGameMode('online');
-            setPlayerColor(color);
+                        window.dispatchEvent(
+                            new CustomEvent(
+                                'app-toast',
+                                {
+                                    detail: {
+                                        message:
+                                            error instanceof
+                                                Error
+                                                ? error.message
+                                                : 'Failed to join game',
+                                        type: 'error',
+                                    },
+                                }
+                            )
+                        );
 
-            if (autoFlip) {
-                setOrientation(color);
-            }
+                        return;
+                    }
+                }
 
-            setOnlineGameConfig({
-                gameId,
-                roomId: gameId,
-                isHost,
-                userId: authUser.id,
-                playerColor: color,
+                const color: Color =
+                    isHost ? 'w' : 'b';
+
+                setOnlineGameId(
+                    gameId
+                );
+
+                setOnlineIsHost(
+                    isHost
+                );
+
+                setGameMode(
+                    'online'
+                );
+
+                setPlayerColor(
+                    color
+                );
+
+                if (autoFlip) {
+                    setOrientation(
+                        color
+                    );
+                }
+
+                setOnlineGameConfig({
+                    gameId,
+                    roomId: gameId,
+                    isHost,
+                    userId:
+                        authUser.id,
+                    playerColor:
+                        color,
+                    timeControl,
+                    customMinutes,
+                });
+
+                setMatchmakingOpen(
+                    false
+                );
+            },
+            [
+                authUser,
+                autoFlip,
                 timeControl,
                 customMinutes,
-            });
-
-            setMatchmakingOpen(false);
-        },
-        [
-            authUser,
-            autoFlip,
-            timeControl,
-            customMinutes,
-        ]
-    );
+            ]
+        );
 
     /*
      * Invite accepted -> online game.
      */
     useEffect(() => {
-        const onCreated = (e: any) => {
+        const onCreated = (
+            e: any
+        ) => {
             const raw = e?.detail;
-            if (!raw || !authUser) return;
 
-            // Normalize different RPC/insert shapes: may be { data: {...} } or array or direct row
-            const createdGame = raw.data ?? (Array.isArray(raw) ? raw[0] : raw);
-            if (!createdGame || typeof createdGame !== 'object') return;
-
-            const id = createdGame.id ?? createdGame.game_id ?? null;
-            if (!id) {
-                // nothing we can do safely without an id
-                // eslint-disable-next-line no-console
-                console.warn('[App] online-game-created event missing id', createdGame);
+            if (
+                !raw ||
+                !authUser
+            ) {
                 return;
             }
 
-            // Defensive: some deployments return slightly different shapes.
-            const hostId = createdGame.host_id ?? createdGame.host ?? null;
-            const guestId = createdGame.guest_id ?? createdGame.guest ?? null;
+            const createdGame =
+                raw.data ??
+                (Array.isArray(raw)
+                    ? raw[0]
+                    : raw);
 
-            // If the backend provided a 'white_id' or 'black_id' use them as hints
-            const whiteId = createdGame.white_id ?? createdGame.white ?? null;
+            if (
+                !createdGame ||
+                typeof createdGame !==
+                'object'
+            ) {
+                return;
+            }
 
-            // Determine whether current user is host (or white) using available fields
-            const isHost = hostId === authUser.id || whiteId === authUser.id || (createdGame.host_id === authUser.id);
+            const id =
+                createdGame.id ??
+                createdGame.game_id ??
+                null;
 
-            const color: Color = isHost ? 'w' : 'b';
+            if (!id) {
+                console.warn(
+                    '[App] online-game-created event missing id',
+                    createdGame
+                );
+                return;
+            }
 
-            // Safely derive time control from returned row or payload
-            const derivedTimeControl = createdGame.time_control ?? createdGame.payload?.time_control ?? timeControl ?? null;
+            const hostId =
+                createdGame.host_id ??
+                createdGame.host ??
+                null;
+
+            const whiteId =
+                createdGame.white_id ??
+                createdGame.white ??
+                null;
+
+            const isHost =
+                hostId ===
+                authUser.id ||
+                whiteId ===
+                authUser.id ||
+                createdGame.host_id ===
+                authUser.id;
+
+            const color: Color =
+                isHost ? 'w' : 'b';
+
+            const derivedTimeControl =
+                createdGame.time_control ??
+                createdGame.payload
+                    ?.time_control ??
+                timeControl ??
+                null;
 
             setOnlineGameId(id);
-            setOnlineIsHost(isHost);
-            setGameMode('online');
-            setPlayerColor(color);
+            setOnlineIsHost(
+                isHost
+            );
+            setGameMode(
+                'online'
+            );
+            setPlayerColor(
+                color
+            );
 
-            if (autoFlip) setOrientation(color);
+            if (autoFlip) {
+                setOrientation(
+                    color
+                );
+            }
 
             setOnlineGameConfig({
                 gameId: id,
                 roomId: id,
                 isHost,
-                userId: authUser.id,
-                playerColor: color,
-                timeControl: derivedTimeControl,
+                userId:
+                    authUser.id,
+                playerColor:
+                    color,
+                timeControl:
+                    derivedTimeControl,
                 customMinutes,
             });
         };
@@ -661,49 +1090,129 @@ function HomePage() {
             onCreated as EventListener
         );
 
-        const onInviteAccepted = (ev: any) => {
-            const invite = ev.detail?.invite;
+        const onInviteAccepted = (
+            ev: any
+        ) => {
+            const invite =
+                ev.detail?.invite;
 
-            if (!invite) return;
+            if (
+                !invite?.game_id ||
+                !authUser
+            ) {
+                return;
+            }
+
+            if (
+                invite.from_user !==
+                authUser.id
+            ) {
+                return;
+            }
+
+            console.log(
+                '[App] Opening accepted game:',
+                invite.game_id
+            );
 
             (async () => {
                 try {
-                    const u =
-                        await supabase.auth.getUser();
+                    const {
+                        data: gameRow,
+                        error,
+                    } =
+                        await supabase
+                            .from(
+                                'online_games'
+                            )
+                            .select(
+                                '*'
+                            )
+                            .eq(
+                                'id',
+                                invite.game_id
+                            )
+                            .single();
 
-                    const uid =
-                        u.data?.user?.id;
-
-                    if (!uid) return;
-
-                    if (
-                        invite.from_user === uid &&
-                        invite.game_id
-                    ) {
-                        const { data: createdGame } =
-                            await supabase
-                                .from('online_games')
-                                .select('*')
-                                .eq(
-                                    'id',
-                                    invite.game_id
-                                )
-                                .single();
-
-                        if (createdGame) {
-                            window.dispatchEvent(
-                                new CustomEvent(
-                                    'online-game-created',
-                                    {
-                                        detail: createdGame,
-                                    }
-                                )
-                            );
-                        }
+                    if (error) {
+                        console.error(
+                            '[App] Failed to load accepted game:',
+                            error
+                        );
+                        return;
                     }
+
+                    if (!gameRow) {
+                        console.error(
+                            '[App] Accepted game not found:',
+                            invite.game_id
+                        );
+                        return;
+                    }
+
+                    const isHost =
+                        gameRow.host_id ===
+                        authUser.id;
+
+                    const color: Color =
+                        isHost
+                            ? 'w'
+                            : 'b';
+
+                    const derivedTimeControl =
+                        gameRow.time_control ??
+                        gameRow.payload
+                            ?.time_control ??
+                        timeControl ??
+                        '3min';
+
+                    setOnlineGameId(
+                        gameRow.id
+                    );
+
+                    setOnlineIsHost(
+                        isHost
+                    );
+
+                    setGameMode(
+                        'online'
+                    );
+
+                    setPlayerColor(
+                        color
+                    );
+
+                    if (autoFlip) {
+                        setOrientation(
+                            color
+                        );
+                    }
+
+                    setOnlineGameConfig(
+                        {
+                            gameId:
+                                gameRow.id,
+                            roomId:
+                                gameRow.id,
+                            isHost,
+                            userId:
+                                authUser.id,
+                            playerColor:
+                                color,
+                            timeControl:
+                                derivedTimeControl,
+                            customMinutes,
+                        }
+                    );
+
+                    console.log(
+                        '[App] ONLINE GAME CONFIG SET:',
+                        gameRow.id,
+                        color
+                    );
                 } catch (err) {
-                    console.warn(
-                        'invite-accepted handler failed',
+                    console.error(
+                        '[App] invite accepted handler failed:',
                         err
                     );
                 }
@@ -734,147 +1243,32 @@ function HomePage() {
     ]);
 
     /*
-     * Online move broadcast.
+     * The dedicated useOnlineGame hook now owns:
+     *
+     * - move persistence
+     * - move reconstruction
+     * - realtime opponent moves
+     * - clocks
+     * - turn persistence
+     *
+     * Therefore App.tsx intentionally does NOT
+     * duplicate those effects here.
      */
+
     useEffect(() => {
-        if (
-            !onlineGameId ||
-            !authUser ||
-            !game.started
-        ) {
-            return;
-        }
+        const openAdd = () =>
+            setAddFriendOpen(true);
 
-        const lastMove =
-            game.getMoveForBroadcast();
-
-        if (!lastMove) return;
-
-        const wasOurMove =
-            (onlineIsHost &&
-                game.state.turn === 'b') ||
-            (!onlineIsHost &&
-                game.state.turn === 'w');
-
-        if (!wasOurMove) return;
-
-        supabase
-            .from('online_game_moves')
-            .insert({
-                game_id: onlineGameId,
-                move_number: game.history.length,
-                from_row: lastMove.from[0],
-                from_col: lastMove.from[1],
-                to_row: lastMove.to[0],
-                to_col: lastMove.to[1],
-                promotion:
-                    lastMove.promotion || null,
-                player_id: authUser.id,
-                san:
-                    game.history[
-                        game.history.length-1
-                    ]?.san || '',
-            })
-            .then(() => { });
-
-        supabase
-            .from('online_games')
-            .update({
-                turn: game.state.turn,
-            })
-            .eq('id', onlineGameId)
-            .then(() => { });
-    }, [
-        game.history,
-        onlineGameId,
-        authUser,
-        onlineIsHost,
-        game.started,
-        game.state.turn,
-        game.getMoveForBroadcast,
-    ]);
-
-    /*
-     * Opponent online moves.
-     */
-    useEffect(() => {
-        if (!onlineGameId || !authUser) {
-            return;
-        }
-
-        const channel = supabase
-            .channel(`game-${onlineGameId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'online_game_moves',
-                    filter: `game_id=eq.${onlineGameId}`,
-                },
-                (payload) => {
-                    const m = payload.new as {
-                        player_id: string;
-                        from_row: number;
-                        from_col: number;
-                        to_row: number;
-                        to_col: number;
-                        promotion: string | null;
-                    };
-
-                    if (
-                        m.player_id === authUser.id
-                    ) {
-                        return;
-                    }
-
-                    const allLegal = legalMoves(
-                        game.board,
-                        game.state,
-                        game.state.turn
-                    );
-
-                    const found = allLegal.find(
-                        (mv) =>
-                            mv.from[0] === m.from_row &&
-                            mv.from[1] === m.from_col &&
-                            mv.to[0] === m.to_row &&
-                            mv.to[1] === m.to_col &&
-                            (mv.promotion || '') ===
-                            (m.promotion || '')
-                    );
-
-                    if (found) {
-                        game.applyRemoteMove(found);
-                    }
-                }
-            )
-            .subscribe();
+        window.addEventListener(
+            'open-add-friend',
+            openAdd as EventListener
+        );
 
         return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [
-        onlineGameId,
-        authUser,
-        game,
-    ]);
-
-    useEffect(() => {
-        // lightweight invite-accepted handler (no-op here — real handling exists in other effect)
-        const onInviteAcceptedGlobal = (_ev: any) => {
-            // Intentionally left blank to ensure listener can be cleaned up reliably.
-        };
-
-        // add friend modal handler
-        const openAdd = () => setAddFriendOpen(true);
-
-        window.addEventListener('invite-accepted', onInviteAcceptedGlobal as EventListener);
-        window.addEventListener('open-add-friend', openAdd as EventListener);
-
-        return () => {
-            window.removeEventListener('open-add-friend', openAdd as EventListener);
-            window.removeEventListener('invite-accepted', onInviteAcceptedGlobal as EventListener);
+            window.removeEventListener(
+                'open-add-friend',
+                openAdd as EventListener
+            );
         };
     }, []);
 
@@ -889,16 +1283,21 @@ function HomePage() {
             : user;
 
     const winnerName =
-        game.status.winner === 'w'
+        game.status.winner ===
+            'w'
             ? whitePlayer.name
             : blackPlayer.name;
 
     const playerWon =
-        game.status.winner === playerColor;
+        game.status.winner ===
+        playerColor;
 
-    const closePopup = useCallback(() => {
-        setDismissKey((k) => k + 1);
-    }, []);
+    const closePopup =
+        useCallback(() => {
+            setDismissKey(
+                (k) => k + 1
+            );
+        }, []);
 
     const [dismissKey, setDismissKey] =
         useState(0);
@@ -907,7 +1306,8 @@ function HomePage() {
 
     const showPopup =
         game.pendingResult &&
-        dismissKey !== pendingKey.current;
+        dismissKey !==
+        pendingKey.current;
 
     useEffect(() => {
         if (game.pendingResult) {
@@ -919,10 +1319,13 @@ function HomePage() {
         dismissKey,
     ]);
 
-    const onNewGame = useCallback(() => {
-        setDismissKey(pendingKey.current);
-        game.startGame();
-    }, [game]);
+    const onNewGame =
+        useCallback(() => {
+            setDismissKey(
+                pendingKey.current
+            );
+            game.startGame();
+        }, [game]);
 
     const stageForPanel =
         game.stageLabel as
@@ -931,36 +1334,46 @@ function HomePage() {
         | 'Game over';
 
     const captured = useMemo(
-        () => computeCaptured(game.board),
+        () =>
+            computeCaptured(
+                game.board
+            ),
         [game.board]
     );
 
-    const onFooterPage = useCallback(
-        (page: string) => {
-            setFooterPage(page);
-            setView('footer');
+    const onFooterPage =
+        useCallback(
+            (page: string) => {
+                setFooterPage(page);
+                setView('footer');
 
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth',
-            });
-        },
-        []
-    );
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth',
+                });
+            },
+            []
+        );
 
     /*
      * Dedicated BOT game screen.
-     *
-     * This MUST happen before the normal homepage.
      */
     if (gameStarted) {
         return (
             <ChessGamePage
                 gameMode={gameMode}
-                aiDifficulty={aiDifficulty}
-                playerColor={playerColor}
-                timeControl={timeControl}
-                customMinutes={customMinutes}
+                aiDifficulty={
+                    aiDifficulty
+                }
+                playerColor={
+                    playerColor
+                }
+                timeControl={
+                    timeControl
+                }
+                customMinutes={
+                    customMinutes
+                }
                 onExit={() => {
                     setGameStarted(false);
                     setView('play');
@@ -979,38 +1392,68 @@ function HomePage() {
                     active=""
                     onNavigate={navigate}
                     user={authUser}
-                    onLogin={() => setAuthOpen(true)}
-                    onLogout={handleLogout}
-                    onWallet={() => setWalletOpen(true)}
-                    walletBalanceInr={walletDB.balanceInr}
+                    onLogin={() =>
+                        setAuthOpen(
+                            true
+                        )
+                    }
+                    onLogout={
+                        handleLogout
+                    }
+                    onWallet={() =>
+                        setWalletOpen(
+                            true
+                        )
+                    }
+                    walletBalanceInr={
+                        walletDB.balanceInr
+                    }
                 />
 
                 <div className="mx-auto w-full max-w-[1400px]">
                     <main className="flex min-w-0 flex-col pt-14">
                         <FooterPage
-                            page={footerPage as any}
+                            page={
+                                footerPage as any
+                            }
                             onBack={() => {
-                                setFooterPage(null);
-                                navigate('home');
+                                setFooterPage(
+                                    null
+                                );
+                                navigate(
+                                    'home'
+                                );
                             }}
                         />
 
                         <Footer
-                            onNavigate={navigate}
-                            onFooterPage={onFooterPage}
+                            onNavigate={
+                                navigate
+                            }
+                            onFooterPage={
+                                onFooterPage
+                            }
+                        />
+
+                        <AuthModal
+                            open={
+                                authOpen
+                            }
+                            onClose={() =>
+                                setAuthOpen(
+                                    false
+                                )
+                            }
+                            onAuthed={(u) => {
+                                setAuthUser(
+                                    u
+                                );
+                                setAuthOpen(
+                                    false
+                                );
+                            }}
                         />
                     </main>
-
-                    <AuthModal
-                        open={authOpen}
-                        onClose={() =>
-                            setAuthOpen(false)
-                        }
-                        onAuthed={(u) => {
-                            setAuthUser(u);
-                            setAuthOpen(false);
-                        }}
-                    />
                 </div>
             </div>
         );
@@ -1020,59 +1463,286 @@ function HomePage() {
      * ONLINE GAME.
      */
     if (onlineGameConfig) {
-        const handleExitOnline = () => {
-            setOnlineGameConfig(null);
-            setOnlineGameId(null);
-            setActiveRoomId(null);
-            setGameMode('ai');
-            setView('home');
-        };
+        const handleExitOnline =
+            () => {
+                setOnlineGameConfig(
+                    null
+                );
+                setOnlineGameId(
+                    null
+                );
+                setActiveRoomId(
+                    null
+                );
+                setGameMode('ai');
+                setView('home');
 
-        const handleRematch = () => {
-            if (!onlineGameConfig) return;
+                loadActiveGames();
+            };
 
-            setOnlineGameConfig({
-                ...onlineGameConfig,
-                gameId:
-                    onlineGameConfig.gameId +
-                    '-rematch-' +
-                    Date.now(),
-            });
+        const handleRematch = async () => {
+            if (!onlineGameConfig || !authUser) {
+                return;
+            }
+
+            try {
+                // Get the finished game so we can create
+                // a completely new online_games row.
+                const {
+                    data: previousGame,
+                    error: previousGameError,
+                } = await supabase
+                    .from('online_games')
+                    .select(
+                        'host_id, guest_id, time_control, payload'
+                    )
+                    .eq(
+                        'id',
+                        onlineGameConfig.gameId
+                    )
+                    .single();
+
+                if (
+                    previousGameError ||
+                    !previousGame
+                ) {
+                    console.error(
+                        '[App] Failed to load previous game for rematch:',
+                        previousGameError
+                    );
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            'app-toast',
+                            {
+                                detail: {
+                                    message:
+                                        'Unable to start rematch',
+                                    type: 'error',
+                                },
+                            }
+                        )
+                    );
+
+                    return;
+                }
+
+                const previousPayload =
+                    previousGame.payload ?? {};
+
+                const customMinutesValue =
+                    Number(
+                        previousPayload.custom_minutes ??
+                        previousPayload.customMinutes ??
+                        onlineGameConfig.customMinutes ??
+                        5
+                    );
+
+                // Create a REAL new online_games row.
+                // PostgreSQL/Supabase generates a fresh UUID.
+                const {
+                    data: newGame,
+                    error: newGameError,
+                } = await supabase
+                    .from('online_games')
+                    .insert({
+                        host_id:
+                            previousGame.host_id,
+                        guest_id:
+                            previousGame.guest_id,
+                        time_control:
+                            previousGame.time_control ??
+                            onlineGameConfig.timeControl,
+                        status: 'active',
+                        turn: 'w',
+                        white_ms:
+                            onlineGameConfig.timeControl ===
+                                'custom'
+                                ? customMinutesValue * 60 * 1000
+                                : onlineGameConfig.timeControl ===
+                                    '1min'
+                                    ? 60 * 1000
+                                    : onlineGameConfig.timeControl ===
+                                        '10min'
+                                        ? 10 * 60 * 1000
+                                        : 3 * 60 * 1000,
+                        black_ms:
+                            onlineGameConfig.timeControl ===
+                                'custom'
+                                ? customMinutesValue * 60 * 1000
+                                : onlineGameConfig.timeControl ===
+                                    '1min'
+                                    ? 60 * 1000
+                                    : onlineGameConfig.timeControl ===
+                                        '10min'
+                                        ? 10 * 60 * 1000
+                                        : 3 * 60 * 1000,
+                        clock_updated_at:
+                            new Date().toISOString(),
+                        payload: {
+                            ...previousPayload,
+                            custom_minutes:
+                                customMinutesValue,
+                            result_reason: null,
+                        },
+                    })
+                    .select()
+                    .single();
+
+                if (
+                    newGameError ||
+                    !newGame
+                ) {
+                    console.error(
+                        '[App] Failed to create rematch:',
+                        newGameError
+                    );
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            'app-toast',
+                            {
+                                detail: {
+                                    message:
+                                        newGameError?.message ??
+                                        'Unable to create rematch',
+                                    type: 'error',
+                                },
+                            }
+                        )
+                    );
+
+                    return;
+                }
+
+                const newGameId =
+                    newGame.id;
+
+                // Keep the same player/color assignment.
+                const color =
+                    onlineGameConfig.playerColor;
+
+                setOnlineGameId(
+                    newGameId
+                );
+
+                setOnlineIsHost(
+                    onlineGameConfig.isHost
+                );
+
+                setPlayerColor(
+                    color
+                );
+
+                if (autoFlip) {
+                    setOrientation(color);
+                }
+
+                setOnlineGameConfig({
+                    ...onlineGameConfig,
+                    gameId: newGameId,
+                    roomId: newGameId,
+                    timeControl:
+                        (newGame.time_control ??
+                            onlineGameConfig.timeControl) as TimeControl,
+                    customMinutes:
+                        customMinutesValue,
+                });
+
+                console.log(
+                    '[App] Rematch created:',
+                    newGameId
+                );
+            } catch (error) {
+                console.error(
+                    '[App] Rematch failed:',
+                    error
+                );
+
+                window.dispatchEvent(
+                    new CustomEvent(
+                        'app-toast',
+                        {
+                            detail: {
+                                message:
+                                    'Unable to start rematch',
+                                type: 'error',
+                            },
+                        }
+                    )
+                );
+            }
         };
 
         return (
             <div className="min-h-screen bg-navy-800">
                 <TopHeader
                     active="play"
-                    onNavigate={navigate}
+                    onNavigate={
+                        navigate
+                    }
                     user={authUser}
-                    onLogin={() => setAuthOpen(true)}
-                    onLogout={handleLogout}
-                    onWallet={() => setWalletOpen(true)}
-                    walletBalanceInr={walletDB.balanceInr}
+                    onLogin={() =>
+                        setAuthOpen(
+                            true
+                        )
+                    }
+                    onLogout={
+                        handleLogout
+                    }
+                    onWallet={() =>
+                        setWalletOpen(
+                            true
+                        )
+                    }
+                    walletBalanceInr={
+                        walletDB.balanceInr
+                    }
                 />
 
                 <div className="mx-auto w-full max-w-[1400px]">
                     <main className="flex min-w-0 flex-col pt-14">
                         <OnlineGameView
-                            config={onlineGameConfig}
-                            themeId={boardThemeId}
-                            onThemeChange={(id) => {
-                                setBoardThemeId(id);
-                                storeTheme(id);
+                            config={
+                                onlineGameConfig
+                            }
+                            themeId={
+                                boardThemeId
+                            }
+                            onThemeChange={(
+                                id
+                            ) => {
+                                setBoardThemeId(
+                                    id
+                                );
+                                storeTheme(
+                                    id
+                                );
                             }}
-                            onExit={handleExitOnline}
-                            onRematch={handleRematch}
+                            onExit={
+                                handleExitOnline
+                            }
+                            onRematch={
+                                handleRematch
+                            }
                         />
 
                         <AuthModal
-                            open={authOpen}
+                            open={
+                                authOpen
+                            }
                             onClose={() =>
-                                setAuthOpen(false)
+                                setAuthOpen(
+                                    false
+                                )
                             }
                             onAuthed={(u) => {
-                                setAuthUser(u);
-                                setAuthOpen(false);
+                                setAuthUser(
+                                    u
+                                );
+                                setAuthOpen(
+                                    false
+                                );
                             }}
                         />
                     </main>
@@ -1081,17 +1751,23 @@ function HomePage() {
         );
     }
 
-    const gameDuration = formatDuration(
-        (timeControl === '1min'
-            ? 60000
-            : timeControl === '3min'
-                ? 180000
-                : timeControl === '10min'
-                    ? 600000
-                    : customMinutes * 60000) *
-        2 -
-        (game.whiteMs + game.blackMs)
-    );
+    const gameDuration =
+        formatDuration(
+            (timeControl ===
+                '1min'
+                ? 60000
+                : timeControl ===
+                    '3min'
+                    ? 180000
+                    : timeControl ===
+                        '10min'
+                        ? 600000
+                        : customMinutes *
+                        60000) *
+            2 -
+            (game.whiteMs +
+                game.blackMs)
+        );
 
     return (
         <div className="min-h-screen overflow-x-hidden bg-navy-800">
@@ -1099,32 +1775,206 @@ function HomePage() {
                 active={view}
                 onNavigate={navigate}
                 user={authUser}
-                onLogin={() => setAuthOpen(true)}
-                onLogout={handleLogout}
-                onWallet={() => setWalletOpen(true)}
-                walletBalanceInr={walletDB.balanceInr}
+                onLogin={() =>
+                    setAuthOpen(true)
+                }
+                onLogout={
+                    handleLogout
+                }
+                onWallet={() =>
+                    setWalletOpen(true)
+                }
+                walletBalanceInr={
+                    walletDB.balanceInr
+                }
             />
 
             <div className="mx-auto w-full max-w-[1400px]">
                 <main className="flex min-w-0 flex-col pt-14">
                     <Hero
-                        onPlay={handleQuickMatch}
-                        onQuickMatch={handleQuickMatch}
-                        onLeaderboard={handleLeaderboard}
-                        onAuth={() => setAuthOpen(true)}
+                        onPlay={
+                            handleQuickMatch
+                        }
+                        onQuickMatch={
+                            handleQuickMatch
+                        }
+                        onLeaderboard={
+                            handleLeaderboard
+                        }
+                        onAuth={() =>
+                            setAuthOpen(
+                                true
+                            )
+                        }
                         onOnline={() => {
-                            setGameMode('online');
+                            setGameMode(
+                                'online'
+                            );
                             handlePlay();
                         }}
                         onRooms={() => {
-                            setGameMode('room');
+                            setGameMode(
+                                'room'
+                            );
                             handlePlay();
                         }}
                         onAI={() => {
-                            setGameMode('ai');
+                            setGameMode(
+                                'ai'
+                            );
                             handlePlay();
                         }}
                     />
+
+                    {/* ACTIVE GAMES */}
+                    {authUser &&
+                        activeGames.length >
+                        0 && (
+                            <section className="w-full px-4 pb-8 sm:px-6 lg:px-8">
+                                <div className="rounded-2xl border border-white/10 bg-navy-700/60 p-5 shadow-xl backdrop-blur-sm">
+                                    <div className="mb-5 flex items-center justify-between gap-4">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400" />
+
+                                                <h2 className="font-display text-xl font-extrabold text-white sm:text-2xl">
+                                                    Active Games
+                                                </h2>
+                                            </div>
+
+                                            <p className="mt-1 text-sm text-navy-300">
+                                                Continue your unfinished multiplayer games.
+                                            </p>
+                                        </div>
+
+                                        <span className="rounded-full bg-royal-500/15 px-3 py-1 text-xs font-semibold text-royal-300 ring-1 ring-royal-500/25">
+                                            {
+                                                activeGames.length
+                                            }{' '}
+                                            {activeGames.length ===
+                                                1
+                                                ? 'game'
+                                                : 'games'}
+                                        </span>
+                                    </div>
+
+                                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                        {activeGames.map(
+                                            (
+                                                gameItem
+                                            ) => {
+                                                const isWhite =
+                                                    gameItem.host_id ===
+                                                    authUser.id;
+
+                                                const yourTurn =
+                                                    (isWhite &&
+                                                        gameItem.turn ===
+                                                        'w') ||
+                                                    (!isWhite &&
+                                                        gameItem.turn ===
+                                                        'b');
+
+                                                const yourClock =
+                                                    isWhite
+                                                        ? gameItem.white_ms
+                                                        : gameItem.black_ms;
+
+                                                const opponentClock =
+                                                    isWhite
+                                                        ? gameItem.black_ms
+                                                        : gameItem.white_ms;
+
+                                                return (
+                                                    <div
+                                                        key={
+                                                            gameItem.id
+                                                        }
+                                                        className="rounded-xl border border-white/10 bg-navy-800/80 p-4"
+                                                    >
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <div className="min-w-0">
+                                                                <p className="truncate font-semibold text-white">
+                                                                    vs.{' '}
+                                                                    {
+                                                                        gameItem.opponentName
+                                                                    }
+                                                                </p>
+
+                                                                <p className="mt-1 text-xs text-navy-400">
+                                                                    {gameItem.time_control ===
+                                                                        'custom'
+                                                                        ? `${gameItem.payload?.custom_minutes ??
+                                                                        gameItem.payload?.customMinutes ??
+                                                                        5
+                                                                        } min`
+                                                                        : gameItem.time_control}
+                                                                    {' • '}
+                                                                    {isWhite
+                                                                        ? 'White'
+                                                                        : 'Black'}
+                                                                </p>
+                                                            </div>
+
+                                                            <span
+                                                                className={
+                                                                    `shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${yourTurn
+                                                                        ? 'bg-emerald-500/15 text-emerald-300'
+                                                                        : 'bg-navy-600 text-navy-300'
+                                                                    }`
+                                                                }
+                                                            >
+                                                                {yourTurn
+                                                                    ? 'Your turn'
+                                                                    : "Opponent's turn"}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="mt-4 grid grid-cols-2 gap-2">
+                                                            <div className="rounded-lg bg-navy-900/70 p-2.5">
+                                                                <p className="text-[10px] uppercase tracking-wider text-navy-500">
+                                                                    You
+                                                                </p>
+
+                                                                <p className="mt-1 font-mono text-sm font-bold text-white">
+                                                                    {formatDuration(
+                                                                        yourClock
+                                                                    )}
+                                                                </p>
+                                                            </div>
+
+                                                            <div className="rounded-lg bg-navy-900/70 p-2.5">
+                                                                <p className="text-[10px] uppercase tracking-wider text-navy-500">
+                                                                    Opponent
+                                                                </p>
+
+                                                                <p className="mt-1 font-mono text-sm font-bold text-white">
+                                                                    {formatDuration(
+                                                                        opponentClock
+                                                                    )}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                resumeOnlineGame(
+                                                                    gameItem
+                                                                )
+                                                            }
+                                                            className="mt-4 w-full rounded-lg bg-royal-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-royal-400"
+                                                        >
+                                                            Resume Game
+                                                        </button>
+                                                    </div>
+                                                );
+                                            }
+                                        )}
+                                    </div>
+                                </div>
+                            </section>
+                        )}
 
                     <Features />
 
@@ -1134,23 +1984,39 @@ function HomePage() {
                         className="w-full scroll-mt-20 px-4 py-10 sm:px-6 lg:px-8 lg:py-14"
                     >
                         <GameSetup
-                            gameMode={gameMode}
-                            onChangeMode={onChangeMode}
-                            timeControl={timeControl}
+                            gameMode={
+                                gameMode
+                            }
+                            onChangeMode={
+                                onChangeMode
+                            }
+                            timeControl={
+                                timeControl
+                            }
                             onChangeTimeControl={
                                 onChangeTimeControl
                             }
-                            customMinutes={customMinutes}
+                            customMinutes={
+                                customMinutes
+                            }
                             onChangeCustomMinutes={
                                 setCustomMinutes
                             }
-                            aiDifficulty={aiDifficulty}
+                            aiDifficulty={
+                                aiDifficulty
+                            }
                             onChangeDifficulty={
                                 onChangeDifficulty
                             }
-                            playerColor={playerColor}
-                            onChangeColor={onChangeColor}
-                            onPlay={handleSetupPlay}
+                            playerColor={
+                                playerColor
+                            }
+                            onChangeColor={
+                                onChangeColor
+                            }
+                            onPlay={
+                                handleSetupPlay
+                            }
                         />
                     </section>
 
@@ -1161,7 +2027,11 @@ function HomePage() {
                     >
                         <div className="mb-8 text-center">
                             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
-                                <LayoutGrid size={13} />
+                                <LayoutGrid
+                                    size={
+                                        13
+                                    }
+                                />
                                 Rankings
                             </span>
 
@@ -1188,7 +2058,11 @@ function HomePage() {
                     >
                         <div className="mb-8 text-center">
                             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
-                                <CreditCard size={13} />
+                                <CreditCard
+                                    size={
+                                        13
+                                    }
+                                />
                                 Plans
                             </span>
 
@@ -1207,9 +2081,14 @@ function HomePage() {
                         </div>
 
                         <PricingPlans
-                            userId={authUser?.id ?? null}
+                            userId={
+                                authUser?.id ??
+                                null
+                            }
                             onLogin={() =>
-                                setAuthOpen(true)
+                                setAuthOpen(
+                                    true
+                                )
                             }
                         />
                     </section>
@@ -1221,7 +2100,11 @@ function HomePage() {
                     >
                         <div className="mb-8 text-center">
                             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
-                                <Gift size={13} />
+                                <Gift
+                                    size={
+                                        13
+                                    }
+                                />
                                 Referrals
                             </span>
 
@@ -1239,11 +2122,18 @@ function HomePage() {
                         </div>
 
                         <ReferralSection
-                            userId={authUser?.id ?? null}
-                            onLogin={() =>
-                                setAuthOpen(true)
+                            userId={
+                                authUser?.id ??
+                                null
                             }
-                            onReferralComplete={(email) =>
+                            onLogin={() =>
+                                setAuthOpen(
+                                    true
+                                )
+                            }
+                            onReferralComplete={(
+                                email
+                            ) =>
                                 walletDB.processReferralBonus(
                                     email
                                 )
@@ -1257,9 +2147,14 @@ function HomePage() {
                         className="w-full px-4 py-12 sm:px-6 lg:px-8 lg:py-16"
                     >
                         <Clubs
-                            userId={authUser?.id ?? null}
+                            userId={
+                                authUser?.id ??
+                                null
+                            }
                             onLogin={() =>
-                                setAuthOpen(true)
+                                setAuthOpen(
+                                    true
+                                )
                             }
                         />
                     </section>
@@ -1271,7 +2166,11 @@ function HomePage() {
                     >
                         <div className="mb-8 text-center">
                             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
-                                <LayoutGrid size={13} />
+                                <LayoutGrid
+                                    size={
+                                        13
+                                    }
+                                />
                                 Your Card
                             </span>
 
@@ -1286,15 +2185,25 @@ function HomePage() {
                         <div className="w-full space-y-6">
                             {profile ? (
                                 <EditableProfile
-                                    profile={profile}
-                                    onUpdate={updateProfile}
+                                    profile={
+                                        profile
+                                    }
+                                    onUpdate={
+                                        updateProfile
+                                    }
                                 />
                             ) : (
-                                <ProfileCard user={user} />
+                                <ProfileCard
+                                    user={
+                                        user
+                                    }
+                                />
                             )}
 
                             <MatchHistory
-                                matches={game.matches}
+                                matches={
+                                    game.matches
+                                }
                                 onClear={
                                     game.clearMatchHistory
                                 }
@@ -1309,7 +2218,11 @@ function HomePage() {
                     >
                         <div className="mb-8 text-center">
                             <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
-                                <SettingsIcon size={13} />
+                                <SettingsIcon
+                                    size={
+                                        13
+                                    }
+                                />
                                 Preferences
                             </span>
 
@@ -1328,27 +2241,49 @@ function HomePage() {
                         <div className="flex justify-center">
                             <Settings
                                 user={user}
-                                userAvatar={userAvatar}
-                                onUploadAvatar={setUserAvatar}
-                                muted={muted}
-                                onToggleMute={onToggleMute}
-                                volume={volume}
-                                onChangeVolume={onChangeVolume}
-                                autoFlip={autoFlip}
-                                onToggleAutoFlip={() =>
-                                    setAutoFlip((v) => !v)
+                                userAvatar={
+                                    userAvatar
                                 }
-                                notifications={notifications}
+                                onUploadAvatar={
+                                    setUserAvatar
+                                }
+                                muted={
+                                    muted
+                                }
+                                onToggleMute={
+                                    onToggleMute
+                                }
+                                volume={
+                                    volume
+                                }
+                                onChangeVolume={
+                                    onChangeVolume
+                                }
+                                autoFlip={
+                                    autoFlip
+                                }
+                                onToggleAutoFlip={() =>
+                                    setAutoFlip(
+                                        (v) =>
+                                            !v
+                                    )
+                                }
+                                notifications={
+                                    notifications
+                                }
                                 onToggleNotifications={() =>
                                     setNotifications(
-                                        (v) => !v
+                                        (v) =>
+                                            !v
                                     )
                                 }
                                 onResetSettings={
                                     onResetSettings
                                 }
                                 matchCount={
-                                    game.matches.length
+                                    game
+                                        .matches
+                                        .length
                                 }
                                 onClearHistory={
                                     game.clearMatchHistory
@@ -1358,31 +2293,54 @@ function HomePage() {
                     </section>
 
                     <Footer
-                        onNavigate={navigate}
-                        onFooterPage={onFooterPage}
+                        onNavigate={
+                            navigate
+                        }
+                        onFooterPage={
+                            onFooterPage
+                        }
                     />
                 </main>
 
-                {/* Existing game-over popup for homepage state */}
+                {/* Existing game-over popup */}
                 {showPopup &&
                     game.pendingResult && (
                         <GameOverPopup
                             status={
-                                game.pendingResult.status
+                                game
+                                    .pendingResult
+                                    .status
                             }
                             ending={
-                                game.pendingResult.ending
+                                game
+                                    .pendingResult
+                                    .ending
                             }
-                            onClose={closePopup}
-                            onNewGame={onNewGame}
-                            winnerName={winnerName}
-                            playerWon={playerWon}
-                            moves={game.history.length}
-                            duration={gameDuration}
+                            onClose={
+                                closePopup
+                            }
+                            onNewGame={
+                                onNewGame
+                            }
+                            winnerName={
+                                winnerName
+                            }
+                            playerWon={
+                                playerWon
+                            }
+                            moves={
+                                game
+                                    .history
+                                    .length
+                            }
+                            duration={
+                                gameDuration
+                            }
                             ratingChange={
                                 playerWon
                                     ? 8
-                                    : game.pendingResult
+                                    : game
+                                        .pendingResult
                                         ?.ending ===
                                         'stalemate'
                                         ? 0
@@ -1395,21 +2353,31 @@ function HomePage() {
                 <AuthModal
                     open={authOpen}
                     onClose={() =>
-                        setAuthOpen(false)
+                        setAuthOpen(
+                            false
+                        )
                     }
                     onAuthed={(u) => {
                         setAuthUser(u);
-                        setAuthOpen(false);
+                        setAuthOpen(
+                            false
+                        );
                     }}
                 />
 
                 {/* WALLET */}
                 <WalletModalDB
-                    open={walletOpen}
-                    onClose={() =>
-                        setWalletOpen(false)
+                    open={
+                        walletOpen
                     }
-                    balanceInr={walletDB.balanceInr}
+                    onClose={() =>
+                        setWalletOpen(
+                            false
+                        )
+                    }
+                    balanceInr={
+                        walletDB.balanceInr
+                    }
                     transactions={
                         walletDB.transactions
                     }
@@ -1420,11 +2388,18 @@ function HomePage() {
 
                 {/* ROOM */}
                 <RoomPanel
-                    open={roomOpen}
-                    onClose={() =>
-                        setRoomOpen(false)
+                    open={
+                        roomOpen
                     }
-                    userId={authUser?.id ?? null}
+                    onClose={() =>
+                        setRoomOpen(
+                            false
+                        )
+                    }
+                    userId={
+                        authUser?.id ??
+                        null
+                    }
                     username={
                         profile?.display_name ||
                         profile?.username ||
@@ -1437,47 +2412,79 @@ function HomePage() {
                         code: string,
                         tc: TimeControl
                     ) => {
-                        setActiveRoomId(rid);
+                        setActiveRoomId(
+                            rid
+                        );
 
-                        if (!authUser) return;
+                        if (!authUser)
+                            return;
 
-                        let gameId: string | null =
+                        let gameId:
+                            | string
+                            | null =
                             null;
 
                         if (!isHost) {
-                            const { data: room } =
+                            const {
+                                data: room,
+                            } =
                                 await supabase
-                                    .from('rooms')
-                                    .select('host_id')
-                                    .eq('id', rid)
+                                    .from(
+                                        'rooms'
+                                    )
+                                    .select(
+                                        'host_id'
+                                    )
+                                    .eq(
+                                        'id',
+                                        rid
+                                    )
                                     .maybeSingle();
 
-                            if (room?.host_id) {
+                            if (
+                                room?.host_id
+                            ) {
                                 const {
                                     data: ogRow,
-                                } = await supabase
-                                    .from('online_games')
-                                    .insert({
-                                        host_id:
-                                            room.host_id,
-                                        guest_id:
-                                            authUser.id,
-                                        time_control: tc,
-                                        status: 'active',
-                                        turn: 'w',
-                                    })
-                                    .select()
-                                    .maybeSingle();
+                                } =
+                                    await supabase
+                                        .from(
+                                            'online_games'
+                                        )
+                                        .insert(
+                                            {
+                                                host_id:
+                                                    room.host_id,
+                                                guest_id:
+                                                    authUser.id,
+                                                time_control:
+                                                    tc,
+                                                status:
+                                                    'active',
+                                                turn: 'w',
+                                            }
+                                        )
+                                        .select()
+                                        .maybeSingle();
 
                                 if (ogRow) {
-                                    gameId = ogRow.id;
+                                    gameId =
+                                        ogRow.id;
 
                                     await supabase
-                                        .from('rooms')
-                                        .update({
-                                            game_id: gameId,
-                                        })
-                                        .eq('id', rid);
+                                        .from(
+                                            'rooms'
+                                        )
+                                        .update(
+                                            {
+                                                game_id:
+                                                    gameId,
+                                            }
+                                        )
+                                        .eq(
+                                            'id',
+                                            rid
+                                        );
                                 }
                             }
                         } else {
@@ -1486,73 +2493,123 @@ function HomePage() {
                                 i < 30;
                                 i++
                             ) {
-                                const { data: room } =
+                                const {
+                                    data: room,
+                                } =
                                     await supabase
-                                        .from('rooms')
-                                        .select('game_id')
-                                        .eq('id', rid)
+                                        .from(
+                                            'rooms'
+                                        )
+                                        .select(
+                                            'game_id'
+                                        )
+                                        .eq(
+                                            'id',
+                                            rid
+                                        )
                                         .maybeSingle();
 
-                                if (room?.game_id) {
+                                if (
+                                    room?.game_id
+                                ) {
                                     gameId =
                                         room.game_id;
                                     break;
                                 }
 
                                 await new Promise(
-                                    (r) =>
-                                        setTimeout(r, 500)
+                                    (
+                                        r
+                                    ) =>
+                                        setTimeout(
+                                            r,
+                                            500
+                                        )
                                 );
                             }
                         }
 
                         if (gameId) {
-                            setOnlineGameConfig({
-                                gameId,
-                                roomId: rid,
-                                isHost,
-                                userId: authUser.id,
-                                playerColor:
-                                    isHost ? 'w' : 'b',
-                                timeControl: tc,
-                                customMinutes,
-                            });
-
-                            setOnlineGameId(gameId);
-                            setOnlineIsHost(isHost);
-                            setGameMode('online');
-                            setPlayerColor(
-                                isHost ? 'w' : 'b'
+                            setOnlineGameConfig(
+                                {
+                                    gameId,
+                                    roomId:
+                                        rid,
+                                    isHost,
+                                    userId:
+                                        authUser.id,
+                                    playerColor:
+                                        isHost
+                                            ? 'w'
+                                            : 'b',
+                                    timeControl:
+                                        tc,
+                                    customMinutes,
+                                }
                             );
 
-                            if (autoFlip) {
+                            setOnlineGameId(
+                                gameId
+                            );
+
+                            setOnlineIsHost(
+                                isHost
+                            );
+
+                            setGameMode(
+                                'online'
+                            );
+
+                            setPlayerColor(
+                                isHost
+                                    ? 'w'
+                                    : 'b'
+                            );
+
+                            if (
+                                autoFlip
+                            ) {
                                 setOrientation(
-                                    isHost ? 'w' : 'b'
+                                    isHost
+                                        ? 'w'
+                                        : 'b'
                                 );
                             }
 
-                            setRoomOpen(false);
+                            setRoomOpen(
+                                false
+                            );
                         }
                     }}
                 />
 
                 {/* MATCHMAKING */}
                 <MatchmakingPanel
-                    open={matchmakingOpen}
+                    open={
+                        matchmakingOpen
+                    }
                     onClose={() =>
-                        setMatchmakingOpen(false)
+                        setMatchmakingOpen(
+                            false
+                        )
                     }
                     userId={
-                        authUser?.id ?? null
+                        authUser?.id ??
+                        null
                     }
                     timeControl={
-                        timeControl === 'custom'
+                        timeControl ===
+                            'custom'
                             ? `${customMinutes}min`
                             : timeControl
                     }
-                    onMatched={handleMatched}
+                    onMatched={
+                        handleMatched
+                    }
                     onLogin={() =>
-                        setAuthOpen(true)
+                        setAuthOpen(
+                            true
+                        )
                     }
                 />
 
@@ -1560,7 +2617,9 @@ function HomePage() {
                 {quickMatchSetupOpen && (
                     <div
                         className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm sm:p-6"
-                        onMouseDown={(e) => {
+                        onMouseDown={(
+                            e
+                        ) => {
                             if (
                                 e.target ===
                                 e.currentTarget
@@ -1586,8 +2645,12 @@ function HomePage() {
                             </button>
 
                             <GameSetup
-                                gameMode={gameMode}
-                                onChangeMode={onChangeMode}
+                                gameMode={
+                                    gameMode
+                                }
+                                onChangeMode={
+                                    onChangeMode
+                                }
                                 timeControl={
                                     timeControl
                                 }
@@ -1624,9 +2687,13 @@ function HomePage() {
                 {showBonusPopup && (
                     <WelcomeBonusPopup
                         onClose={() =>
-                            setShowBonusPopup(false)
+                            setShowBonusPopup(
+                                false
+                            )
                         }
-                        onClaim={claimBonus}
+                        onClaim={
+                            claimBonus
+                        }
                     />
                 )}
 
@@ -1634,10 +2701,28 @@ function HomePage() {
                 {showPremiumOffer && (
                     <PremiumOfferPopup
                         onClose={() =>
-                            setShowPremiumOffer(false)
+                            setShowPremiumOffer(
+                                false
+                            )
                         }
                         onClaim={() =>
-                            setShowPremiumOffer(false)
+                            setShowPremiumOffer(
+                                false
+                            )
+                        }
+                    />
+                )}
+
+                {/* ADD FRIEND */}
+                {addFriendOpen && (
+                    <AddFriendModal
+                        open={
+                            addFriendOpen
+                        }
+                        onClose={() =>
+                            setAddFriendOpen(
+                                false
+                            )
                         }
                     />
                 )}

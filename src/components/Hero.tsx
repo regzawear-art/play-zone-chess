@@ -9,6 +9,12 @@ import {
 
 interface HeroProps {
   onPlay: () => void;
+  onQuickMatch?: () => void;
+  onLeaderboard?: () => void;
+  onAuth?: () => void;
+  onOnline?: () => void;
+  onRooms?: () => void;
+  onAI?: () => void;
 }
 
 const slides = [
@@ -136,7 +142,7 @@ export function Hero({ onPlay }: HeroProps) {
                     type="button"
                     onClick={() => setActiveSlide(index)}
                     aria-label={`Go to slide ${ index + 1 } `}
-                    className={`h-1.5 rounded-full transition-all duration-500 sm: h-2 ${
+                    className={`h-1.5 rounded-full transition-all duration-500 sm:h-2 ${
     index === activeSlide
         ? 'w-7 bg-royal-400 sm:w-9'
         : 'w-2 bg-white/20 hover:bg-white/40'

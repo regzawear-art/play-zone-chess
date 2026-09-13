@@ -64,8 +64,8 @@ export default function MatchPage() {
   useEffect(() => {
     (async () => {
       // ensure user session is available
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.user) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session?.user) {
         // try to detect session in URL fragments
         // fallback: wait a bit for auth to be established (user may be signing in)
         await new Promise((r) => setTimeout(r, 500));
@@ -76,8 +76,8 @@ export default function MatchPage() {
           // join the game row if needed
           const game = await multiplayer.joinOnlineGame(gameId);
           const { data: me } = await supabase.auth.getUser();
-          const uid = me.data?.user?.id;
-          const isHost = game.white_id === uid;
+          const uid = me.user?.id;
+          const isHost = game.host_id === uid;
           setConfig({
             type: 'online',
             gameId: game.id,
@@ -111,11 +111,6 @@ export default function MatchPage() {
     // AI match: use useChess hook to run a local game and render board + moves
     const aiOpts = { playerColor: config.playerColor as Color, opponentColor: config.playerColor === 'w' ? 'b' : 'w', vsComputer: true, timeControl: config.timeControl || '3min', customMinutes: config.customMinutes || 5, opponentName: 'Computer', opponentAvatar: '', opponentFlag: '', aiDifficulty: config.difficulty || 'intermediate' };
       const chess = useChess(aiOpts as any);
-      useEffect(() => {
-          if (game.pendingResult) {
-              setShowGameOver(true);
-          }
-      }, [game.pendingResult]);
     return (
       <div style={pageStyle as any}>
         <div style={contentStyle as any}>
@@ -135,7 +130,6 @@ export default function MatchPage() {
                 onChoosePromotion={chess.choosePromotion}
                 onCancelPromotion={chess.cancelPromotion}
                 thinking={chess.thinking}
-                onSizeChange={() => {}}
               />
             </div>
           </div>

@@ -53,7 +53,7 @@ function computeCaptured(board: any) {
             const piece = board[r][c];
 
             if (piece) {
-                counts[piece.color][piece.type]++;
+                counts[piece.color as 'w' | 'b'][piece.type as keyof typeof PIECE_VALUES]++;
             }
         }
     }
@@ -77,12 +77,12 @@ function computeCaptured(board: any) {
     });
 
     const whiteMaterial = white.reduce(
-        (sum, piece) => sum + PIECE_VALUES[piece],
+        (sum, piece) => sum + PIECE_VALUES[piece as keyof typeof PIECE_VALUES],
         0
     );
 
     const blackMaterial = black.reduce(
-        (sum, piece) => sum + PIECE_VALUES[piece],
+        (sum, piece) => sum + PIECE_VALUES[piece as keyof typeof PIECE_VALUES],
         0
     );
 

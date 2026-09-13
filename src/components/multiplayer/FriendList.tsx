@@ -36,7 +36,7 @@ export default function FriendList({ compact }: { compact?: boolean } = {}) {
   };
 
   return (
-    <div className={`rounded-xl border border-white/8 bg-navy-750 ${compact ? 'p-2' : 'p-3'}`}>
+    <div className={`min-w-0 w-full rounded-xl border border-white/8 bg-navy-750 ${compact ? 'p-2' : 'p-3'}`}>
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-bold text-white">Friends</h3>
         <button
@@ -61,8 +61,14 @@ export default function FriendList({ compact }: { compact?: boolean } = {}) {
                 try {
                   await multiplayer.sendFriendRequest(r.id);
                   window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Friend request sent', type: 'success' } }));
-                } catch (e) {
-                  window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Failed to send friend request', type: 'error' } }));
+                } catch (e: any) {
+                  console.error('[FriendList] send friend request failed:', e);
+                  window.dispatchEvent(new CustomEvent('app-toast', {
+                    detail: {
+                      message: e?.message || 'Failed to send friend request',
+                      type: 'error',
+                    },
+                  }));
                 }
               }}
               containerClassName=""
@@ -73,12 +79,12 @@ export default function FriendList({ compact }: { compact?: boolean } = {}) {
       <div className="flex flex-col gap-2">
         {friends.length === 0 && <p className="text-sm text-navy-300">No friends yet</p>}
         {friends.map((f: any) => (
-          <div key={f.id} className="flex items-center justify-between rounded-md bg-navy-700 px-3 py-2">
-            <div>
-              <div className="text-sm font-semibold text-white truncate">{f.username ?? f.id}</div>
+          <div key={f.id} className="flex min-w-0 flex-col gap-2 rounded-md bg-navy-700 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold text-white">{f.username ?? f.id}</div>
               <div className="text-xs text-navy-300">{f.status}</div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1">
               <button onClick={() => challenge(f.id)} className="text-xs text-navy-200 hover:text-white">Challenge</button>
               <button onClick={async () => {
                 try {

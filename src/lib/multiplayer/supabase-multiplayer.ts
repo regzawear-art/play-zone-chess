@@ -13,7 +13,7 @@ export async function listFriends(): Promise<{ id: string; username: string; ava
   // caller should ensure user is authenticated; we return empty on missing
   const uid = user.data?.user?.id;
   if (!uid) return [];
-  const friendsRes = (await (supabase.from<FriendRow>('friends').select('*').or(`user_id.eq.${uid},friend_id.eq.${uid}`) as unknown)) as { data: FriendRow[] | null; error: unknown };
+  const friendsRes = (await (supabase.from('friends').select('*').or(`user_id.eq.${uid},friend_id.eq.${uid}`) as unknown)) as { data: FriendRow[] | null; error: unknown };
   const data = friendsRes.data;
   if (!data || data.length === 0) return [];
   // resolve friend profiles for the other participant
@@ -27,12 +27,12 @@ export async function listFriends(): Promise<{ id: string; username: string; ava
   let profilesRes: { data: ProfileRec[] | null; error: any } | null = null;
   try {
     // try selecting email/avatar if available
-    profilesRes = (await (supabase.from<ProfileRec>('profiles').select('id,username,avatar,email').in('id', otherIds as string[]) as unknown)) as { data: ProfileRec[] | null; error: unknown };
+    profilesRes = (await (supabase.from('profiles').select('id,username,avatar,email').in('id', otherIds as string[]) as unknown)) as { data: ProfileRec[] | null; error: unknown };
     // if columns missing this will throw and be caught below
   } catch (e) {
     // fallback: try without email/avatar
     try {
-      profilesRes = (await (supabase.from<ProfileRec>('profiles').select('id,username').in('id', otherIds as string[]) as unknown)) as { data: ProfileRec[] | null; error: unknown };
+      profilesRes = (await (supabase.from('profiles').select('id,username').in('id', otherIds as string[]) as unknown)) as { data: ProfileRec[] | null; error: unknown };
     } catch (e2) {
       profilesRes = null;
     }
@@ -63,7 +63,7 @@ export async function listOnlinePlayers(windowSeconds = 60): Promise<{ id: strin
   try {
     const threshold = new Date(Date.now()-windowSeconds * 1000).toISOString();
     // select only guaranteed columns to avoid schema differences
-    const res = (await (supabase.from<ProfileRec>('profiles').select('id,username,last_active').gte('last_active', threshold).order('last_active', { ascending: false }).limit(50) as unknown)) as { data: ProfileRec[] | null; error: unknown };
+    const res = (await (supabase.from('profiles').select('id,username,last_active').gte('last_active', threshold).order('last_active', { ascending: false }).limit(50) as unknown)) as { data: ProfileRec[] | null; error: unknown };
     if (res.data) return res.data.map((p) => ({ id: p.id, username: p.username || p.id, avatar: '' }));
   } catch (_) {
     // ignore
@@ -80,11 +80,11 @@ export async function searchPlayers(term: string, limit = 10): Promise<ProfileRe
     const looksLikeId = /^[0-9a-fA-F-]{8,}$/.test(q);
     if (looksLikeId) {
       try {
-        const byId = (await (supabase.from<ProfileRec>('profiles').select('id,username,avatar,email,last_active').eq('id', q).maybeSingle() as unknown)) as { data?: ProfileRec | null; error?: unknown };
+        const byId = (await (supabase.from('profiles').select('id,username,avatar,email,last_active').eq('id', q).maybeSingle() as unknown)) as { data?: ProfileRec | null; error?: unknown };
         if (byId.data) return [byId.data];
       } catch (e) {
         try {
-          const byId2 = (await (supabase.from<ProfileRec>('profiles').select('id,username,last_active').eq('id', q).maybeSingle() as unknown)) as { data?: ProfileRec | null; error?: unknown };
+          const byId2 = (await (supabase.from('profiles').select('id,username,last_active').eq('id', q).maybeSingle() as unknown)) as { data?: ProfileRec | null; error?: unknown };
           if (byId2.data) return [byId2.data];
         } catch (e2) {
           // ignore
@@ -101,14 +101,14 @@ export async function searchPlayers(term: string, limit = 10): Promise<ProfileRe
     let res;
     try {
       res = (await (supabase
-        .from<ProfileRec>('profiles')
+        .from('profiles')
         .select('id,username,avatar,email,last_active')
         .or(`username.ilike.${ilike},email.ilike.${ilike}`)
         .limit(limit) as unknown)) as { data: ProfileRec[] | null; error: unknown };
     } catch (e) {
       // fallback to select without email/avatar
       res = (await (supabase
-        .from<ProfileRec>('profiles')
+        .from('profiles')
         .select('id,username,last_active')
         .or(`username.ilike.${ilike}`)
         .limit(limit) as unknown)) as { data: ProfileRec[] | null; error: unknown };
@@ -119,7 +119,7 @@ export async function searchPlayers(term: string, limit = 10): Promise<ProfileRe
       // fallback: try select without email
       try {
         const res2 = (await (supabase
-          .from<ProfileRec>('profiles')
+          .from('profiles')
           .select('id,username,avatar,last_active')
           .or(`username.ilike.${ilike}`)
           .limit(limit) as unknown)) as { data: ProfileRec[] | null; error: unknown };
@@ -194,80 +194,89 @@ export async function sendInvite(toUser: string, payload: Record<string, unknown
 
 export async function acceptInvite(inviteId: string) {
   const u = await supabase.auth.getUser();
-  const uid = u.data?.user?.id; if (!uid) throw new Error('not authenticated');
-  // mark invite accepted, create game
-  const inviteRes = (await (supabase.from('invites').select('*').eq('id', inviteId).single() as unknown)) as { data?: Record<string, any> | null; error?: unknown };
+  const uid = u.data?.user?.id;
+  if (!uid) throw new Error('not authenticated');
+
+  // Fetch the invite and make sure the current user is the recipient.
+  const inviteRes = (await (supabase
+    .from('invites')
+    .select('*')
+    .eq('id', inviteId)
+    .eq('to_user', uid)
+    .eq('status', 'pending')
+    .single() as unknown)) as {
+    data?: Record<string, any> | null;
+    error?: any;
+  };
+
+  if (inviteRes.error) {
+    throw new Error(`Could not load invite: ${inviteRes.error.message ?? inviteRes.error}`);
+  }
+
   const invite = inviteRes.data;
-  if (!invite) throw new Error('invite not found');
-  // create an online_games row so realtime subscribers can pick it up
-  // decide host/guest: inviter is host by default unless payload says otherwise
-  const inviterIsHost = !(invite.payload && invite.payload.host === 'guest');
-  const hostId = inviterIsHost ? invite.from_user : uid;
-  const guestId = inviterIsHost ? uid : invite.from_user;
+  if (!invite) throw new Error('invite not found or already handled');
+
+  // The old implementation called create_online_game with the inviter's
+  // user id. That RPC deliberately rejects calls where p_user !== auth.uid(),
+  // so accepting an invite produced "not authorized". The acceptor is the
+  // authenticated user and therefore must create the row as host; the inviter
+  // becomes the guest. This is an intentional, secure direct insert covered by
+  // the online_games INSERT policy (host_id = auth.uid()).
   const timeControl = invite.payload?.time_control ?? null;
   const payload: Record<string, unknown> = invite.payload ?? {};
-  // Prefer calling RPC create_online_game if available (works with RLS). Fallback to
-  // direct insert when RPC is missing. Do NOT send a 'moves' column if the DB
-  // schema doesn't have it (some deployments omit that column) to avoid PGRST204/42703.
-  let game: OnlineGameRow | null = null;
-  try {
-    // @ts-ignore
-    const rpcRes = await supabase.rpc('create_online_game', { p_user: hostId, p_time_control: timeControl, p_payload: payload });
-    // supabase.rpc returns { data, error } for typed responses
-    // @ts-ignore
-    if (rpcRes && (rpcRes as any).data) game = (rpcRes as any).data as OnlineGameRow;
-    else if (rpcRes) game = rpcRes as any;
-  } catch (e) {
-    // ignore RPC failure and try fallback insert
+
+  const insertBody: Record<string, unknown> = {
+    host_id: uid,
+    guest_id: invite.from_user,
+    time_control: timeControl ?? '3min',
+    status: 'active',
+    fen: 'startpos',
+    turn: 'w',
+    moves: [],
+    payload,
+  };
+
+  const gameRes = (await (supabase
+    .from('online_games')
+    .insert(insertBody)
+    .select()
+    .single() as unknown)) as {
+    data?: OnlineGameRow | null;
+    error?: any;
+  };
+
+  if (gameRes.error) {
+    console.error('[multiplayer] accept invite game insert failed:', gameRes.error);
+    throw new Error(`Failed creating game: ${gameRes.error.message ?? gameRes.error}`);
   }
 
-  if (!game) {
-    const insertBody: Record<string, unknown> = { host_id: hostId, guest_id: guestId, time_control: timeControl, status: 'active', fen: 'startpos', payload };
-    const gameRes = (await (supabase.from('online_games').insert(insertBody).select().maybeSingle() as unknown)) as { data?: OnlineGameRow | null; error?: unknown };
-    // @ts-ignore
-    if ((gameRes as any).error) {
-      // eslint-disable-next-line no-console
-      console.error('[multiplayer] create online game error', (gameRes as any).error);
-      throw new Error('failed creating online game: ' + String((gameRes as any).error.message ?? (gameRes as any).error));
-    }
-    game = gameRes.data ?? null;
+  const game = gameRes.data;
+  if (!game?.id) throw new Error('Failed creating game');
+
+  // Mark the invite accepted and attach the newly-created game. Do not delete
+  // it immediately: the inviter needs the UPDATE event/game_id to open the game.
+  const { error: updateError } = await supabase
+    .from('invites')
+    .update({ status: 'accepted', game_id: game.id })
+    .eq('id', inviteId)
+    .eq('to_user', uid);
+
+  if (updateError) {
+    console.error('[multiplayer] failed to update accepted invite:', updateError);
+    // The game exists, but the sender cannot discover it through the invite
+    // event if this update fails, so surface the error rather than pretending
+    // the invite completed normally.
+    throw new Error(`Game created, but invite update failed: ${updateError.message}`);
   }
 
-  if (!game) throw new Error('failed creating online game');
+  // Let the acceptor open the game immediately. The sender will receive the
+  // invite UPDATE through subscribeToInvites and open the same game by game_id.
+  window.dispatchEvent(
+    new CustomEvent('online-game-created', {
+      detail: game,
+    })
+  );
 
-  // Attempt to call join_online_game RPC (best-effort) only if we have valid ids
-  try {
-    if (game && game.id && uid) {
-      // @ts-ignore
-      const { data: joinData, error: joinErr } = await supabase.rpc('join_online_game', { p_game: game.id, p_user: uid }) as any;
-      if (joinErr) {
-        // eslint-disable-next-line no-console
-        console.warn('[multiplayer] join_online_game rpc error', joinErr);
-      } else {
-        // eslint-disable-next-line no-console
-        console.debug('[multiplayer] join_online_game rpc success', joinData);
-      }
-    } else {
-      // eslint-disable-next-line no-console
-      console.debug('[multiplayer] skipping join_online_game RPC; missing game.id or uid', { game, uid });
-    }
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('[multiplayer] join_online_game call failed', e);
-  }
-
-  // mark invite accepted and then delete it so it won't reappear
-  try {
-    await supabase.from('invites').update({ status: 'accepted', game_id: game.id }).eq('id', inviteId);
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('[multiplayer] failed to update invite status', e);
-  }
-  try {
-    await supabase.from('invites').delete().eq('id', inviteId);
-  } catch (e) {
-    // ignore delete errors
-  }
   return game;
 }
 
@@ -507,5 +516,6 @@ export async function joinOnlineGame(gameId: string) {
 
 export default {
   listFriends, listOnlinePlayers, searchPlayers, sendInvite, acceptInvite, subscribeToInvites, subscribeToGame, pushMove,
+  sendFriendRequest, acceptFriendRequest,
   createOnlineGame, joinOnlineGame,
 };
