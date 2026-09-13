@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import PlayWithFriends from './components/multiplayer/PlayWithFriends';
 
 import type {
     Board,
@@ -282,6 +283,9 @@ function HomePage() {
     const [addFriendOpen, setAddFriendOpen] =
         useState(false);
 
+    const [playWithFriendsOpen, setPlayWithFriendsOpen] =
+        useState(false);
+
     const [activeGames, setActiveGames] =
         useState<ActiveGameItem[]>([]);
 
@@ -339,9 +343,7 @@ function HomePage() {
                             '',
                     });
 
-                    if (event === 'SIGNED_IN') {
-                        setShowPremiumOffer(true);
-                    }
+          
                 } else {
                     setAuthUser(null);
                 }
@@ -598,6 +600,8 @@ function HomePage() {
             [authUser, autoFlip]
         );
 
+    
+
     /* Shared room URL */
     useEffect(() => {
         const params =
@@ -766,14 +770,11 @@ function HomePage() {
             []
         );
 
-    const onChangeMode =
-        useCallback(
-            (m: GameMode) => {
-                setGameMode(m);
-                sound.play('select');
-            },
-            []
-        );
+    const onChangeMode = useCallback((m: GameMode) => {
+        console.log('[App] onChangeMode RECEIVED:', m);
+        setGameMode(m);
+        sound.play('select');
+    }, []);
 
     const onChangeDifficulty =
         useCallback(
@@ -851,46 +852,50 @@ function HomePage() {
     /*
      * Setup PLAY handler.
      */
-    const handleSetupPlay =
-        useCallback(() => {
-            if (
-                gameMode === 'online'
-            ) {
-                setQuickMatchSetupOpen(
-                    false
-                );
+    const handleSetupPlay = useCallback(() => {
+        console.log('[App] PLAY clicked');
+        console.log('[App] gameMode:', gameMode);
+        console.log('[App] authUser:', authUser);
 
-                if (!authUser) {
-                    setAuthOpen(true);
-                    return;
-                }
+        if (gameMode === 'online') {
+            console.log('[App] ONLINE MODE detected');
 
-                setMatchmakingOpen(
-                    true
-                );
+            setQuickMatchSetupOpen(false);
+
+            if (!authUser) {
+                console.log('[App] NO AUTH USER');
+                setAuthOpen(true);
                 return;
             }
 
-            if (gameMode === 'room') {
-                setQuickMatchSetupOpen(
-                    false
-                );
+            console.log('[App] About to open MatchmakingPanel');
+            setMatchmakingOpen(true);
+            console.log('[App] setMatchmakingOpen(true) called');
 
-                if (!authUser) {
-                    setAuthOpen(true);
-                    return;
-                }
+            return;
+        }
 
-                setRoomOpen(true);
+        if (gameMode === 'room') {
+            console.log('[App] ROOM MODE detected');
+
+            setQuickMatchSetupOpen(false);
+
+            if (!authUser) {
+                setAuthOpen(true);
                 return;
             }
 
-            startBotGame();
-        }, [
-            gameMode,
-            authUser,
-            startBotGame,
-        ]);
+            setRoomOpen(true);
+            return;
+        }
+
+        console.log('[App] Starting bot game');
+        startBotGame();
+    }, [
+        gameMode,
+        authUser,
+        startBotGame,
+    ]);
 
     /*
      * Matchmaking matched.
@@ -2716,13 +2721,18 @@ function HomePage() {
                 {/* ADD FRIEND */}
                 {addFriendOpen && (
                     <AddFriendModal
-                        open={
-                            addFriendOpen
-                        }
+                        open={addFriendOpen}
                         onClose={() =>
-                            setAddFriendOpen(
-                                false
-                            )
+                            setAddFriendOpen(false)
+                        }
+                    />
+                )}
+
+                {/* PLAY WITH FRIENDS */}
+                {playWithFriendsOpen && (
+                    <PlayWithFriends
+                        onClose={() =>
+                            setPlayWithFriendsOpen(false)
                         }
                     />
                 )}

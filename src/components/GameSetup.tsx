@@ -181,7 +181,20 @@ export function GameSetup({
                                         key={mode.key}
                                         type="button"
                                         disabled={disabled}
-                                        onClick={() => onChangeMode(mode.key)}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+
+                                            console.log(
+                                                '[GameSetup CURRENT] clicked:',
+                                                mode.label,
+                                                'KEY:',
+                                                mode.key
+                                            );
+
+                                            onChangeMode(mode.key);
+                                        }}
+
                                         className={`group min-w-0 rounded-xl border p-3 text-left transition-all sm:rounded-2xl sm:p-4 ${active
                                                 ? 'border-royal-400/50 bg-royal-500/15 shadow-glow-sm'
                                                 : 'border-white/8 bg-navy-800 hover:border-white/15 hover:bg-navy-750'

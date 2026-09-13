@@ -4,7 +4,7 @@ import multiplayer from '../../lib/multiplayer/supabase-multiplayer';
 import { UserPlus } from 'lucide-react';
 import SuggestionList from './SuggestionList';
 
-export default function FriendList({ compact }: { compact?: boolean } = {}) {
+export function FriendList({ compact }: { compact?: boolean } = {}) {
   const { friends } = useFriends();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any[]>([]);
@@ -102,4 +102,36 @@ export default function FriendList({ compact }: { compact?: boolean } = {}) {
       </div>
     </div>
   );
+}
+
+export default function PlayWithFriends({
+    onClose,
+}: {
+    onClose: () => void;
+}) {
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
+            <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-navy-800 p-4 shadow-2xl sm:p-6">
+
+                <button
+                    onClick={onClose}
+                    className="absolute right-4 top-4 z-10 text-xl text-navy-300 hover:text-white"
+                    aria-label="Close"
+                >
+                    ✕
+                </button>
+
+                <div className="mb-4 pr-8">
+                    <h2 className="text-xl font-bold text-white">
+                        Play With Friends
+                    </h2>
+                    <p className="mt-1 text-sm text-navy-300">
+                        Choose a friend to send a game invitation.
+                    </p>
+                </div>
+
+                <FriendList />
+            </div>
+        </div>
+    );
 }
