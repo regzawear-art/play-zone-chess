@@ -42,7 +42,7 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
       // eslint-disable-next-line no-console
       console.log('[AI] delegating to Stockfish for intermediate difficulty (limited, ~depth8)');
       try {
-        const move = await chooseWithStockfish(board, state, side, 1200, { limitStrength: true, elo: 1600 });
+        const move = await chooseWithStockfish(board, state, side, 1500, { limitStrength: true, elo: 1800 });
         if (move) return move;
         // eslint-disable-next-line no-console
         console.warn('[AI] Stockfish (intermediate) returned no move, falling back to JS worker');
@@ -56,7 +56,7 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
       // eslint-disable-next-line no-console
       console.log('[AI] delegating to Stockfish for advanced difficulty (limited, ~depth12)');
       try {
-        const move = await chooseWithStockfish(board, state, side, 3000, { limitStrength: true, elo: 2000 });
+        const move = await chooseWithStockfish(board, state, side, 3500, { limitStrength: true, elo: 2200 });
         if (move) return move;
         // eslint-disable-next-line no-console
         console.warn('[AI] Stockfish (advanced) returned no move, falling back to JS worker');
@@ -70,7 +70,7 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
       // eslint-disable-next-line no-console
       console.log('[AI] delegating to Stockfish for master difficulty (limited, ~depth20)');
       try {
-        const move = await chooseWithStockfish(board, state, side, 8000, { limitStrength: true, elo: 2400 });
+        const move = await chooseWithStockfish(board, state, side, 6000, { limitStrength: true, elo: 2600 });
         if (move) return move;
         // eslint-disable-next-line no-console
         console.warn('[AI] Stockfish (master) returned no move, falling back to JS worker');
@@ -84,7 +84,7 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
       // eslint-disable-next-line no-console
       console.log('[AI] delegating to Stockfish for max difficulty (full strength)');
       try {
-        const move = await chooseWithStockfish(board, state, side, 20000);
+        const move = await chooseWithStockfish(board, state, side, 12000);
         if (move) return move;
         // eslint-disable-next-line no-console
         console.warn('[AI] Stockfish (max) returned no move, falling back to JS worker');

@@ -8,28 +8,28 @@ import { PIECE_VALUE } from './pieces';
 const DIFFICULTY_DEPTH: Record<AIDifficulty, number> = {
   beginner: 1,
   // requested: intermediate ~8
-  intermediate: 8,
+  intermediate: 10,
   // requested: advanced ~12
-  advanced: 12,
+  advanced: 14,
   // requested: master ~20
-  master: 20,
+  master: 18,
   // requested: max-very deep
   max: 40,
 };
 
 const DIFFICULTY_RANDOMNESS: Record<AIDifficulty, number> = {
   beginner: 120,
-  intermediate: 6,
-  advanced: 3,
-  master: 1,
+  intermediate: 2,
+  advanced: 1,
+  master: 0.25,
   max: 0,
 };
 
 const DIFFICULTY_TIME_MS: Record<AIDifficulty, number> = {
   beginner: 100,
   // these are fallbacks for the JS worker; Stockfish will be used for many levels
-  intermediate: 1500,
-  advanced: 4000,
+  intermediate: 2000,
+  advanced: 5000,
   master: 10000,
   // allow very long thinking time for the highest engine level
   max: 30000,

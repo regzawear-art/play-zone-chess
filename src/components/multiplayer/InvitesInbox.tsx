@@ -131,8 +131,6 @@ export default function InvitesInbox({
       } catch (e) {}
 
       // also show a toast in the invites list so user sees the accepted invite
-      window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Invite accepted — opening match', type: 'success' } }));
-
       window.dispatchEvent(
         new CustomEvent('app-toast', {
           detail: {
@@ -285,6 +283,9 @@ export default function InvitesInbox({
                     src={avatar}
                     alt={displayName}
                     className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-white/10"
+                    onError={(event) => {
+                      event.currentTarget.style.display = 'none';
+                    }}
                   />
                 ) : (
                   <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blue-grad text-xs font-bold text-white">

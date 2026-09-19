@@ -4,7 +4,7 @@ import { supabase } from '../supabase';
 // Helpers for multiplayer: friends, invites, games and realtime subscriptions
 
 type FriendRow = { user_id: string; friend_id: string; status?: string };
-type ProfileRec = { id: string; username?: string; avatar?: string; email?: string; last_active?: string };
+type ProfileRec = { id: string; username?: string; display_name?: string; avatar_url?: string; last_active?: string };
 
 type OnlineGameRow = { id: string; host_id: string; guest_id?: string | null; time_control?: string | null; status?: string; fen?: string; moves?: unknown; payload?: unknown };
 
@@ -23,23 +23,20 @@ export async function listFriends(): Promise<{ id: string; username: string; ava
     if (other && !otherIds.includes(other)) otherIds.push(other);
   }
   if (otherIds.length === 0) return [];
-  // try to select email if present in schema, otherwise fall back without it
-  let profilesRes: { data: ProfileRec[] | null; error: any } | null = null;
-  try {
-    // try selecting email/avatar if available
-    profilesRes = (await (supabase.from('profiles').select('id,username,avatar,email').in('id', otherIds as string[]) as unknown)) as { data: ProfileRec[] | null; error: unknown };
-    // if columns missing this will throw and be caught below
-  } catch (e) {
-    // fallback: try without email/avatar
-    try {
-      profilesRes = (await (supabase.from('profiles').select('id,username').in('id', otherIds as string[]) as unknown)) as { data: ProfileRec[] | null; error: unknown };
-    } catch (e2) {
-      profilesRes = null;
-    }
-  }
-  let profiles = profilesRes?.data ?? null;
+  const profilesRes = await supabase
+    .from('profiles')
+    .select('id,username,display_name,avatar_url,last_active')
+    .in('id', otherIds as string[]);
+
+  const profiles = profilesRes.data as ProfileRec[] | null;
   if (!profiles) {
-    return data.map((row) => ({ id: row.friend_id === uid ? row.user_id : row.friend_id, username: row.friend_id === uid ? row.user_id : row.friend_id, avatar: '', email: '', status: row.status || 'accepted' }));
+    return data.map((row) => ({
+      id: row.friend_id === uid ? row.user_id : row.friend_id,
+      username: row.friend_id === uid ? row.user_id : row.friend_id,
+      avatar: '',
+      email: '',
+      status: row.status || 'accepted',
+    }));
   }
   // map rows to enriched friend objects
   const profilesMap = new Map<string, ProfileRec>();
@@ -49,9 +46,9 @@ export async function listFriends(): Promise<{ id: string; username: string; ava
     const prof = profilesMap.get(other) || null;
     return {
       id: other,
-      username: prof?.username ?? other,
-      avatar: prof?.avatar ?? '',
-      email: prof?.email ?? '',
+      username: prof?.display_name || prof?.username || other,
+      avatar: prof?.avatar_url ?? '',
+      email: '',
       status: row.status || 'accepted',
     };
   });
@@ -63,8 +60,8 @@ export async function listOnlinePlayers(windowSeconds = 60): Promise<{ id: strin
   try {
     const threshold = new Date(Date.now()-windowSeconds * 1000).toISOString();
     // select only guaranteed columns to avoid schema differences
-    const res = (await (supabase.from('profiles').select('id,username,last_active').gte('last_active', threshold).order('last_active', { ascending: false }).limit(50) as unknown)) as { data: ProfileRec[] | null; error: unknown };
-    if (res.data) return res.data.map((p) => ({ id: p.id, username: p.username || p.id, avatar: '' }));
+    const res = (await (supabase.from('profiles').select('id,username,avatar_url,last_active').gte('last_active', threshold).order('last_active', { ascending: false }).limit(50) as unknown)) as { data: ProfileRec[] | null; error: unknown };
+    if (res.data) return res.data.map((p) => ({ id: p.id, username: p.display_name || p.username || p.id, avatar: p.avatar_url || '' }));
   } catch (_) {
     // ignore
   }
@@ -73,100 +70,56 @@ export async function listOnlinePlayers(windowSeconds = 60): Promise<{ id: strin
 }
 
 export async function searchPlayers(term: string, limit = 10): Promise<ProfileRec[]> {
-  if (!term || term.trim().length === 0) return [];
   const q = term.trim();
-  try {
-    // if the term looks like an id (short hex or uuid-like) try exact id match first
-    const looksLikeId = /^[0-9a-fA-F-]{8,}$/.test(q);
-    if (looksLikeId) {
-      try {
-        const byId = (await (supabase.from('profiles').select('id,username,avatar,email,last_active').eq('id', q).maybeSingle() as unknown)) as { data?: ProfileRec | null; error?: unknown };
-        if (byId.data) return [byId.data];
-      } catch (e) {
-        try {
-          const byId2 = (await (supabase.from('profiles').select('id,username,last_active').eq('id', q).maybeSingle() as unknown)) as { data?: ProfileRec | null; error?: unknown };
-          if (byId2.data) return [byId2.data];
-        } catch (e2) {
-          // ignore
-        }
-      }
-    }
+  if (!q) return [];
 
-    // search username or email (case-insensitive) and include last_active to let UI show online state
-    const ilike = `%${q.replace(/%/g, '\\%')}%`;
-    // Try selecting email (some deployments have it); fall back to no-email select if server returns error
-    // Log the outgoing query for easier debugging in dev
-    // be quiet in prod; keep minimal debug
-    try {
-    let res;
-    try {
-      res = (await (supabase
-        .from('profiles')
-        .select('id,username,avatar,email,last_active')
-        .or(`username.ilike.${ilike},email.ilike.${ilike}`)
-        .limit(limit) as unknown)) as { data: ProfileRec[] | null; error: unknown };
-    } catch (e) {
-      // fallback to select without email/avatar
-      res = (await (supabase
-        .from('profiles')
-        .select('id,username,last_active')
-        .or(`username.ilike.${ilike}`)
-        .limit(limit) as unknown)) as { data: ProfileRec[] | null; error: unknown };
-    }
-      if (!res.data) return [];
-      return res.data;
-    } catch (err) {
-      // fallback: try select without email
-      try {
-        const res2 = (await (supabase
-          .from('profiles')
-          .select('id,username,avatar,last_active')
-          .or(`username.ilike.${ilike}`)
-          .limit(limit) as unknown)) as { data: ProfileRec[] | null; error: unknown };
-        if (!res2.data) return [];
-        return res2.data;
-      } catch (err2) {
-        // silent fallback
-        return [];
-      }
-    }
-  } catch (_) {
-    // log unexpected errors
-    // eslint-disable-next-line no-console
-    console.error('[multiplayer] searchPlayers error', _);
+  const looksLikeId = /^[0-9a-fA-F-]{8,}$/.test(q);
+  if (looksLikeId) {
+    const byId = await supabase
+      .from('profiles')
+      .select('id,username,display_name,avatar_url,last_active')
+      .eq('id', q)
+      .maybeSingle();
+    if (byId.data) return [byId.data as ProfileRec];
+  }
+
+  const escaped = q.replace(/[%_,]/g, (char) => `\\${char}`);
+  const pattern = `%${escaped}%`;
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id,username,display_name,avatar_url,last_active')
+    .or(`username.ilike.${pattern},display_name.ilike.${pattern}`)
+    .neq('id', (await supabase.auth.getUser()).data.user?.id ?? '')
+    .limit(limit);
+
+  if (error) {
+    console.error('[multiplayer] searchPlayers error:', error);
     return [];
   }
+
+  return (data ?? []) as ProfileRec[];
 }
 
 export async function sendInvite(toUser: string, payload: Record<string, unknown> = {}) {
   const u = (await (supabase.auth.getUser() as unknown)) as { data?: { user?: { id: string } } };
   const from = u.data?.user?.id; if (!from) throw new Error('not authenticated');
 
-  // Resolve to a profile id if caller passed username or email
+  // Resolve usernames/display names to a profile id. The profiles table does
+  // not contain auth email addresses, so email lookup here was never reliable.
   let targetId: string | null = null;
   const t = String(toUser || '').trim();
   const looksLikeId = /^[0-9a-fA-F-]{8,}$/.test(t);
-  if (looksLikeId) targetId = t;
-  else if (t.includes('@')) {
-    try {
-      const byEmail = await supabase.from('profiles').select('id').eq('email', t).maybeSingle();
-      // @ts-ignore
-      if (byEmail?.data?.id) targetId = byEmail.data.id;
-    } catch (err) {
-      // Column may not exist in some deployments. Fallback to username lookup using local-part.
-      // eslint-disable-next-line no-console
-      console.warn('[multiplayer] email lookup failed, falling back to username part', err);
-      const uname = t.split('@')[0];
-      if (uname) {
-        const byUsername = await supabase.from('profiles').select('id').eq('username', uname).maybeSingle();
-        // @ts-ignore
-        if (byUsername?.data?.id) targetId = byUsername.data.id;
-      }
-    }
-  } else if (t.length > 0) {
-    const byUsername = await supabase.from('profiles').select('id').eq('username', t).maybeSingle();
-    // @ts-ignore
-    if (byUsername?.data?.id) targetId = byUsername.data.id;
+
+  if (looksLikeId) {
+    const byId = await supabase.from('profiles').select('id').eq('id', t).maybeSingle();
+    targetId = byId.data?.id ?? null;
+  } else if (t) {
+    const byUsername = await supabase
+      .from('profiles')
+      .select('id')
+      .or(`username.eq.${t.replace(/,/g, '')},display_name.eq.${t.replace(/,/g, '')}`)
+      .maybeSingle();
+    targetId = byUsername.data?.id ?? null;
   }
 
   if (!targetId) {
@@ -223,8 +176,6 @@ export async function acceptInvite(inviteId: string) {
   // becomes the guest. This is an intentional, secure direct insert covered by
   // the online_games INSERT policy (host_id = auth.uid()).
   const timeControl = invite.payload?.time_control ?? null;
-  const payload: Record<string, unknown> = invite.payload ?? {};
-
   const insertBody: Record<string, unknown> = {
     host_id: uid,
     guest_id: invite.from_user,

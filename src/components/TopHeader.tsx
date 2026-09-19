@@ -16,10 +16,7 @@ import {
   Gift,
 } from 'lucide-react';
 
-import FriendList from './multiplayer/FriendList';
-import FriendRequestsPanel from './multiplayer/FriendRequestsPanel';
-import InviteModal from './multiplayer/InviteModal';
-import InvitesInbox from './multiplayer/InvitesInbox';
+import PlayWithFriends from './multiplayer/PlayWithFriends';
 import { SoundControls } from './SoundControls';
 import { formatCurrency, getStoredCurrency } from '@/data/countries';
 import type { AppUser } from '@/lib/supabase';
@@ -62,11 +59,6 @@ export function TopHeader({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'friends' | 'invites'>(
-    'friends',
-  );
-  const [copyMsg, setCopyMsg] = useState<string | null>(null);
   const [unreadInvites] = useState<number>(0);
 
   useEffect(() => {
@@ -211,177 +203,8 @@ export function TopHeader({
                     </span>
                   )}
                 </button>
-
                 {friendsOpen && (
-                  <>
-                    {/* Dark backdrop */}
-                    <button
-                      type="button"
-                      aria-label="Close friends panel"
-                      onClick={() => setFriendsOpen(false)}
-                      className="fixed inset-0 z-[90] bg-black/70 backdrop-blur-[2px]"
-                    />
-
-                    {/* Friends panel */}
-                    <div
-                      className="
-                        fixed
-                        left-0
-                        top-14
-                        z-[100]
-                        h-[calc(100vh-56px)]
-                        w-[min(400px,92vw)]
-                        overflow-y-auto
-                        overflow-x-hidden
-                        border-r
-                        border-white/10
-                        bg-navy-900
-                        p-3
-                        shadow-2xl
-                        animate-pop-in
-
-                        sm:absolute
-                        sm:left-auto
-                        sm:right-0
-                        sm:top-12
-                        sm:h-auto
-                        sm:max-h-[calc(100vh-80px)]
-                        sm:w-[min(32rem,calc(100vw-2rem))]
-                        sm:rounded-xl
-                        sm:border
-                        sm:bg-navy-800
-                      "
-                    >
-                      {/* Panel header */}
-                      <div className="mb-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Tabs */}
-                        <div className="flex min-w-0 items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab('friends')}
-                            className={`rounded-md px-3 py-1 text-sm ${
-    activeTab === 'friends'
-        ? 'bg-navy-600 text-white'
-        : 'text-navy-300 hover:bg-white/5'
-} `}
-                          >
-                            Friends
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab('invites')}
-                            className={`rounded-md px-3 py-1 text-sm ${
-    activeTab === 'invites'
-        ? 'bg-navy-600 text-white'
-        : 'text-navy-300 hover:bg-white/5'
-} `}
-                          >
-                            Invites
-                          </button>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex min-w-0 flex-wrap items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setInviteOpen(true)}
-                            className="shrink-0 whitespace-nowrap text-xs text-navy-200 hover:text-white"
-                          >
-                            New Invite
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              try {
-                                await navigator.clipboard?.writeText(
-                                  user?.id || '',
-                                );
-
-                                setCopyMsg('Copied');
-
-                                setTimeout(
-                                  () => setCopyMsg(null),
-                                  2000,
-                                );
-
-                                window.dispatchEvent(
-                                  new CustomEvent('app-toast', {
-                                    detail: {
-                                      message:
-                                        'Your ID copied to clipboard',
-                                      type: 'success',
-                                    },
-                                  }),
-                                );
-                              } catch (e) {
-                                console.warn('copy failed', e);
-
-                                setCopyMsg('Failed');
-
-                                setTimeout(
-                                  () => setCopyMsg(null),
-                                  2000,
-                                );
-
-                                window.dispatchEvent(
-                                  new CustomEvent('app-toast', {
-                                    detail: {
-                                      message: 'Copy failed',
-                                      type: 'error',
-                                    },
-                                  }),
-                                );
-                              }
-                            }}
-                            className="shrink-0 whitespace-nowrap text-xs text-navy-200 hover:text-white"
-                          >
-                            {copyMsg ?? 'Copy my ID'}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Main content */}
-                      <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row">
-                        {/* Friends */}
-                        <div className="w-full min-w-0 sm:w-1/2">
-                          <div className="max-h-72 min-w-0 max-w-full overflow-x-hidden overflow-y-auto">
-                            <FriendList compact />
-                          </div>
-                        </div>
-
-                        {/* Invites */}
-                        <div className="w-full min-w-0 sm:w-1/2">
-                          <div className="max-h-72 min-w-0 max-w-full overflow-x-hidden overflow-y-auto">
-                            {activeTab === 'invites' ? (
-                              <InvitesInbox
-                                onClose={() =>
-                                  setFriendsOpen(false)
-                                }
-                              />
-                            ) : (
-                              <div className="rounded-lg p-2 text-sm text-navy-300">
-                                Select Invites to view incoming
-                                invites.
-                              </div>
-                            )}
-
-                            {/* Friend requests */}
-                            <div className="mt-2">
-                              <div className="mb-1 text-xs text-navy-400">
-                                Friend requests
-                              </div>
-
-                              <div className="min-w-0 max-w-full overflow-hidden rounded-lg border border-white/5 bg-navy-800 p-1">
-                                <FriendRequestsPanel />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </>
+                  <PlayWithFriends onClose={() => setFriendsOpen(false)} />
                 )}
               </div>
             )}
@@ -474,16 +297,6 @@ export function TopHeader({
                 Log In
               </button>
             )}
-
-            {/* ===================================================
-                INVITE MODAL
-               =================================================== */}
-            {inviteOpen && (
-              <InviteModal
-                onClose={() => setInviteOpen(false)}
-              />
-            )}
-
             {/* ===================================================
                 MOBILE MENU BUTTON
                =================================================== */}

@@ -44,10 +44,10 @@ type Tab = 'play' | 'newgame' | 'moves' | 'chat';
 
 const AI_LEVELS: { value: AIDifficulty; label: string; elo: string }[] = [
   { value: 'beginner', label: 'Beginner', elo: '~600' },
-  { value: 'intermediate', label: 'Intermediate', elo: '~1600' },
-  { value: 'advanced', label: 'Advanced', elo: '~2000' },
-  { value: 'master', label: 'Master', elo: '2200-2600' },
-  { value: 'max', label: 'Max Engine', elo: '3000+' },
+  { value: 'intermediate', label: 'Intermediate', elo: '~1800' },
+  { value: 'advanced', label: 'Advanced', elo: '~2200' },
+  { value: 'master', label: 'Master', elo: '~2600' },
+  { value: 'max', label: 'Max Engine', elo: 'Full engine' },
 ];
 
 const TC_PRESETS: { value: TimeControl; label: string; sub: string; icon: typeof Zap }[] = [

@@ -219,12 +219,16 @@ export function useChess(opts: UseChessOptions) {
     const stateRef = useRef(state);
     const statusRef = useRef(status);
     const startedRef = useRef(started);
+    const runningRef = useRef(running);
+    const pendingResultRef = useRef(pendingResult);
     const initialMsRef = useRef(initialMs);
 
     boardRef.current = board;
     stateRef.current = state;
     statusRef.current = status;
     startedRef.current = started;
+    runningRef.current = running;
+    pendingResultRef.current = pendingResult;
     initialMsRef.current = initialMs;
 
     const tcLabel =
@@ -254,6 +258,8 @@ export function useChess(opts: UseChessOptions) {
                     stage: statusRef.current.stage,
                 };
 
+            runningRef.current = false;
+            pendingResultRef.current = { status: finalStatus, ending };
             setRunning(false);
             setThinking(false);
             setSelected(null);
@@ -340,6 +346,8 @@ export function useChess(opts: UseChessOptions) {
         }
 
         const interval = setInterval(() => {
+            if (!runningRef.current || pendingResultRef.current) return;
+
             const currentState = stateRef.current;
 
             if (currentState.turn === 'w') {
@@ -357,62 +365,47 @@ export function useChess(opts: UseChessOptions) {
     // ---------------------------------------------------------
 
     useEffect(() => {
-        if (!started || !running) return;
-        if (pendingResult) return;
+        if (!started || !running || pendingResult) return;
 
-        if (whiteMs <= 0) {
-            const winner: Color = 'b';
+        // Only the clock belonging to the player whose turn it is can expire.
+        // This prevents a stale/inactive clock value from awarding the game
+        // to the wrong side.
+        const activeTurn = stateRef.current.turn;
+        const timedOut =
+            (activeTurn === 'w' && whiteMs <= 0) ||
+            (activeTurn === 'b' && blackMs <= 0);
 
-            const timeoutStatus: GameStatus = {
-                phase: 'draw',
-                winner,
-                stage: statusRef.current.stage,
-            };
+        if (!timedOut) return;
 
-            setRunning(false);
-            setThinking(false);
+        const winner: Color = activeTurn === 'w' ? 'b' : 'w';
+        const timeoutStatus: GameStatus = {
+            phase: 'draw',
+            winner,
+            stage: statusRef.current.stage,
+        };
 
-            setStatus(timeoutStatus);
+        // Set refs synchronously before React re-renders. An AI move that is
+        // already in flight must never be allowed to play after timeout.
+        runningRef.current = false;
+        pendingResultRef.current = {
+            status: timeoutStatus,
+            ending: 'timeout',
+        };
 
-            setPendingResult({
-                status: timeoutStatus,
-                ending: 'timeout',
-            });
+        setRunning(false);
+        setThinking(false);
+        setStatus(timeoutStatus);
+        setPendingResult(pendingResultRef.current);
 
-            sound.play('game-end');
-            recordMatch(winner, 'timeout');
-
-            return;
-        }
-
-        if (blackMs <= 0) {
-            const winner: Color = 'w';
-
-            const timeoutStatus: GameStatus = {
-                phase: 'draw',
-                winner,
-                stage: statusRef.current.stage,
-            };
-
-            setRunning(false);
-            setThinking(false);
-
-            setStatus(timeoutStatus);
-
-            setPendingResult({
-                status: timeoutStatus,
-                ending: 'timeout',
-            });
-
-            sound.play('game-end');
-            recordMatch(winner, 'timeout');
-        }
+        sound.play('game-end');
+        recordMatch(winner, 'timeout');
     }, [
         whiteMs,
         blackMs,
         started,
         running,
         pendingResult,
+        state.turn,
         recordMatch,
     ]);
 
@@ -435,8 +428,8 @@ export function useChess(opts: UseChessOptions) {
 
     const doMove = useCallback(
         (move: Move) => {
-            if (!running) return;
-            if (pendingResult) return;
+            if (!runningRef.current) return;
+            if (pendingResultRef.current) return;
 
             const b = boardRef.current;
             const s = stateRef.current;
@@ -585,7 +578,13 @@ export function useChess(opts: UseChessOptions) {
                         computerColor,
                     );
 
-                    if (move && startedRef.current) {
+                    if (
+                        move &&
+                        startedRef.current &&
+                        runningRef.current &&
+                        !pendingResultRef.current &&
+                        stateRef.current.turn === computerColor
+                    ) {
                         doMove(move);
                     }
                 } catch (e) {
@@ -828,6 +827,8 @@ export function useChess(opts: UseChessOptions) {
             initialMsRef.current,
         );
 
+        runningRef.current = true;
+        pendingResultRef.current = null;
         setRunning(true);
         setStarted(true);
         setThinking(false);
@@ -849,6 +850,11 @@ export function useChess(opts: UseChessOptions) {
             stage: statusRef.current.stage,
         };
 
+        runningRef.current = false;
+        pendingResultRef.current = {
+            status: resignationStatus,
+            ending: 'resignation',
+        };
         setRunning(false);
         setThinking(false);
 

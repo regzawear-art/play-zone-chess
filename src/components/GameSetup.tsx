@@ -102,22 +102,22 @@ const DIFFICULTIES: {
         {
             key: 'intermediate',
             label: 'Intermediate',
-            sub: 'Stockfish Level 1',
+            sub: '~1800 strength',
         },
         {
             key: 'advanced',
             label: 'Advanced',
-            sub: 'Stockfish Level 2',
+            sub: '~2200 strength',
         },
         {
             key: 'master',
             label: 'Master',
-            sub: 'Stockfish Level 3',
+            sub: '~2600 strength',
         },
         {
             key: 'max',
             label: 'Max Engine',
-            sub: 'Stockfish Maximum',
+            sub: 'Full engine strength',
         },
     ];
 

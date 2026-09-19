@@ -1,105 +1,102 @@
-import React, { useState, useEffect } from 'react';
-import useFriends from '../../hooks/useFriends';
-import multiplayer from '../../lib/multiplayer/supabase-multiplayer';
-import { UserPlus } from 'lucide-react';
-import SuggestionList from './SuggestionList';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { X, Users, Mail, UserPlus } from 'lucide-react';
+import { FriendList } from './FriendList';
+import InvitesInbox from './InvitesInbox';
 
-export default function FriendList({ compact }: { compact?: boolean } = {}) {
-    const { friends } = useFriends();
-    const [search, setSearch] = useState('');
-    const [results, setResults] = useState<any[]>([]);
+interface Props {
+  onClose: () => void;
+}
 
-    const challenge = async (idOrUsername: string) => {
-        try {
-            // allow passing username or id; lookup id if necessary
-            let targetId = idOrUsername;
-            if (!/^[0-9a-fA-F-]{8,}$/.test(idOrUsername)) {
-                const matches = await multiplayer.searchPlayers(idOrUsername, 1);
-                if (matches && matches.length > 0) targetId = matches[0].id;
-            }
-            await multiplayer.sendInvite(targetId, { type: 'challenge' });
-            window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Challenge sent', type: 'success' } }));
-        } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn('send invite failed', e);
-            window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Failed to send challenge', type: 'error' } }));
-        }
-    };
+type Tab = 'friends' | 'invites';
 
-    const onSearch = async (q: string) => {
-        setSearch(q);
-        if (!q || q.trim().length < 1) { setResults([]); return; }
-        try {
-            const res = await multiplayer.searchPlayers(q, 6);
-            setResults(res || []);
-        } catch (_) { setResults([]); }
-    };
+/**
+ * Page-level Friends dialog.
+ *
+ * Rendered through a portal so it cannot be trapped by an ancestor's
+ * stacking context, transform, overflow, or z-index.
+ */
+export default function PlayWithFriends({ onClose }: Props) {
+  const [activeTab, setActiveTab] = useState<Tab>('friends');
 
-    return (
-        <div className={`min-w-0 w-full rounded-xl border border-white/8 bg-navy-750 ${compact ? 'p-2' : 'p-3'}`}>
-            <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white">Friends</h3>
-                <button
-                    onClick={() => window.dispatchEvent(new CustomEvent('open-add-friend'))}
-                    title="Add friend"
-                    aria-label="Add friend"
-                    className="flex items-center gap-2 text-navy-300 hover:text-white"
-                >
-                    <UserPlus size={14} />
-                    <span className="hidden sm:inline text-xs">Add</span>
-                </button>
-            </div>
-            <div className="mb-2">
-                <div className="relative">
-                    <input value={search} onChange={(e) => onSearch(e.target.value)} placeholder="Search by username, email or id" className="w-full rounded-md bg-navy-700 px-3 py-2 text-sm text-white outline-none placeholder:text-navy-400" />
-                </div>
-                {results.length > 0 && (
-                    <div className="mt-1 rounded border border-white/6 bg-navy-800">
-                        <SuggestionList
-                            items={results}
-                            onSelect={async (r) => {
-                                try {
-                                    await multiplayer.sendFriendRequest(r.id);
-                                    window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Friend request sent', type: 'success' } }));
-                                } catch (e: any) {
-                                    console.error('[FriendList] send friend request failed:', e);
-                                    window.dispatchEvent(new CustomEvent('app-toast', {
-                                        detail: {
-                                            message: e?.message || 'Failed to send friend request',
-                                            type: 'error',
-                                        },
-                                    }));
-                                }
-                            }}
-                            containerClassName=""
-                        />
-                    </div>
-                )}
-            </div>
-            <div className="flex flex-col gap-2">
-                {friends.length === 0 && <p className="text-sm text-navy-300">No friends yet</p>}
-                {friends.map((f: any) => (
-                    <div key={f.id} className="flex min-w-0 flex-col gap-2 rounded-md bg-navy-700 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-semibold text-white">{f.username ?? f.id}</div>
-                            <div className="text-xs text-navy-300">{f.status}</div>
-                        </div>
-                        <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1">
-                            <button onClick={() => challenge(f.id)} className="text-xs text-navy-200 hover:text-white">Challenge</button>
-                            <button onClick={async () => {
-                                try {
-                                    await navigator.clipboard.writeText(f.username ?? f.id);
-                                    window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Friend copied', type: 'success' } }));
-                                } catch (e) {
-                                    // eslint-disable-next-line no-console
-                                    console.warn('copy failed', e);
-                                    window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Copy failed', type: 'error' } }));
-                                }
-                            }} className="text-xs text-navy-200 hover:text-white">Copy</button>
-                        </div>
-                    </div>
-                ))}
-            </div>
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="friends-dialog-title"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="relative flex max-h-[min(760px,calc(100vh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-navy-800 shadow-2xl">
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-4 sm:px-6">
+          <div className="min-w-0 pr-4">
+            <h2
+              id="friends-dialog-title"
+              className="flex items-center gap-2 text-lg font-bold text-white"
+            >
+              <Users size={19} className="text-royal-400" />
+              Friends
+            </h2>
+            <p className="mt-1 text-xs text-navy-300">
+              Manage friends and game invitations in one place.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-navy-700 text-navy-200 transition hover:bg-navy-600 hover:text-white"
+            aria-label="Close friends"
+            title="Close"
+          >
+            <X size={18} />
+          </button>
         </div>
-    );
+
+        {/* Tabs */}
+        <div className="flex shrink-0 gap-1 border-b border-white/10 bg-navy-850 px-4 pt-3 sm:px-6">
+          <button
+            type="button"
+            onClick={() => setActiveTab('friends')}
+            className={`flex items-center gap-2 rounded-t-lg border-b-2 px-4 py-2.5 text-sm font-bold transition ${
+              activeTab === 'friends'
+                ? 'border-royal-400 bg-navy-700 text-white'
+                : 'border-transparent text-navy-300 hover:bg-navy-700/60 hover:text-white'
+            }`}
+          >
+            <UserPlus size={16} />
+            Friends
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('invites')}
+            className={`flex items-center gap-2 rounded-t-lg border-b-2 px-4 py-2.5 text-sm font-bold transition ${
+              activeTab === 'invites'
+                ? 'border-royal-400 bg-navy-700 text-white'
+                : 'border-transparent text-navy-300 hover:bg-navy-700/60 hover:text-white'
+            }`}
+          >
+            <Mail size={16} />
+            Invites
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+          {activeTab === 'friends' ? (
+            <FriendList />
+          ) : (
+            <InvitesInbox onClose={undefined} />
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
 }
