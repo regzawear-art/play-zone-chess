@@ -885,7 +885,7 @@ function HomePage() {
                 return;
             }
 
-            setRoomOpen(true);
+            setPlayWithFriendsOpen(true);
             return;
         }
 

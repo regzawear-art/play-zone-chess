@@ -175,7 +175,12 @@ export async function acceptInvite(inviteId: string) {
   // authenticated user and therefore must create the row as host; the inviter
   // becomes the guest. This is an intentional, secure direct insert covered by
   // the online_games INSERT policy (host_id = auth.uid()).
-  const timeControl = invite.payload?.time_control ?? null;
+  const rawInvitePayload = invite.payload;
+  const payload: Record<string, unknown> =
+    rawInvitePayload && typeof rawInvitePayload === 'object' && !Array.isArray(rawInvitePayload)
+      ? (rawInvitePayload as Record<string, unknown>)
+      : {};
+  const timeControl = typeof payload.time_control === 'string' ? payload.time_control : null;
   const insertBody: Record<string, unknown> = {
     host_id: uid,
     guest_id: invite.from_user,

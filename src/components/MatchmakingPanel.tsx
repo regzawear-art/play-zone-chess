@@ -38,6 +38,7 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
   const [matched, setMatched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [queueId, setQueueId] = useState<string | null>(null);
+  const queueIdRef = useRef<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
 
   const pollRef = useRef<number | null>(null);
@@ -67,7 +68,8 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
     clearTimers();
     removeChannel();
 
-    const id = queueId;
+    const id = queueIdRef.current;
+    queueIdRef.current = null;
     setQueueId(null);
     setSearching(false);
     finishingRef.current = false;
@@ -79,7 +81,7 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
         .eq('id', id)
         .eq('user_id', userId ?? '');
     }
-  }, [clearTimers, removeChannel, queueId, userId]);
+  }, [clearTimers, removeChannel, userId]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -161,7 +163,7 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
           opponent_id: opponent.user_id,
           matched_at: now,
         })
-        .eq('id', queueId ?? '')
+        .eq('id', queueIdRef.current ?? '')
         .eq('user_id', userId)
         .eq('status', 'searching');
 
@@ -173,15 +175,16 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
       setError(err instanceof Error ? err.message : 'Failed to create online game.');
       await cancelSearch();
     }
-  }, [userId, timeControl, queueId, openMatchedGame, cancelSearch]);
+  }, [userId, timeControl, openMatchedGame, cancelSearch]);
 
   const checkQueue = useCallback(async () => {
-    if (!userId || !queueId || finishingRef.current) return;
+    const activeQueueId = queueIdRef.current;
+    if (!userId || !activeQueueId || finishingRef.current) return;
 
     const { data: me, error: meError } = await supabase
       .from('matchmaking_queue')
       .select('id,user_id,time_control,status,game_id,opponent_id,created_at')
-      .eq('id', queueId)
+      .eq('id', activeQueueId)
       .maybeSingle();
 
     if (meError) {
@@ -217,7 +220,7 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
           opponent_id: guestGame.host_id,
           matched_at: new Date().toISOString(),
         })
-        .eq('id', queueId)
+        .eq('id', activeQueueId)
         .eq('user_id', userId);
 
       openMatchedGame(guestGame.id, false, guestGame.host_id);
@@ -279,6 +282,7 @@ export function MatchmakingPanel({ open, onClose, userId, timeControl, onMatched
     }
 
     setQueueId(myEntry.id);
+    queueIdRef.current = myEntry.id;
     setSearching(true);
 
     const channel = supabase
