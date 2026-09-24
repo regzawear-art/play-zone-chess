@@ -121,20 +121,36 @@ if (sfWorker) {
   }
 }
 
-export async function chooseWithStockfish(board: Board, state: GameState, side: Color, movetime = 2000, opts?: { limitStrength?: boolean; elo?: number; skillLevel?: number }): Promise<Move | null> {
+let engineInitialized = false;
+
+function initEngine(): void {
+  if (engineInitialized || !sfWorker) return;
+  try {
+    sfWorker.postMessage('uci');
+    sfWorker.postMessage('setoption name Hash value 128');
+    sfWorker.postMessage('setoption name Threads value 2');
+    sfWorker.postMessage('setoption name UCI_AnalyseMode value false');
+    sfWorker.postMessage('isready');
+    engineInitialized = true;
+  } catch {
+    // ignore
+  }
+}
+
+export async function chooseWithStockfish(board: Board, state: GameState, side: Color, movetime = 800, opts?: { limitStrength?: boolean; elo?: number; skillLevel?: number }): Promise<Move | null> {
   if (!sfWorker) {
-    // Worker unavailable — log and signal caller to fallback
     // eslint-disable-next-line no-console
     console.warn('[stockfish main] worker unavailable, falling back to JS worker');
     return null;
   }
+
+  initEngine();
 
   const fen = boardToFEN(board, state);
   const id = reqId++;
   return new Promise((resolve, reject) => {
     pending[id] = { resolve, reject };
     try {
-      // send UCI setoption commands if options provided
       if (opts) {
         if (opts.limitStrength) {
           try { sfWorker!.postMessage('setoption name UCI_LimitStrength value true'); } catch {}
@@ -145,15 +161,15 @@ export async function chooseWithStockfish(board: Board, state: GameState, side: 
         if (typeof opts.skillLevel === 'number') {
           try { sfWorker!.postMessage('setoption name Skill Level value ' + Math.floor(opts.skillLevel)); } catch {}
         }
+      } else {
+        try { sfWorker!.postMessage('setoption name UCI_LimitStrength value false'); } catch {}
       }
 
-      // Send according to detected worker mode. Raw engines expect string UCI commands.
       if (workerMode === 'wrapped') {
         sfWorker!.postMessage({ type: 'go', id, fen, movetime, opts });
       } else {
-        // raw or unknown: send UCI strings
         sfWorker!.postMessage('position fen ' + fen);
-        sfWorker!.postMessage('go movetime ' + Math.max(10, Math.floor(movetime)));
+        sfWorker!.postMessage('go movetime ' + Math.max(50, Math.floor(movetime)));
       }
     } catch (err) {
       // posting failed, cleanup and resolve null so caller can fallback
@@ -163,7 +179,7 @@ export async function chooseWithStockfish(board: Board, state: GameState, side: 
       resolve(null);
       return;
     }
-    setTimeout(() => { if (pending[id]) { pending[id].resolve(null); delete pending[id]; } }, movetime + 2000);
+    setTimeout(() => { if (pending[id]) { pending[id].resolve(null); delete pending[id]; } }, movetime + 1500);
   }).then((bestUnknown) => {
     const best = typeof bestUnknown === 'string' ? bestUnknown : null;
     if (!best) return null;

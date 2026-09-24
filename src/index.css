@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --board-light: #ebecd0;
-  --board-dark: #779952;
-  --board-highlight: #baca44;
-  --board-select: #f7f769;
+  --board-light: #eeeed2;
+  --board-dark: #7ba45b;
+  --board-highlight: #cdd26a;
+  --board-select: #f6f669;
   --board-legal-dot: rgba(0,0,0,0.22);
   --board-legal-ring: rgba(0,0,0,0.22);
-  --board-check-bg: rgba(229,57,53,0.45);
-  --board-last-move: rgba(186,202,68,0.55);
+  --board-check-bg: rgba(229,57,53,0.5);
+  --board-last-move: rgba(205,210,106,0.6);
   --navy-800: #262522;
   --royal-500: #81B64C;
 }
@@ -125,7 +125,7 @@ body {
   line-height: 1;
   user-select: none;
   cursor: grab;
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
   pointer-events: auto;
 }
@@ -137,6 +137,9 @@ body {
   height: 100%;
   display: block;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
+}
+.chess-piece:hover svg {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.55));
 }
 
 .square-light {
@@ -164,9 +167,19 @@ body {
 
 .legal-dot {
   background: radial-gradient(circle, var(--board-legal-dot) 0%, transparent 70%);
+  animation: dot-appear 0.2s ease-out;
 }
 .legal-ring {
   box-shadow: inset 0 0 0 4px var(--board-legal-ring);
+  animation: ring-appear 0.2s ease-out;
+}
+@keyframes dot-appear {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes ring-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -195,3 +208,26 @@ body {
 
 /* Responsive board: JS-driven sizing via ResizeObserver handles all screen sizes.
    No CSS max-width overrides — the inline style from boardPx is authoritative. */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pop-in {
+  0% { transform: scale(0.85); opacity: 0; }
+  60% { transform: scale(1.03); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+.animate-pop-in {
+  animation: pop-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.animate-glow-pulse {
+  animation: glow-pulse 1.2s ease-in-out infinite;
+}

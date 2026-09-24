@@ -189,7 +189,7 @@ export function GameOverPopup({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl">
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl animate-pop-in">
         {/* Close */}
         <button
           type="button"
@@ -202,7 +202,7 @@ export function GameOverPopup({
 
         {/* Header */}
         <div className="relative px-6 pb-6 pt-10 text-center">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-indigo-500/20 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-amber-500/20 to-transparent" />
 
           <div className="relative mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-white/5">
             <ResultIcon className="h-10 w-10 text-yellow-400" />
@@ -230,7 +230,7 @@ export function GameOverPopup({
 
         {/* Stats */}
         <div
-          className={`grid grid - cols - 2 gap - 3 px - 6 transition - all duration - 500 ${
+          className={`grid grid-cols-2 gap-3 px-6 transition-all duration-500 ${
     showStats
         ? 'translate-y-0 opacity-100'
         : 'translate-y-2 opacity-0'
@@ -268,7 +268,7 @@ export function GameOverPopup({
             </div>
 
             <span
-              className={`text - sm font - bold ${
+              className={`text-sm font-bold ${
     ratingChange > 0
         ? 'text-emerald-400'
         : ratingChange < 0
@@ -296,7 +296,7 @@ export function GameOverPopup({
           <button
             type="button"
             onClick={onNewGame}
-            className="flex-1 rounded-2xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400"
+            className="flex-1 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 px-4 py-3 text-sm font-semibold text-white transition hover:from-amber-400 hover:to-amber-500"
           >
             New Game
           </button>

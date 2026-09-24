@@ -265,7 +265,7 @@ export function ChessGamePage({
         game.status.winner === playerColor;
 
     return (
-        <div className="min-h-screen bg-[#07111f] text-white">
+        <div className="flex min-h-screen flex-col bg-[#07111f] text-white">
             {/* Top bar */}
             <header className="sticky top-0 z-50 border-b border-navy-600/40 bg-navy-900/95 backdrop-blur">
                 <div className="mx-auto flex h-14 max-w-[1500px] items-center justify-between px-3 sm:px-5">
@@ -303,11 +303,12 @@ export function ChessGamePage({
             </header>
 
             {/* Game */}
-            <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-[1500px] items-center justify-center p-2 sm:p-4 lg:p-5">
-                <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
+            <main className="flex flex-1 items-center justify-center p-2 sm:p-4 lg:p-5">
+                <div className="mx-auto flex w-full max-w-[1500px] items-center justify-center">
+                    <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
                     {/* BOARD */}
                     <section className="flex min-w-0 justify-center">
-                        <div className="w-full max-w-[min(92vw,calc(100vh-150px))] lg:max-w-[min(72vh,760px)]">
+                        <div className="w-full max-w-[min(92vw,calc(100vh-180px))] lg:max-w-[min(70vh,720px)]">
                             <PlayerHUD
                                 player={{
                                     name: topPlayer.name,
@@ -441,8 +442,16 @@ export function ChessGamePage({
                             </div>
                         </div>
                     </aside>
+                    </div>
                 </div>
             </main>
+
+            {/* Footer */}
+            <footer className="shrink-0 border-t border-navy-600/40 bg-[#050b16] py-3 text-center">
+                <p className="text-xs font-medium text-navy-300 sm:text-sm">
+                    Powered by Sylvanta Pvt Ltd company
+                </p>
+            </footer>
 
             {game.pendingResult && showGameOver && (
                 <GameOverPopup

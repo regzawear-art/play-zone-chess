@@ -52,7 +52,15 @@ postMessage({ type: 'info', info: 'engine constructed=' + !!engine });
 
 postMessage({ type: 'ready', hasEngine: !!engine });
 
+// Send initialization commands once engine is detected
 if (engine) {
+  try {
+    engine.postMessage('setoption name Hash value 128');
+    engine.postMessage('setoption name Threads value 2');
+    engine.postMessage('ucinewgame');
+  } catch (e) {
+    // ignore init errors
+  }
   engine.onmessage = function (e: any) {
     const line = e.data || e;
     if (typeof line === 'string' && line.startsWith('bestmove')) {
@@ -80,7 +88,7 @@ addEventListener('message', (ev: MessageEvent<any>) => {
         return;
       }
       engine.postMessage('position fen ' + msg.fen);
-      engine.postMessage('go movetime ' + Math.max(10, Math.floor(msg.movetime)));
+      engine.postMessage('go movetime ' + Math.max(50, Math.floor(msg.movetime)));
     } catch (err) {
       postMessage({ type: 'error', id: msg.id, error: String(err) });
       currentRequestId = null;

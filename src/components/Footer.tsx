@@ -170,6 +170,7 @@ export function Footer({ onNavigate, onFooterPage }: Props) {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-center sm:flex-row sm:text-left">
           <p className="text-xs text-royal-200/70">© {new Date().getFullYear()} Gambit Royale. All rights reserved.</p>
+          <p className="text-xs font-semibold text-royal-200/90">Powered by Sylvanta Pvt Ltd company</p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-royal-200/70">
             <button onClick={() => onFooterPage('privacy')} className="transition-colors hover:text-white">Privacy</button>
             <button onClick={() => onFooterPage('terms')} className="transition-colors hover:text-white">Terms</button>
