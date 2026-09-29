@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "setup:stockfish": "node scripts/copy-stockfish-wasm.mjs",
     "postinstall": "node scripts/copy-stockfish-wasm.mjs --soft",
-    "prebuild": "node scripts/copy-stockfish-wasm.mjs"
+    "prebuild": "node scripts/copy-stockfish-wasm.mjs --soft"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
