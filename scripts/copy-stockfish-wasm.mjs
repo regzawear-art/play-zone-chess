@@ -20,7 +20,7 @@ const soft = process.argv.includes('--soft'); // don't fail `npm install` on pro
 function bail(msg) {
   console.error('[stockfish-wasm] ' + msg);
   process.exit(soft ? 0 : 1);
-}c
+}
 
 if (!fs.existsSync(jsFile)) bail('missing ' + path.relative(root, jsFile));
 if (!fs.existsSync(pkgDir)) bail('node_modules/stockfish not found - run `npm install` first');
