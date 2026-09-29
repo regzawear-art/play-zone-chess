@@ -28,11 +28,11 @@ const DIFFICULTY_RANDOMNESS: Record<AIDifficulty, number> = {
 const DIFFICULTY_TIME_MS: Record<AIDifficulty, number> = {
   beginner: 100,
   // these are fallbacks for the JS worker; Stockfish will be used for many levels
-  intermediate: 2000,
-  advanced: 5000,
-  master: 10000,
-  // allow very long thinking time for the highest engine level
-  max: 30000,
+  // Kept under ai.ts JS_FALLBACK_TIMEOUT_MS (4000) so the fallback always answers in time.
+  intermediate: 1000,
+  advanced: 1500,
+  master: 2000,
+  max: 2500,
 };
 
 let currentDifficulty: AIDifficulty = 'intermediate';
