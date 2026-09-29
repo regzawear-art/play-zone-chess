@@ -265,9 +265,9 @@ export function ChessGamePage({
         game.status.winner === playerColor;
 
     return (
-        <div className="flex min-h-screen flex-col bg-[#07111f] text-white">
+        <div className="flex h-[100dvh] flex-col overflow-hidden overscroll-none bg-[#07111f] text-white">
             {/* Top bar */}
-            <header className="sticky top-0 z-50 border-b border-navy-600/40 bg-navy-900/95 backdrop-blur">
+            <header className="sticky top-0 z-50 shrink-0 border-b border-navy-600/40 bg-navy-900/95 backdrop-blur">
                 <div className="mx-auto flex h-14 max-w-[1500px] items-center justify-between px-3 sm:px-5">
                     <button
                         type="button"
@@ -303,12 +303,12 @@ export function ChessGamePage({
             </header>
 
             {/* Game */}
-            <main className="flex flex-1 items-center justify-center p-2 sm:p-4 lg:p-5">
-                <div className="mx-auto flex w-full max-w-[1500px] items-center justify-center">
-                    <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
+            <main className="flex min-h-0 flex-1 items-start justify-center overflow-hidden p-0 lg:items-center lg:p-5">
+                <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] items-start justify-center lg:items-center">
+                    <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-none lg:items-center lg:gap-4">
                     {/* BOARD */}
                     <section className="flex min-w-0 justify-center">
-                        <div className="w-full max-w-[min(92vw,calc(100vh-180px))] lg:max-w-[min(70vh,720px)]">
+                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:max-w-[min(calc(100dvh-225px),860px)]">
                             <PlayerHUD
                                 player={{
                                     name: topPlayer.name,
@@ -372,7 +372,7 @@ export function ChessGamePage({
                     </section>
 
                     {/* RIGHT PANEL */}
-                    <aside className="w-full">
+                    <aside className="h-full min-h-0 w-full overflow-y-auto p-2 lg:h-auto lg:max-h-[calc(100dvh-6.5rem)] lg:p-0">
                         <div className="hidden lg:block">
                             <GameControls
                                 game={game}
