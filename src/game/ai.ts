@@ -26,6 +26,10 @@ worker.addEventListener('message', (ev: MessageEvent<any>) => {
   }
 });
 
+// Must be larger than the longest JS time budget in ai-core.ts (2500ms), otherwise the
+// wrapper gives up first and the bot never moves.
+const JS_FALLBACK_TIMEOUT_MS = 4000;
+
 export function setAIDifficulty(d: AIDifficulty) {
   worker.postMessage({ type: 'setDifficulty', difficulty: d });
   // locally remember difficulty so we can delegate to Stockfish for master
@@ -37,10 +41,10 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
   try {
     const cd = (chooseMove as any).currentDifficulty as AIDifficulty | undefined;
     // Delegate to Stockfish for stronger levels as requested.
-    // intermediate -> use limited-strength Stockfish ~ depth 8
+    // Elo values below match the labels shown in GameSetup (~1800 / ~2200 / ~2600).
     if (cd === 'intermediate') {
       try {
-        const move = await chooseWithStockfish(board, state, side, 600, { limitStrength: true, elo: 1500 });
+        const move = await chooseWithStockfish(board, state, side, 1000, { limitStrength: true, elo: 1800 });
         if (move) return move;
       } catch {
         // fall back to JS worker
@@ -48,7 +52,7 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
     }
     if (cd === 'advanced') {
       try {
-        const move = await chooseWithStockfish(board, state, side, 700, { limitStrength: true, elo: 1900 });
+        const move = await chooseWithStockfish(board, state, side, 1000, { limitStrength: true, elo: 2200 });
         if (move) return move;
       } catch {
         // fall back to JS worker
@@ -56,7 +60,7 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
     }
     if (cd === 'master') {
       try {
-        const move = await chooseWithStockfish(board, state, side, 900, { limitStrength: true, elo: 2200 });
+        const move = await chooseWithStockfish(board, state, side, 1000, { limitStrength: true, elo: 2600 });
         if (move) return move;
       } catch {
         // fall back to JS worker
@@ -64,7 +68,7 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
     }
     if (cd === 'max') {
       try {
-        const move = await chooseWithStockfish(board, state, side, 900);
+        const move = await chooseWithStockfish(board, state, side, 1000);
         if (move) return move;
       } catch {
         // fall back to JS worker
@@ -80,6 +84,6 @@ export async function chooseMove(board: Board, state: GameState, side: Color): P
     worker.postMessage({ type: 'choose', id, board, state, side });
     setTimeout(() => {
       if (pending[id]) { pending[id].resolve(null); delete pending[id]; }
-    }, 3000);
+    }, JS_FALLBACK_TIMEOUT_MS);
   });
 }
