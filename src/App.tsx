@@ -1416,7 +1416,7 @@ function HomePage() {
                 />
 
                 <div className="mx-auto w-full max-w-[1400px]">
-                    <main className="flex min-w-0 flex-col pt-14">
+                    <main className="flex min-w-0 flex-col">
                         <FooterPage
                             page={
                                 footerPage as any
@@ -1706,7 +1706,7 @@ function HomePage() {
                 />
 
                 <div className="mx-auto w-full max-w-[1400px]">
-                    <main className="flex min-w-0 flex-col pt-14">
+                    <main className="flex min-w-0 flex-col">
                         <OnlineGameView
                             config={
                                 onlineGameConfig
@@ -1795,7 +1795,7 @@ function HomePage() {
             />
 
             <div className="mx-auto w-full max-w-[1400px]">
-                <main className="flex min-w-0 flex-col pt-14">
+                <main className="flex min-w-0 flex-col">
                     <Hero
                         onPlay={
                             handleQuickMatch
