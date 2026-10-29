@@ -305,7 +305,7 @@ export function ChessGamePage({
             {/* Game */}
             <main className="flex min-h-0 flex-1 items-start justify-center overflow-hidden p-0 lg:items-center lg:p-5">
                 <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] items-start justify-center lg:items-center">
-                    <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(340px,400px)] lg:grid-rows-none lg:items-center lg:justify-center lg:gap-5">
+                    <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(340px,400px)] lg:grid-rows-none lg:items-start lg:justify-center lg:gap-5">
                     {/* BOARD */}
                     <section className="flex min-w-0 justify-center">
                         <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-205px),calc(100vw-480px),1000px)] lg:max-w-none">
@@ -383,7 +383,7 @@ export function ChessGamePage({
                             />
                         </div>
 
-                        <div className="mt-3">
+                        <div className="mt-3 hidden">
                             <GamePanel
                                 status={game.status}
                                 running={game.running}
@@ -409,7 +409,7 @@ export function ChessGamePage({
                             />
                         </div>
 
-                        <div className="mt-3 rounded-xl border border-navy-600/40 bg-navy-800/80 p-3 lg:hidden">
+                        <div className="mt-3 hidden rounded-xl border border-navy-600/40 bg-navy-800/80 p-3">
                             <div className="mb-2 text-sm font-bold">
                                 Moves
                             </div>

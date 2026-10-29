@@ -536,12 +536,12 @@ export function ChessBoard({
                             `${row}-${col}`;
 
                         const showFileLabel =
-                            col ===
+                            row ===
                             (orientation === 'w' ? 7 : 0);
 
                         const showRankLabel =
-                            row ===
-                            (orientation === 'w' ? 7 : 0);
+                            col ===
+                            (orientation === 'w' ? 0 : 7);
 
                         return (
                             <button
