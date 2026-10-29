@@ -159,7 +159,7 @@ function isInsufficientMaterial(board: Board): boolean {
 
             if (!piece) continue;
 
-            if (piece.type === 'king') continue;
+            if (piece.type === 'k') continue;
 
             pieces.push({
                 color: piece.color,
