@@ -6,6 +6,7 @@ import { gameStatus, legalMoves, legalMovesFrom, makeMove } from '../game/engine
 import { parseFEN, parseUci } from '../game/fen';
 import { sound } from '../game/sound';
 import PUZZLES_RAW from '../data/puzzles.json';
+import { SylvantaSideCard, AdSenseSlot, ADSENSE_SLOTS } from './SylvantaAds';
 
 interface PuzzleData {
     id: string;
@@ -447,7 +448,12 @@ export function PuzzlesPage({ onExit, initialPuzzleId }: { onExit: () => void; i
                             Next Puzzle <ChevronRight size={18} />
                         </button>
 
-                        <p className="mt-auto pt-2 text-center text-[10px] text-[#6f6d6a]">
+                        <div className="mt-auto space-y-2 pt-2">
+                            <SylvantaSideCard />
+                            <AdSenseSlot slot={ADSENSE_SLOTS.puzzles} />
+                        </div>
+
+                        <p className="pt-1 text-center text-[10px] text-[#6f6d6a]">
                             Puzzles from the Lichess open database (CC0)
                         </p>
                     </aside>

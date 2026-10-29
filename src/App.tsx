@@ -38,6 +38,7 @@ import { GameSetup } from './components/GameSetup';
 import { ChessGamePage } from './components/ChessGamePage';
 import { PuzzlesPage } from './components/PuzzlesPage';
 import { DailyPuzzleCard } from './components/DailyPuzzleCard';
+import { SylvantaHomeStrip } from './components/SylvantaAds';
 import { OnlineGameView } from './components/OnlineGameView';
 
 import {
@@ -2053,6 +2054,8 @@ function HomePage() {
                             }
                         />
                     </section>
+
+                    <SylvantaHomeStrip />
 
                     {/* LEADERBOARD */}
                     <section
