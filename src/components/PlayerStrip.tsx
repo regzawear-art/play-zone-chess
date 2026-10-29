@@ -63,7 +63,7 @@ export function PlayerStrip({ player, label, active, showOnline }: Props) {
           )}
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-xs text-navy-400">
-          <span className="font-semibold text-royal-400">{player.rating}</span>
+          <span className="font-semibold text-royal-400">{player.rating > 0 ? player.rating : "BOT"}</span>
           <span className="text-navy-500">·</span>
           <span>{label}</span>
         </div>

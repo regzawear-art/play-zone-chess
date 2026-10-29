@@ -62,7 +62,7 @@ export function PlayerHUD({ player, ms, active, running, align }: Props) {
           <span className="shrink-0 text-xs sm:text-sm">{player.flag}</span>
         </div>
         <div className="mt-0.5 flex items-center gap-1">
-          <span className="text-[11px] font-semibold text-royal-400 sm:text-xs">{player.rating}</span>
+          <span className="text-[11px] font-semibold text-royal-400 sm:text-xs">{player.rating > 0 ? player.rating : "BOT"}</span>
           <span className="text-navy-500 text-[10px]">·</span>
           {/* Captured pieces */}
           <div className="flex items-center leading-none">
