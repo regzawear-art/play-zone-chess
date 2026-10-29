@@ -13,6 +13,7 @@ import {
   Settings as SettingsIcon,
   CreditCard,
   Gift,
+  Puzzle,
 } from 'lucide-react';
 
 import PlayWithFriends from './multiplayer/PlayWithFriends';
@@ -29,6 +30,7 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
   { id: 'home', label: 'Home', icon: Home },
   { id: 'play', label: 'Play', icon: Gamepad2 },
+  { id: 'puzzles', label: 'Puzzles', icon: Puzzle },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   { id: 'clubs', label: 'Clubs', icon: Users },
   { id: 'pricing', label: 'Pricing', icon: CreditCard },

@@ -36,6 +36,7 @@ import { useWalletDB } from './hooks/useWalletDB';
 import { PremiumOfferPopup } from './components/PremiumOfferPopup';
 import { GameSetup } from './components/GameSetup';
 import { ChessGamePage } from './components/ChessGamePage';
+import { PuzzlesPage } from './components/PuzzlesPage';
 import { OnlineGameView } from './components/OnlineGameView';
 
 import {
@@ -1358,6 +1359,20 @@ function HomePage() {
             },
             []
         );
+
+    /*
+     * Puzzles screen.
+     */
+    if (view === 'puzzles' && !gameStarted) {
+        return (
+            <PuzzlesPage
+                onExit={() => {
+                    setView('home');
+                    window.scrollTo({ top: 0 });
+                }}
+            />
+        );
+    }
 
     /*
      * Dedicated BOT game screen.
