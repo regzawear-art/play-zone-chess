@@ -12,19 +12,6 @@ export default defineConfig({
         },
     },
 
-    build: {
-        rollupOptions: {
-            output: {
-                manualChunks(id) {
-                    if (!id.includes('node_modules')) return undefined;
-                    if (id.includes('@supabase')) return 'supabase';
-                    if (id.includes('lucide-react')) return 'icons';
-                    if (id.includes('react') || id.includes('scheduler')) return 'react';
-                    return 'vendor';
-                },
-            },
-        },
-    },
 
     optimizeDeps: {
         exclude: ['lucide-react'],
