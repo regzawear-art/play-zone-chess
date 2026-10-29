@@ -15,7 +15,7 @@ export function Features() {
       <div className="mx-auto max-w-3xl text-center">
         <span className="chip mx-auto bg-royal-500/15 text-royal-400 ring-1 ring-royal-500/25">
           <Sparkles size={13} />
-          Why Gambit Royale
+          Why KhelChess
         </span>
         <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
           Everything you need to <span className="shimmer-text">play like a pro</span>

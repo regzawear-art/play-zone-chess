@@ -1,4 +1,4 @@
-import { Crown, Twitter, Github, Youtube, Instagram, Send } from 'lucide-react';
+import { Twitter, Github, Youtube, Instagram, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 const COLUMNS = [
@@ -87,11 +87,9 @@ export function Footer({ onNavigate, onFooterPage }: Props) {
           {/* brand */}
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-blue-grad shadow-glow-sm">
-                <Crown size={22} className="text-white" />
-              </span>
+              <img src="/icon-192.png" alt="" className="h-11 w-11 rounded-xl" />
               <div className="leading-none">
-                <p className="font-display text-xl font-extrabold">Gambit Royale</p>
+                <p className="font-display text-xl font-extrabold">KhelChess</p>
                 <p className="font-display text-[10px] font-semibold uppercase tracking-[0.25em] text-royal-300">
                   Premium Chess
                 </p>
@@ -169,7 +167,7 @@ export function Footer({ onNavigate, onFooterPage }: Props) {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-center sm:flex-row sm:text-left">
-          <p className="text-xs text-royal-200/70">© {new Date().getFullYear()} Gambit Royale. All rights reserved.</p>
+          <p className="text-xs text-royal-200/70">© {new Date().getFullYear()} KhelChess. All rights reserved.</p>
           <p className="text-xs font-semibold text-royal-200/90">Powered by Sylvanta Pvt Ltd company</p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-royal-200/70">
             <button onClick={() => onFooterPage('privacy')} className="transition-colors hover:text-white">Privacy</button>

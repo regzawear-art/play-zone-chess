@@ -72,7 +72,7 @@ export function PremiumOfferPopup({ onClose, onClaim }: Props) {
           </div>
           <h2 className="relative mt-4 font-display text-2xl font-extrabold text-white">Get 1 Month of Premium for Free!</h2>
           <p className="relative mt-1.5 text-sm text-navy-200">
-            Unlock the full Gambit Royale experience — limited time sign-up offer.
+            Unlock the full KhelChess experience — limited time sign-up offer.
           </p>
         </div>
 

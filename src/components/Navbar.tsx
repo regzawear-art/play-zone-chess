@@ -61,14 +61,14 @@ export function Navbar({ active, onNavigate, user, onLogin, onLogout, onWallet, 
         >
           {/* Logo — left, flex-1 to balance center */}
           <div className="flex flex-1 items-center justify-start">
-            <button onClick={() => go('home')} className="flex items-center gap-2.5" aria-label="Gambit Royale home">
+            <button onClick={() => go('home')} className="flex items-center gap-2.5" aria-label="KhelChess home">
               <span className="relative grid h-10 w-10 place-items-center rounded-xl bg-blue-grad shadow-glow-sm">
                 <Crown size={20} className="text-white" />
                 <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-royal-300 ring-2 ring-navy-800" />
               </span>
               <span className="hidden flex-col leading-none sm:flex">
-                <span className="font-display text-lg font-extrabold tracking-tight text-white">Gambit</span>
-                <span className="font-display text-[10px] font-semibold uppercase tracking-[0.25em] text-royal-400">Royale</span>
+                <span className="font-display text-lg font-extrabold tracking-tight text-white">KhelChess</span>
+                
               </span>
             </button>
           </div>

@@ -45,13 +45,13 @@ export function PlaySidebar({ active, onNavigate, user, onLogin, onLogout, onWal
     <nav className="flex h-full flex-col border-r border-white/5 bg-navy-750">
       {/* Logo */}
       <div className="flex shrink-0 items-center gap-2.5 px-4 py-4">
-        <button onClick={() => onNavigate('home')} className="flex items-center gap-2.5" aria-label="Gambit Royale home">
+        <button onClick={() => onNavigate('home')} className="flex items-center gap-2.5" aria-label="KhelChess home">
           <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blue-grad shadow-glow-sm">
             <Crown size={18} className="text-white" />
           </span>
           <span className="hidden flex-col leading-none lg:flex">
-            <span className="font-display text-base font-extrabold tracking-tight text-white">Gambit</span>
-            <span className="font-display text-[9px] font-semibold uppercase tracking-[0.2em] text-royal-400">Royale</span>
+            <span className="font-display text-base font-extrabold tracking-tight text-white">KhelChess</span>
+            
           </span>
         </button>
       </div>

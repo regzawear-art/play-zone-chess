@@ -10,7 +10,7 @@ interface Props {
 }
 
 const PAGE_META: Record<PageId, { title: string; icon: typeof Info; description: string }> = {
-  about: { title: 'About Us', icon: Info, description: 'Learn about Gambit Royale' },
+  about: { title: 'About Us', icon: Info, description: 'Learn about KhelChess' },
   privacy: { title: 'Privacy Policy', icon: Shield, description: 'How we handle your data' },
   terms: { title: 'Terms of Service', icon: FileText, description: 'Our terms and conditions' },
   contact: { title: 'Contact Us', icon: Mail, description: 'Get in touch with our team' },
@@ -94,7 +94,7 @@ function AboutContent() {
   return (
     <div className="space-y-4 text-sm leading-relaxed text-white">
       <p>
-        Gambit Royale is a premium online chess platform built for players of every level — from
+        KhelChess is a premium online chess platform built for players of every level — from
         beginners making their first moves to grandmasters refining their craft. Our mission is to make
         chess accessible, beautiful, and competitive for everyone, everywhere.
       </p>
@@ -147,7 +147,7 @@ function PrivacyContent() {
       <h3 className="font-display text-lg font-bold text-white">4. Your Rights</h3>
       <p>
         You can request a copy of your data, update your profile, or delete your account at any time from
-        your settings page. Contact us at privacy@gambitroyale.com for data requests.
+        your settings page. Contact us at privacy@khelchess.com for data requests.
       </p>
       <h3 className="font-display text-lg font-bold text-white">5. Cookies</h3>
       <p>
@@ -164,7 +164,7 @@ function TermsContent() {
       <p>Last updated: August 2026</p>
       <h3 className="font-display text-lg font-bold text-white">1. Acceptance of Terms</h3>
       <p>
-        By creating an account or using Gambit Royale, you agree to these terms. If you do not agree,
+        By creating an account or using KhelChess, you agree to these terms. If you do not agree,
         please discontinue use of the platform.
       </p>
       <h3 className="font-display text-lg font-bold text-white">2. Fair Play Policy</h3>
@@ -241,7 +241,7 @@ function ContactContent() {
           <Mail size={20} className="text-royal-600" />
           <div>
             <p className="font-semibold text-white">Email</p>
-            <p className="text-xs text-navy-400">support@gambitroyale.com</p>
+            <p className="text-xs text-navy-400">support@khelchess.com</p>
           </div>
         </div>
         <div className="flex items-center gap-3 rounded-2xl bg-navy-600 p-4">
@@ -300,7 +300,7 @@ function FaqContent() {
       a: 'Your $50 welcome bonus is automatically credited to your account when you first sign up. You can claim it from the welcome popup that appears after registration, or from your profile page.',
     },
     {
-      q: 'Is Gambit Royale free to play?',
+      q: 'Is KhelChess free to play?',
       a: 'Yes! You can play unlimited games for free. Premium features like advanced AI analysis and tournament entry may use your bonus points or require a subscription.',
     },
     {

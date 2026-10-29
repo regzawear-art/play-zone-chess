@@ -124,11 +124,9 @@ export function AuthModal({ open, onClose, onAuthed }: Props) {
             <X size={16} />
           </button>
           <div className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/20">
-              <Crown size={18} className="text-white" />
-            </span>
+            <img src="/icon-192.png" alt="" className="h-9 w-9 rounded-xl" />
             <div>
-              <p className="font-display text-lg font-extrabold leading-none text-white">Gambit Royale</p>
+              <p className="font-display text-lg font-extrabold leading-none text-white">KhelChess</p>
               <p className="mt-1 text-xs font-medium text-royal-100">{subtitle}</p>
             </div>
           </div>
