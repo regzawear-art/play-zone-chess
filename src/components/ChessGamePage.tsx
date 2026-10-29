@@ -303,12 +303,12 @@ export function ChessGamePage({
             </header>
 
             {/* Game */}
-            <main className="flex min-h-0 flex-1 items-start justify-center overflow-hidden p-0 lg:items-center lg:p-5">
+            <main className="flex min-h-0 flex-1 items-start justify-center overflow-hidden p-0 lg:items-center lg:p-3">
                 <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] items-start justify-center lg:items-center">
-                    <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(340px,400px)] lg:grid-rows-none lg:items-start lg:justify-center lg:gap-5">
+                    <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(320px,380px)] lg:grid-rows-none lg:items-start lg:justify-center lg:gap-5">
                     {/* BOARD */}
                     <section className="flex min-w-0 justify-center">
-                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-205px),calc(100vw-480px),1000px)] lg:max-w-none">
+                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-190px),calc(100vw-440px),1000px)] lg:max-w-none">
                             <PlayerHUD
                                 player={{
                                     name: topPlayer.name,
@@ -372,7 +372,7 @@ export function ChessGamePage({
                     </section>
 
                     {/* RIGHT PANEL */}
-                    <aside className="h-full min-h-0 w-full overflow-y-auto p-2 lg:h-auto lg:max-h-[calc(100dvh-6.5rem)] lg:p-0">
+                    <aside className="h-full min-h-0 w-full overflow-y-auto p-2 lg:h-auto lg:max-h-[calc(100dvh-86px)] lg:p-0">
                         <div className="hidden lg:block">
                             <GameControls
                                 game={game}
@@ -447,7 +447,7 @@ export function ChessGamePage({
             </main>
 
             {/* Footer */}
-            <footer className="shrink-0 border-t border-navy-600/40 bg-[#050b16] py-3 text-center">
+            <footer className="shrink-0 lg:hidden border-t border-navy-600/40 bg-[#050b16] py-3 text-center">
                 <p className="text-xs font-medium text-navy-300 sm:text-sm">
                     Powered by Sylvanta Pvt Ltd company
                 </p>
