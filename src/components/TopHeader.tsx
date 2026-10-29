@@ -85,7 +85,7 @@ export function TopHeader({
           HEADER
          ========================================================= */}
       <header
-        className={`sticky top-0 z-50 w-full border-b border-white / 5 transition-all duration-300 ${
+        className={`fixed inset-x-0 top-0 z-50 w-full border-b border-white / 5 transition-all duration-300 ${
     scrolled
         ? 'bg-navy-900 shadow-lg shadow-black/20'
         : 'bg-navy-900'
@@ -399,6 +399,7 @@ export function TopHeader({
           </>
         )}
       </header>
+      <div aria-hidden="true" className="h-14 w-full shrink-0" />
     </>
   );
 }

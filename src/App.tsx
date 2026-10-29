@@ -1775,7 +1775,7 @@ function HomePage() {
         );
 
     return (
-        <div className="min-h-screen overflow-x-hidden bg-navy-800">
+        <div className="min-h-screen overflow-x-clip bg-navy-800">
             <TopHeader
                 active={view}
                 onNavigate={navigate}
