@@ -6,7 +6,7 @@ import { gameStatus, legalMoves, legalMovesFrom, makeMove } from '../game/engine
 import { parseFEN, parseUci } from '../game/fen';
 import { sound } from '../game/sound';
 import PUZZLES_RAW from '../data/puzzles.json';
-import { KhelShopCard, AdSenseSlot, ADSENSE_SLOTS } from './SylvantaAds';
+import { KhelShopCard, KhelSkyscraper, AdSenseSlot, ADSENSE_SLOTS } from './SylvantaAds';
 
 interface PuzzleData {
     id: string;
@@ -353,9 +353,9 @@ export function PuzzlesPage({ onExit, initialPuzzleId }: { onExit: () => void; i
             </header>
 
             <main className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto p-0 lg:items-center lg:overflow-hidden lg:p-2">
-                <div className="grid w-full max-w-[1500px] gap-0 lg:h-full lg:grid-cols-[auto_minmax(320px,380px)] lg:items-stretch lg:justify-center lg:gap-5">
+                <div className="grid w-full max-w-[1500px] 2xl:max-w-[1760px] gap-0 lg:h-full lg:grid-cols-[auto_minmax(320px,380px)] 2xl:grid-cols-[auto_minmax(320px,380px)_160px] lg:items-stretch lg:justify-center lg:gap-5">
                     <section className="flex min-w-0 justify-center lg:items-center">
-                        <div className="w-full max-w-[min(100vw,max(260px,calc(100dvh-230px)))] lg:w-[min(calc(100dvh-80px),calc(100vw-420px),1100px)] lg:max-w-none">
+                        <div className="w-full max-w-[min(100vw,max(260px,calc(100dvh-230px)))] lg:w-[min(calc(100dvh-80px),calc(100vw-420px),1100px)] 2xl:w-[min(calc(100dvh-80px),calc(100vw-620px),1100px)] lg:max-w-none">
                             <div className="relative">
                                 <ChessBoard
                                     board={board}
@@ -449,7 +449,7 @@ export function PuzzlesPage({ onExit, initialPuzzleId }: { onExit: () => void; i
                         </button>
 
                         <div className="mt-auto space-y-2 pt-2">
-                            <KhelShopCard />
+                            <div className="2xl:hidden"><KhelShopCard /></div>
                             <AdSenseSlot slot={ADSENSE_SLOTS.puzzles} />
                         </div>
 
@@ -457,6 +457,11 @@ export function PuzzlesPage({ onExit, initialPuzzleId }: { onExit: () => void; i
                             Puzzles from the Lichess open database (CC0)
                         </p>
                     </aside>
+
+                    {/* Chess.com-style skyscraper ad (wide screens only) */}
+                    <div className="hidden 2xl:flex 2xl:items-center 2xl:justify-center">
+                        <KhelSkyscraper />
+                    </div>
                 </div>
             </main>
         </div>
