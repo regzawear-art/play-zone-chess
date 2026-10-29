@@ -303,8 +303,9 @@ export function ChessGamePage({
                 <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] 2xl:max-w-[1760px] items-start justify-center lg:items-center">
                     <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(320px,380px)] 2xl:grid-cols-[auto_minmax(320px,380px)_160px] lg:grid-rows-none lg:items-stretch lg:justify-center lg:gap-5">
                     {/* BOARD */}
-                    <section className="flex min-w-0 justify-center">
-                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-172px),calc(100vw-420px),1100px)] 2xl:w-[min(calc(100dvh-172px),calc(100vw-620px),1100px)] lg:max-w-none">
+                    <section className="flex min-w-0 justify-center lg:items-center">
+                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-80px),calc(100vw-420px),1100px)] 2xl:w-[min(calc(100dvh-80px),calc(100vw-620px),1100px)] lg:max-w-none">
+                            <div className="lg:hidden">
                             <PlayerHUD
                                 player={{
                                     name: topPlayer.name,
@@ -321,6 +322,7 @@ export function ChessGamePage({
                                 running={game.running}
                                 align="top"
                             />
+                            </div>
 
                             <ChessBoard
                                 board={game.board}
@@ -338,6 +340,7 @@ export function ChessGamePage({
                                 thinking={game.thinking}
                             />
 
+                            <div className="lg:hidden">
                             <PlayerHUD
                                 player={{
                                     name: bottomPlayer.name,
@@ -354,6 +357,7 @@ export function ChessGamePage({
                                 running={game.running}
                                 align="bottom"
                             />
+                            </div>
 
                             <div className="mt-2 lg:hidden">
                                 <GameControls
@@ -369,6 +373,24 @@ export function ChessGamePage({
 
                     {/* RIGHT PANEL */}
                     <aside className="h-full min-h-0 w-full overflow-y-auto p-2 lg:flex lg:h-auto lg:max-h-none lg:flex-col lg:p-0">
+                        <div className="mb-2 hidden shrink-0 rounded-lg bg-[#262421] px-2 lg:block">
+                            <PlayerHUD
+                                player={{
+                                    name: topPlayer.name,
+                                    avatar: topPlayer.avatar,
+                                    flag: topPlayer.flag,
+                                    rating: topPlayer.rating,
+                                    title: topPlayer.title,
+                                    online: topPlayer.online,
+                                    capturedPieces: topCaptured,
+                                    materialDiff: topDiff,
+                                }}
+                                ms={topMs}
+                                active={topActive}
+                                running={game.running}
+                                align="bottom"
+                            />
+                        </div>
                         <div className="hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
                             <GameControls
                                 game={game}
@@ -381,6 +403,25 @@ export function ChessGamePage({
 
                         <div className="mt-2 2xl:hidden">
                             <KhelShopCard />
+                        </div>
+
+                        <div className="mt-2 hidden shrink-0 rounded-lg bg-[#262421] px-2 lg:block">
+                            <PlayerHUD
+                                player={{
+                                    name: bottomPlayer.name,
+                                    avatar: bottomPlayer.avatar,
+                                    flag: bottomPlayer.flag,
+                                    rating: bottomPlayer.rating,
+                                    title: bottomPlayer.title,
+                                    online: bottomPlayer.online,
+                                    capturedPieces: bottomCaptured,
+                                    materialDiff: bottomDiff,
+                                }}
+                                ms={bottomMs}
+                                active={bottomActive}
+                                running={game.running}
+                                align="bottom"
+                            />
                         </div>
 
                         <div className="mt-3 hidden">
