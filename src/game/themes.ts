@@ -49,7 +49,7 @@ export const BOARD_THEMES: BoardTheme[] = [
     legalDot: 'rgba(0,0,0,0.22)',
     legalRing: 'rgba(0,0,0,0.22)',
     checkBg: 'rgba(229,57,53,0.45)',
-    lastMoveBg: 'rgba(181,136,99,0.55)',
+    lastMoveBg: 'rgba(246,235,114,0.5)',
     preview: 'linear-gradient(135deg, #f0d9b5 50%, #b58863 50%)',
   },
   {
@@ -130,9 +130,9 @@ export interface CustomColors {
 
 export function getStoredTheme(): string {
   try {
-    return localStorage.getItem(STORAGE_KEY) || 'green';
+    return localStorage.getItem(STORAGE_KEY) || 'brown';
   } catch {
-    return 'green';
+    return 'brown';
   }
 }
 
