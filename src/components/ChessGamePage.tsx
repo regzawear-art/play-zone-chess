@@ -1,3 +1,4 @@
+import { KhelShopCard } from './SylvantaAds';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ArrowLeft,
@@ -376,6 +377,10 @@ export function ChessGamePage({
                                 toggleMusic={toggleMusic}
                                 musicOn={musicOn}
                             />
+                        </div>
+
+                        <div className="mt-2">
+                            <KhelShopCard />
                         </div>
 
                         <div className="mt-3 hidden">

@@ -6,7 +6,7 @@ import { gameStatus, legalMoves, legalMovesFrom, makeMove } from '../game/engine
 import { parseFEN, parseUci } from '../game/fen';
 import { sound } from '../game/sound';
 import PUZZLES_RAW from '../data/puzzles.json';
-import { SylvantaSideCard, AdSenseSlot, ADSENSE_SLOTS } from './SylvantaAds';
+import { KhelShopCard, AdSenseSlot, ADSENSE_SLOTS } from './SylvantaAds';
 
 interface PuzzleData {
     id: string;
@@ -449,7 +449,7 @@ export function PuzzlesPage({ onExit, initialPuzzleId }: { onExit: () => void; i
                         </button>
 
                         <div className="mt-auto space-y-2 pt-2">
-                            <SylvantaSideCard />
+                            <KhelShopCard />
                             <AdSenseSlot slot={ADSENSE_SLOTS.puzzles} />
                         </div>
 

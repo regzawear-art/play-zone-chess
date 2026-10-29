@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ExternalLink, ShoppingBag } from 'lucide-react';
 import PRODUCTS_RAW from '../data/sylvanta-products.json';
+import SHOP_RAW from '../data/khelchess-shop.json';
 
 interface Product {
     name: string;
@@ -155,6 +156,75 @@ export function AdSenseSlot({ slot, className = '' }: { slot: string; className?
                 data-ad-format="auto"
                 data-full-width-responsive="true"
             />
+        </div>
+    );
+}
+
+/* ------------------------------------------------------------------
+ * KhelChess exclusive shop card (game screen). Chess sets + T-shirts,
+ * coupon KHELCHESS20 = 20% off (coupon is created in WooCommerce admin).
+ * ------------------------------------------------------------------ */
+
+const SHOP = SHOP_RAW as Product[];
+export const KHEL_COUPON = 'KHELCHESS20';
+const KHEL_PCT = 20;
+
+export function KhelShopCard() {
+    const start = useMemo(() => Math.floor(Math.random() * SHOP.length), []);
+    const [i, setI] = useState(start);
+    const [copied, setCopied] = useState(false);
+    useEffect(() => {
+        const t = window.setInterval(() => setI((x) => (x + 1) % SHOP.length), 10000);
+        return () => window.clearInterval(t);
+    }, []);
+    const p = SHOP[i];
+    if (!p) return null;
+    const final = Math.round(p.price * (1 - KHEL_PCT / 100));
+    const copy = () => {
+        navigator.clipboard?.writeText(KHEL_COUPON).then(() => {
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1800);
+        }).catch(() => {});
+    };
+    return (
+        <div className="shrink-0 rounded-lg bg-[#262421] p-2.5 ring-1 ring-white/10">
+            <div className="mb-2 flex items-center justify-between">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-[#989795]">Sponsored · Sylvanta</span>
+                <span className="rounded bg-[#c33a32] px-1.5 py-0.5 text-[10px] font-extrabold text-white">KhelChess Exclusive {KHEL_PCT}% OFF</span>
+            </div>
+            <a
+                href={track(p.url, 'game_panel')}
+                target="_blank"
+                rel="noopener sponsored"
+                className="flex items-center gap-3 rounded-md p-1 transition hover:bg-white/5"
+            >
+                <img src={p.img} alt={p.name} loading="lazy" className="h-16 w-16 shrink-0 rounded-md bg-white object-contain p-1" />
+                <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 text-xs font-semibold leading-snug text-white">{p.name}</p>
+                    <p className="mt-0.5 text-sm font-extrabold text-[#a3d160]">
+                        {inr(final)}
+                        <span className="ml-1.5 text-[11px] font-medium text-[#989795] line-through">{inr(p.price)}</span>
+                    </p>
+                </div>
+            </a>
+            <div className="mt-2 flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={copy}
+                    className="flex-1 rounded-md border border-dashed border-[#81b64c]/70 bg-[#1f1e1b] px-2 py-1.5 text-center text-[11px] font-bold text-white hover:bg-white/5"
+                    title="Copy coupon code"
+                >
+                    {copied ? 'Copied!' : <>Code <span className="font-extrabold text-[#a3d160]">{KHEL_COUPON}</span></>}
+                </button>
+                <a
+                    href={track(p.url, 'game_panel')}
+                    target="_blank"
+                    rel="noopener sponsored"
+                    className="flex items-center gap-1 rounded-md bg-[#81b64c] px-3 py-1.5 text-[11px] font-extrabold text-white shadow-[0_2px_0_#45753c] hover:bg-[#a3d160]"
+                >
+                    Shop <ExternalLink size={12} />
+                </a>
+            </div>
         </div>
     );
 }

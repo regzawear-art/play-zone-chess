@@ -1,0 +1,82 @@
+[
+ {
+  "id": 16044,
+  "name": "Portable Chess Set – Big, Foldable, Travel-Friendly Vinyl Board",
+  "price": 596,
+  "mrp": 1192,
+  "url": "https://sylvantapvt.com/product/portable-chess-set-big-foldable-travel-friendly-vinyl-board/",
+  "img": "https://sylvantapvt.com/wp-content/uploads/2026/09/19324_knx_portable_plastic_chess_cls_1103-300x300.png",
+  "stock": true,
+  "type": "simple"
+ },
+ {
+  "id": 47318,
+  "name": "3-in-1 Classic Board Game Combo – Chess, Tic Tac Toe & Peg Solitaire Game Set",
+  "price": 906,
+  "mrp": 1360,
+  "url": "https://sylvantapvt.com/product/3-in-1-classic-board-game-combo-chess-tic-tac-toe-peg-solitaire-game-set/",
+  "img": "https://sylvantapvt.com/wp-content/uploads/2026/10/codeximagesep15_2026_12_07_50pm_197daa6d-6e19-4155-8269-6dbe448bd8df-300x300.png",
+  "stock": true,
+  "type": "simple"
+ },
+ {
+  "id": 18225,
+  "name": "Memory Chess Game – Plastic Brain Teaser with 24 Colorful Pegs",
+  "price": 246,
+  "mrp": 702,
+  "url": "https://sylvantapvt.com/product/memory-chess-game-plastic-brain-teaser-with-24-colorful-pegs/",
+  "img": "https://sylvantapvt.com/wp-content/uploads/2026/09/01_e8709943-2d61-4547-a7e6-4803522cebce-300x300.jpg",
+  "stock": true,
+  "type": "simple"
+ },
+ {
+  "id": 19773,
+  "name": "Unisex Stretch T-shirt",
+  "price": 749,
+  "mrp": null,
+  "url": "https://sylvantapvt.com/product/unisex-stretch-t-shirt/",
+  "img": "https://sylvantapvt.com/wp-content/uploads/2026/10/img_870ba1e68e21de-300x300.jpg",
+  "stock": true,
+  "type": "variable"
+ },
+ {
+  "id": 10322,
+  "name": "Unisex Tie Dye Oversized T-Shirt",
+  "price": 999,
+  "mrp": null,
+  "url": "https://sylvantapvt.com/product/unisex-tie-dye-oversized-t-shirt/",
+  "img": "https://sylvantapvt.com/wp-content/uploads/2026/09/img_5a45d9e0c9d030-300x300.jpg",
+  "stock": true,
+  "type": "variable"
+ },
+ {
+  "id": 7965,
+  "name": "Unisex Ringer T-Shirt",
+  "price": 499,
+  "mrp": null,
+  "url": "https://sylvantapvt.com/product/unisex-ringer-t-shirt/",
+  "img": "https://sylvantapvt.com/wp-content/uploads/2026/09/img_8fef65b2d599c4-300x300.jpg",
+  "stock": true,
+  "type": "variable"
+ },
+ {
+  "id": 7897,
+  "name": "Unisex Classic Crew T-Shirt",
+  "price": 499,
+  "mrp": null,
+  "url": "https://sylvantapvt.com/product/unisex-classic-crew-t-shirt-3/",
+  "img": "https://sylvantapvt.com/wp-content/uploads/2026/09/img_9e4527a1f84266-300x300.jpg",
+  "stock": true,
+  "type": "variable"
+ },
+ {
+  "id": 19528,
+  "name": "Women’s Classic T-Shirt",
+  "price": 499,
+  "mrp": null,
+  "url": "https://sylvantapvt.com/product/womens-classic-t-shirt/",
+  "img": "https://sylvantapvt.com/wp-content/uploads/2026/10/img_52f41513cd63a4-300x300.jpg",
+  "stock": true,
+  "type": "variable"
+ }
+]
