@@ -130,7 +130,7 @@ useEffect(() => {
                 (res || []).map((s) => ({
                     id: s.id,
                     username: s.username,
-                    email: s.email,
+                    email: (s as { email?: string }).email,
                 }))
             );
         } catch {

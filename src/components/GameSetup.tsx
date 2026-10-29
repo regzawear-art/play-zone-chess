@@ -96,8 +96,8 @@ const DIFFICULTIES: {
 }[] = [
         {
             key: 'beginner',
-            label: 'Basic',
-            sub: 'JavaScript AI',
+            label: 'Beginner',
+            sub: '~600 strength',
         },
         {
             key: 'intermediate',

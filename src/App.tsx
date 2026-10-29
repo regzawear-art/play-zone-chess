@@ -2721,7 +2721,6 @@ function HomePage() {
                 {/* ADD FRIEND */}
                 {addFriendOpen && (
                     <AddFriendModal
-                        open={addFriendOpen}
                         onClose={() =>
                             setAddFriendOpen(false)
                         }
