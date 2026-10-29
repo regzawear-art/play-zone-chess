@@ -37,6 +37,7 @@ import { PremiumOfferPopup } from './components/PremiumOfferPopup';
 import { GameSetup } from './components/GameSetup';
 import { ChessGamePage } from './components/ChessGamePage';
 import { PuzzlesPage } from './components/PuzzlesPage';
+import { DailyPuzzleCard } from './components/DailyPuzzleCard';
 import { OnlineGameView } from './components/OnlineGameView';
 
 import {
@@ -203,6 +204,9 @@ function HomePage() {
         useState<string>('home');
 
     const [footerPage, setFooterPage] =
+        useState<string | null>(null);
+
+    const [puzzleId, setPuzzleId] =
         useState<string | null>(null);
 
     const [gameMode, setGameMode] =
@@ -1366,7 +1370,9 @@ function HomePage() {
     if (view === 'puzzles' && !gameStarted) {
         return (
             <PuzzlesPage
+                initialPuzzleId={puzzleId}
                 onExit={() => {
+                    setPuzzleId(null);
                     setView('home');
                     window.scrollTo({ top: 0 });
                 }}
@@ -1994,6 +2000,15 @@ function HomePage() {
                                 </div>
                             </section>
                         )}
+
+                    <DailyPuzzleCard
+                        onSolve={(id) => {
+                            setPuzzleId(id || null);
+                            setFooterPage(null);
+                            setView('puzzles');
+                            window.scrollTo({ top: 0 });
+                        }}
+                    />
 
                     <Features />
 

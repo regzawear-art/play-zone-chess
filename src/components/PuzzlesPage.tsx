@@ -72,9 +72,15 @@ function playSound(m: Move, nextBoard: Board, nextState: GameState) {
     else sound.play('move');
 }
 
-export function PuzzlesPage({ onExit }: { onExit: () => void }) {
+export function levelOf(rating: number): LevelId {
+    return (LEVELS.find((l) => rating >= l.min && rating < l.max) ?? LEVELS[0]).id;
+}
+
+export function PuzzlesPage({ onExit, initialPuzzleId }: { onExit: () => void; initialPuzzleId?: string | null }) {
+    const initialPuzzle = initialPuzzleId ? PUZZLES.find((p) => p.id === initialPuzzleId) ?? null : null;
     const [store, setStore] = useState<Store>(loadStore);
-    const [level, setLevel] = useState<LevelId>(store.level);
+    const [level, setLevel] = useState<LevelId>(initialPuzzle ? levelOf(initialPuzzle.rating) : store.level);
+    const firstLoad = useRef(true);
     const [puzzle, setPuzzle] = useState<PuzzleData | null>(null);
     const [board, setBoard] = useState<Board>(() => parseFEN('8/8/8/8/8/8/8/8 w - - 0 1').board);
     const [state, setState] = useState<GameState>(() => parseFEN('8/8/8/8/8/8/8/8 w - - 0 1').state);
@@ -148,6 +154,12 @@ export function PuzzlesPage({ onExit }: { onExit: () => void }) {
 
     // Load first puzzle / on level change
     useEffect(() => {
+        if (firstLoad.current && initialPuzzle) {
+            firstLoad.current = false;
+            loadPuzzle(initialPuzzle);
+            return;
+        }
+        firstLoad.current = false;
         nextPuzzle();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [level]);
