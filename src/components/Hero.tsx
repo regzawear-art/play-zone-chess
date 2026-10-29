@@ -24,7 +24,7 @@ const slides = [
     highlight: 'Starts Here.',
     description:
       'Play powerful games, improve your skills, and challenge players from around the world.',
-    accent: 'from-royal-500/20 via-transparent to-blue-500/10',
+    accent: '', image: '/hero/hero-1.webp', gradient: 'from-amber-300 via-yellow-200 to-blue-300', spark: '#fcd34d',
   },
   {
     eyebrow: 'TRAIN • ANALYZE • GROW',
@@ -32,7 +32,7 @@ const slides = [
     highlight: 'Chess Player.',
     description:
       'Practice tactics, study positions, and sharpen your decision-making with every game.',
-    accent: 'from-purple-500/20 via-transparent to-royal-500/10',
+    accent: '', image: '/hero/hero-2.webp', gradient: 'from-fuchsia-400 via-violet-300 to-sky-300', spark: '#c084fc',
   },
   {
     eyebrow: 'COMPETE • CLIMB • WIN',
@@ -40,9 +40,24 @@ const slides = [
     highlight: 'Chess Skills.',
     description:
       'Compete against players, climb the leaderboard, and build your chess legacy.',
-    accent: 'from-amber-500/20 via-transparent to-orange-500/10',
+    accent: '', image: '/hero/hero-3.webp', gradient: 'from-amber-400 via-orange-300 to-red-400', spark: '#fb923c',
   },
 ];
+
+const floaters = [
+  { glyph: '♞', left: '62%', top: '14%', size: 64, dur: 9, delay: 0 },
+  { glyph: '♛', left: '86%', top: '58%', size: 54, dur: 11, delay: 1.5 },
+  { glyph: '♜', left: '48%', top: '74%', size: 40, dur: 8, delay: 0.8 },
+  { glyph: '♝', left: '92%', top: '18%', size: 36, dur: 10, delay: 2.2 },
+  { glyph: '♚', left: '6%', top: '82%', size: 44, dur: 12, delay: 0.4 },
+];
+
+const sparks = Array.from({ length: 18 }, (_, i) => ({
+  left: `${(i * 53) % 100}%`,
+  size: 2 + (i % 3),
+  dur: 5 + (i % 5),
+  delay: (i * 0.7) % 6,
+}));
 
 export function Hero({ onPlay }: HeroProps) {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -68,150 +83,117 @@ export function Hero({ onPlay }: HeroProps) {
   };
 
   return (
-    <section className="relative w-full min-w-0 overflow-hidden pt-24 pb-8 sm:pt-32 sm:pb-16 lg:pt-20 lg:pb-20">
-      {/* Background */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div
-          className={`absolute inset-x-0 top-0 h-[500px] bg-gradient-to-b ${ slide.accent } transition-all duration-500 ease-smooth`}
-        />
+    <section className="relative w-full min-w-0 overflow-hidden">
+      <style>{`
+        @keyframes heroKenBurns { 0% { transform: scale(1.04) translate3d(0,0,0); } 100% { transform: scale(1.16) translate3d(-2%, -1.5%, 0); } }
+        @keyframes heroFloat { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-26px) rotate(6deg); } }
+        @keyframes heroSpark { 0% { transform: translateY(0) scale(1); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-260px) scale(0.3); opacity: 0; } }
+        @keyframes heroRise { 0% { opacity: 0; transform: translateY(28px); filter: blur(6px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
+        @keyframes heroProgress { from { width: 0%; } to { width: 100%; } }
+        .hero-kb { animation: heroKenBurns 7s ease-out forwards; }
+        .hero-rise { animation: heroRise 0.9s cubic-bezier(.2,.8,.2,1) both; }
+        @media (prefers-reduced-motion: reduce) { .hero-kb, .hero-rise, .hero-anim { animation: none !important; } }
+      `}</style>
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.06),transparent_35%)]" />
+      {/* Background slides */}
+      <div className="absolute inset-0">
+        {slides.map((s, index) => (
+          <div
+            key={s.image}
+            className={`absolute inset-0 transition-opacity duration-[1200ms] ease-in-out ${index === activeSlide ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <img
+              key={index === activeSlide ? `on-${activeSlide}` : `off-${index}`}
+              src={s.image}
+              alt=""
+              loading={index === 0 ? 'eager' : 'lazy'}
+              className={`h-full w-full object-cover object-[70%_center] ${index === activeSlide ? 'hero-kb' : ''}`}
+            />
+          </div>
+        ))}
+        <div className="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-950/75 to-navy-950/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-navy-950/40" />
       </div>
 
-      <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid min-w-0 items-center gap-6 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
-          {/* LEFT CONTENT */}
-          <div className="relative min-w-0">
-            <div className="relative min-h-[285px] sm:min-h-[310px] lg:min-h-[320px]">
-              {slides.map((s, index) => (
-                <div
-                  key={s.title}
-                  className={`absolute inset-0 transition-opacity duration-700 ease-smooth ${
-    index === activeSlide
-        ? 'opacity-100'
-        : 'pointer-events-none opacity-0'
-} `}
-                >
-                  <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold tracking-wider text-white/70 sm:text-sm">
-                    <span className="h-1.5 w-1.5 rounded-full bg-royal-400" />
-                    {s.eyebrow}
-                  </div>
+      {/* Floating chess pieces */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {floaters.map((f, i) => (
+          <span
+            key={i}
+            className="hero-anim absolute select-none text-white/10 drop-shadow-[0_0_18px_rgba(140,120,255,0.35)]"
+            style={{ left: f.left, top: f.top, fontSize: f.size, animation: `heroFloat ${f.dur}s ease-in-out ${f.delay}s infinite` }}
+          >
+            {f.glyph}
+          </span>
+        ))}
+        {sparks.map((p, i) => (
+          <span
+            key={`s${i}`}
+            className="hero-anim absolute rounded-full"
+            style={{ left: p.left, bottom: '-10px', width: p.size, height: p.size, background: slide.spark, boxShadow: `0 0 10px ${slide.spark}`, animation: `heroSpark ${p.dur}s linear ${p.delay}s infinite` }}
+          />
+        ))}
+      </div>
 
-                  <h1 className="max-w-3xl text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl">
-                    {s.title}{' '}
-                    <span className="bg-gradient-to-r from-royal-400 to-blue-400 bg-clip-text text-transparent">
-                      {s.highlight}
-                    </span>
-                  </h1>
+      <div className="relative mx-auto flex min-h-[560px] w-full max-w-7xl items-center px-4 pt-24 pb-14 sm:min-h-[620px] sm:px-6 sm:pt-28 lg:min-h-[680px] lg:px-8">
+        <div key={activeSlide} className="max-w-2xl">
+          <div className="hero-rise mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold tracking-wider text-white/80 backdrop-blur-md sm:text-sm">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: slide.spark }} />
+            {slide.eyebrow}
+          </div>
 
-                  <p className="mt-5 max-w-xl text-sm leading-6 text-white/60 sm:text-base sm:leading-7 lg:text-lg">
-                    {s.description}
-                  </p>
+          <h1 className="hero-rise text-4xl font-bold leading-[1.05] tracking-tight text-white drop-shadow-xl sm:text-5xl lg:text-6xl xl:text-7xl" style={{ animationDelay: '0.12s' }}>
+            {slide.title}{' '}
+            <span className={`bg-gradient-to-r ${slide.gradient} bg-clip-text text-transparent`}>
+              {slide.highlight}
+            </span>
+          </h1>
 
-                  <div className="mt-7 flex flex-wrap items-center gap-3 sm:mt-8">
-                    <button
-                      type="button"
-                      onClick={onPlay}
-                      className="group inline-flex items-center gap-2 rounded-xl bg-royal-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-royal-500/20 transition-all hover:bg-royal-400 hover:shadow-royal-500/30 sm:px-6 sm:py-3.5"
-                    >
-                      Play Chess
-                      <ArrowRight
-                        size={17}
-                        className="transition-transform group-hover:translate-x-1"
-                      />
-                    </button>
+          <p className="hero-rise mt-5 max-w-xl text-sm leading-6 text-white/75 sm:text-base sm:leading-7 lg:text-lg" style={{ animationDelay: '0.24s' }}>
+            {slide.description}
+          </p>
 
-                    <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
-                      <Trophy
-                        size={17}
-                        className="text-royal-400 sm:h-5 sm:w-5"
-                      />
-                      <span>Improve your game</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Carousel controls */}
-            <div className="mt-5 flex items-center justify-between sm:mt-6">
-              <div className="flex items-center gap-2">
-                {slides.map((_, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setActiveSlide(index)}
-                    aria-label={`Go to slide ${ index + 1 } `}
-                    className={`h-1.5 rounded-full transition-all duration-500 sm:h-2 ${
-    index === activeSlide
-        ? 'w-7 bg-royal-400 sm:w-9'
-        : 'w-2 bg-white/20 hover:bg-white/40'
-} `}
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={previousSlide}
-                  aria-label="Previous slide"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  <ChevronLeft size={17} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={nextSlide}
-                  aria-label="Next slide"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  <ChevronRight size={17} />
-                </button>
-              </div>
+          <div className="hero-rise mt-7 flex flex-wrap items-center gap-3 sm:mt-8" style={{ animationDelay: '0.36s' }}>
+            <button
+              type="button"
+              onClick={onPlay}
+              className="group inline-flex items-center gap-2 rounded-xl bg-royal-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-royal-500/30 transition-all hover:scale-[1.03] hover:bg-royal-400"
+            >
+              Play Chess
+              <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
+            </button>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white/80 backdrop-blur-md">
+              <Trophy size={17} className="text-amber-300" />
+              <span>Improve your game</span>
             </div>
           </div>
 
-          {/* RIGHT VISUAL */}
-          <div className="relative min-w-0">
-            <div className="relative mx-auto aspect-square w-full max-w-[520px]">
-              <div
-                className={`absolute inset-0 bg-gradient-to-tr ${ slide.accent } `}
-              />
-
-              <div className="absolute inset-4 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-sm sm:inset-6 lg:inset-8" />
-
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative flex h-[72%] w-[72%] items-center justify-center rounded-3xl border border-white/10 bg-navy-900/80 shadow-2xl backdrop-blur-md">
-                  <div className="text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-royal-500/10 sm:h-20 sm:w-20">
-                      <Trophy
-                        size={30}
-                        className="text-royal-400 sm:h-9 sm:w-9"
-                      />
-                    </div>
-
-                    <div className="text-2xl font-bold text-white sm:text-3xl">
-                      Chess
-                    </div>
-
-                    <div className="mt-1 text-xs text-white/40 sm:text-sm">
-                      Play. Learn. Master.
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Decorative elements */}
-              <div className="absolute left-2 top-1/4 h-2 w-2 rounded-full bg-royal-400/70 sm:left-4" />
-              <div className="absolute right-4 top-1/3 h-3 w-3 rounded-full bg-blue-400/50 sm:right-8" />
-              <div className="absolute bottom-1/4 left-1/4 h-2 w-2 rounded-full bg-purple-400/50" />
+          {/* Controls */}
+          <div className="mt-10 flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => setActiveSlide(index)}
+                  aria-label={`Go to slide ${index + 1}`}
+                  className={`relative h-1.5 overflow-hidden rounded-full transition-all duration-500 ${index === activeSlide ? 'w-12 bg-white/25' : 'w-3 bg-white/25 hover:bg-white/50'}`}
+                >
+                  {index === activeSlide && (
+                    <span className="absolute inset-y-0 left-0 rounded-full bg-white" style={{ animation: 'heroProgress 6s linear forwards' }} />
+                  )}
+                </button>
+              ))}
             </div>
+            <button type="button" onClick={previousSlide} aria-label="Previous slide" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white/80 backdrop-blur-md transition-colors hover:bg-white/20">
+              <ChevronLeft size={17} />
+            </button>
+            <button type="button" onClick={nextSlide} aria-label="Next slide" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white/80 backdrop-blur-md transition-colors hover:bg-white/20">
+              <ChevronRight size={17} />
+            </button>
           </div>
         </div>
       </div>
     </section>
   );
 }
-
