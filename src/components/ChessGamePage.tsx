@@ -61,30 +61,25 @@ function computeCaptured(board: any) {
     const white: any[] = [];
     const black: any[] = [];
 
+    const ORIGINAL = { p: 8, n: 2, b: 2, r: 2, q: 1 } as const;
+
     (['p', 'n', 'b', 'r', 'q'] as const).forEach((type) => {
-        const missingBlack = 8-counts.b[type];
+        // Pieces White has captured = Black pieces missing from the board.
+        const missingBlack = Math.max(0, ORIGINAL[type]-counts.b[type]);
+        for (let i = 0; i < missingBlack; i++) white.push(type);
 
-        for (let i = 0; i < missingBlack; i++) {
-            white.push(type);
-        }
-
-        const originalWhite = type === 'p' ? 8 : 2;
-        const missingWhite = originalWhite-counts.w[type];
-
-        for (let i = 0; i < missingWhite; i++) {
-            black.push(type);
-        }
+        const missingWhite = Math.max(0, ORIGINAL[type]-counts.w[type]);
+        for (let i = 0; i < missingWhite; i++) black.push(type);
     });
 
-    const whiteMaterial = white.reduce(
-        (sum, piece) => sum + PIECE_VALUES[piece as keyof typeof PIECE_VALUES],
-        0
-    );
-
-    const blackMaterial = black.reduce(
-        (sum, piece) => sum + PIECE_VALUES[piece as keyof typeof PIECE_VALUES],
-        0
-    );
+    // Material advantage from what is actually on the board (handles promotions).
+    const onBoard = (side: 'w' | 'b') =>
+        (['p', 'n', 'b', 'r', 'q'] as const).reduce(
+            (sum, t) => sum + counts[side][t] * PIECE_VALUES[t],
+            0
+        );
+    const whiteMaterial = onBoard('w');
+    const blackMaterial = onBoard('b');
 
     return {
         white,
