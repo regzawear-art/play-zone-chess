@@ -30,12 +30,12 @@ export function PlayerHUD({ player, ms, active, running, align }: Props) {
 
   return (
     <div
-      className={`flex w-full items-center gap-2 px-0.5 py-1 sm:gap-2.5 sm:py-1.5`}
+      className={`flex w-full items-center gap-2 px-0.5 py-1 sm:gap-2.5 sm:py-1.5 lg:py-1`}
     >
       {/* Avatar */}
       <div className="relative shrink-0">
         <div
-          className={`h-8 w-8 overflow-hidden rounded-sm bg-[#3c3a36] sm:h-10 sm:w-10`}
+          className={`h-8 w-8 overflow-hidden rounded-sm bg-[#3c3a36] sm:h-10 sm:w-10 lg:h-9 lg:w-9`}
         >
           <img src={player.avatar} alt={player.name} loading="lazy" className="h-full w-full object-cover" />
         </div>
@@ -80,7 +80,7 @@ export function PlayerHUD({ player, ms, active, running, align }: Props) {
 
       {/* Clock — chess.com style right-aligned */}
       <div
-        className={`flex shrink-0 items-center justify-center min-w-[84px] rounded-sm px-2.5 py-1.5 transition-colors duration-200 sm:min-w-[120px] sm:justify-end sm:px-3 sm:py-2 ${
+        className={`flex shrink-0 items-center justify-center min-w-[84px] rounded-sm px-2.5 py-1.5 transition-colors duration-200 sm:min-w-[120px] sm:justify-end sm:px-3 sm:py-2 lg:py-1.5 ${
           active
             ? 'bg-white text-[#262421]'
             : 'bg-[#262421] text-[#989795]'

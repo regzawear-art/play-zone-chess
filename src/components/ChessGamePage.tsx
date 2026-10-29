@@ -268,7 +268,7 @@ export function ChessGamePage({
         <div className="flex h-[100dvh] flex-col overflow-hidden overscroll-none bg-[#302e2b] text-white">
             {/* Top bar */}
             <header className="sticky top-0 z-50 shrink-0 border-b border-white/5 bg-[#262421]">
-                <div className="mx-auto flex h-14 max-w-[1500px] items-center justify-between px-3 sm:px-5">
+                <div className="mx-auto flex h-14 max-w-[1500px] items-center justify-between px-3 sm:px-5 lg:h-12">
                     <button
                         type="button"
                         onClick={onExit}
@@ -303,12 +303,12 @@ export function ChessGamePage({
             </header>
 
             {/* Game */}
-            <main className="flex min-h-0 flex-1 items-start justify-center overflow-hidden p-0 lg:items-center lg:p-3">
+            <main className="flex min-h-0 flex-1 items-start justify-center overflow-hidden p-0 lg:items-center lg:p-2">
                 <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] items-start justify-center lg:items-center">
                     <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(320px,380px)] lg:grid-rows-none lg:items-stretch lg:justify-center lg:gap-5">
                     {/* BOARD */}
                     <section className="flex min-w-0 justify-center">
-                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-200px),calc(100vw-440px),1000px)] lg:max-w-none">
+                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-172px),calc(100vw-420px),1100px)] lg:max-w-none">
                             <PlayerHUD
                                 player={{
                                     name: topPlayer.name,
