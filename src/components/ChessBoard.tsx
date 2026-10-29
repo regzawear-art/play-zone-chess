@@ -497,7 +497,7 @@ export function ChessBoard({
           aspect-square
           w-full
           grid-cols-8
-          overflow-hidden lg:rounded-lg ring-1 ring-black/40 shadow-[0_14px_44px_rgba(0,0,0,0.55)]
+          overflow-hidden rounded-sm
           touch-none
           select-none
         "

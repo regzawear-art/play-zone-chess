@@ -15,16 +15,16 @@ export interface BoardTheme {
 export const BOARD_THEMES: BoardTheme[] = [
   {
     id: 'green',
-    name: 'Emerald Green',
-    light: '#eeeed2',
-    dark: '#7ba45b',
+    name: 'Classic Green',
+    light: '#ebecd0',
+    dark: '#779556',
     highlight: '#cdd26a',
     select: '#f6f669',
     legalDot: 'rgba(0,0,0,0.22)',
     legalRing: 'rgba(0,0,0,0.22)',
     checkBg: 'rgba(229,57,53,0.5)',
     lastMoveBg: 'rgba(205,210,106,0.6)',
-    preview: 'linear-gradient(135deg, #eeeed2 50%, #7ba45b 50%)',
+    preview: 'linear-gradient(135deg, #ebecd0 50%, #779556 50%)',
   },
   {
     id: 'blue',
@@ -130,9 +130,9 @@ export interface CustomColors {
 
 export function getStoredTheme(): string {
   try {
-    return localStorage.getItem(STORAGE_KEY) || 'brown';
+    return localStorage.getItem(STORAGE_KEY) || 'green';
   } catch {
-    return 'brown';
+    return 'green';
   }
 }
 

@@ -30,18 +30,12 @@ export function PlayerHUD({ player, ms, active, running, align }: Props) {
 
   return (
     <div
-      className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1 transition-all duration-300 sm:gap-3 sm:px-3 sm:py-1.5 ${
-        active
-          ? 'bg-navy-600 shadow-glow-sm ring-1 ring-royal-500/40'
-          : 'bg-navy-700/70'
-      }`}
+      className={`flex w-full items-center gap-2 px-0.5 py-1 sm:gap-2.5 sm:py-1.5`}
     >
       {/* Avatar */}
       <div className="relative shrink-0">
         <div
-          className={`h-8 w-8 overflow-hidden rounded-full ring-2 transition-all sm:h-10 sm:w-10 ${
-            active ? 'ring-royal-400' : 'ring-white/10'
-          }`}
+          className={`h-8 w-8 overflow-hidden rounded-sm bg-[#3c3a36] sm:h-10 sm:w-10`}
         >
           <img src={player.avatar} alt={player.name} loading="lazy" className="h-full w-full object-cover" />
         </div>
@@ -59,24 +53,24 @@ export function PlayerHUD({ player, ms, active, running, align }: Props) {
             </span>
           )}
           <span className="truncate text-xs font-bold text-white sm:text-sm">{player.name}</span>
+          <span className="shrink-0 text-xs text-[#989795] sm:text-sm">({player.rating > 0 ? player.rating : 'BOT'})</span>
           <span className="shrink-0 text-xs sm:text-sm">{player.flag}</span>
         </div>
         <div className="mt-0.5 flex items-center gap-1">
-          <span className="text-[11px] font-semibold text-royal-400 sm:text-xs">{player.rating > 0 ? player.rating : "BOT"}</span>
-          <span className="text-navy-500 text-[10px]">·</span>
+          
           {/* Captured pieces */}
           <div className="flex items-center leading-none">
             {sortedPieces.slice(0, 6).map((p, i) => (
               <span
                 key={i}
-                className="text-navy-200 text-xs sm:text-sm"
+                className="text-[#989795] text-xs sm:text-sm"
                 style={{ marginLeft: i > 0 ? '-3px' : '0', opacity: 0.7 }}
               >
                 {GLYPH[p]}
               </span>
             ))}
             {player.materialDiff > 0 && (
-              <span className="ml-1 text-[9px] font-bold text-royal-300 sm:text-[11px]">
+              <span className="ml-1 text-[9px] font-bold text-[#989795] sm:text-[11px]">
                 +{player.materialDiff}
               </span>
             )}
@@ -86,15 +80,15 @@ export function PlayerHUD({ player, ms, active, running, align }: Props) {
 
       {/* Clock — chess.com style right-aligned */}
       <div
-        className={`flex shrink-0 items-center justify-center rounded-md px-2.5 py-1.5 transition-all duration-300 sm:px-4 sm:py-2 ${
+        className={`flex shrink-0 items-center justify-center min-w-[84px] rounded-sm px-2.5 py-1.5 transition-colors duration-200 sm:min-w-[120px] sm:justify-end sm:px-3 sm:py-2 ${
           active
-            ? 'bg-blue-grad text-white shadow-glow-sm'
-            : 'bg-navy-600 text-navy-200'
+            ? 'bg-white text-[#262421]'
+            : 'bg-[#262421] text-[#989795]'
         }`}
       >
         <span
           className={`font-display text-base font-extrabold tabular-nums sm:text-xl ${
-            lowTime && active ? 'animate-pulse text-red-300' : ''
+            lowTime && active ? 'animate-pulse text-red-600' : ''
           }`}
         >
           {formatClock(ms)}

@@ -265,9 +265,9 @@ export function ChessGamePage({
         game.status.winner === playerColor;
 
     return (
-        <div className="flex h-[100dvh] flex-col overflow-hidden overscroll-none bg-[#07111f] text-white">
+        <div className="flex h-[100dvh] flex-col overflow-hidden overscroll-none bg-[#302e2b] text-white">
             {/* Top bar */}
-            <header className="sticky top-0 z-50 shrink-0 border-b border-navy-600/40 bg-navy-900/95 backdrop-blur">
+            <header className="sticky top-0 z-50 shrink-0 border-b border-white/5 bg-[#262421]">
                 <div className="mx-auto flex h-14 max-w-[1500px] items-center justify-between px-3 sm:px-5">
                     <button
                         type="button"
@@ -305,7 +305,7 @@ export function ChessGamePage({
             {/* Game */}
             <main className="flex min-h-0 flex-1 items-start justify-center overflow-hidden p-0 lg:items-center lg:p-3">
                 <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] items-start justify-center lg:items-center">
-                    <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(320px,380px)] lg:grid-rows-none lg:items-start lg:justify-center lg:gap-5">
+                    <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(320px,380px)] lg:grid-rows-none lg:items-stretch lg:justify-center lg:gap-5">
                     {/* BOARD */}
                     <section className="flex min-w-0 justify-center">
                         <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-200px),calc(100vw-440px),1000px)] lg:max-w-none">
@@ -372,8 +372,8 @@ export function ChessGamePage({
                     </section>
 
                     {/* RIGHT PANEL */}
-                    <aside className="h-full min-h-0 w-full overflow-y-auto p-2 lg:h-auto lg:max-h-[calc(100dvh-86px)] lg:p-0">
-                        <div className="hidden lg:block">
+                    <aside className="h-full min-h-0 w-full overflow-y-auto p-2 lg:flex lg:h-auto lg:max-h-none lg:flex-col lg:p-0">
+                        <div className="hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
                             <GameControls
                                 game={game}
                                 boardThemeId={boardThemeId}
@@ -484,7 +484,7 @@ function GameControls({
     musicOn,
 }: any) {
     return (
-        <div className="rounded-xl border border-navy-600/40 bg-navy-800/90 p-3 shadow-card-lg">
+        <div className="flex h-full min-h-0 flex-col rounded-lg border border-white/5 bg-[#262522] p-3">
             <div className="mb-3 flex items-center justify-between">
                 <div>
                     <div className="text-sm font-bold">
@@ -507,12 +507,12 @@ function GameControls({
                 </button>
             </div>
 
-            <div className="grid grid-cols-4 gap-1 rounded-lg bg-navy-700 p-1">
+            <div className="grid grid-cols-4 gap-1 rounded-lg bg-[#1f1e1b] p-1">
                 <button
                     type="button"
                     onClick={() => game.jumpToMove(-1)}
                     disabled={game.history.length === 0}
-                    className="rounded-md py-2 text-sm font-bold transition hover:bg-navy-600 disabled:opacity-30"
+                    className="rounded-md py-2 text-sm font-bold transition hover:bg-[#3c3a36] disabled:opacity-30"
                 >
                     |≪
                 </button>
@@ -521,7 +521,7 @@ function GameControls({
                     type="button"
                     onClick={game.undo}
                     disabled={game.history.length === 0}
-                    className="rounded-md py-2 text-sm font-bold transition hover:bg-navy-600 disabled:opacity-30"
+                    className="rounded-md py-2 text-sm font-bold transition hover:bg-[#3c3a36] disabled:opacity-30"
                 >
                     ≪
                 </button>
@@ -530,7 +530,7 @@ function GameControls({
                     type="button"
                     onClick={game.redo}
                     disabled={game.history.length === 0}
-                    className="rounded-md py-2 text-sm font-bold transition hover:bg-navy-600 disabled:opacity-30"
+                    className="rounded-md py-2 text-sm font-bold transition hover:bg-[#3c3a36] disabled:opacity-30"
                 >
                     ≫
                 </button>
@@ -543,7 +543,7 @@ function GameControls({
                         )
                     }
                     disabled={game.history.length === 0}
-                    className="rounded-md py-2 text-sm font-bold transition hover:bg-navy-600 disabled:opacity-30"
+                    className="rounded-md py-2 text-sm font-bold transition hover:bg-[#3c3a36] disabled:opacity-30"
                 >
                     ≫|
                 </button>
@@ -563,7 +563,7 @@ function GameControls({
                     onClick={toggleMusic}
                     className={`grid h-9 w-9 place-items-center rounded-lg sm:h-11 sm:w-11 ${musicOn
                             ? 'bg-blue-grad shadow-glow-sm'
-                            : 'bg-navy-700 hover:bg-navy-600'
+                            : 'bg-[#3c3a36] hover:bg-[#4b4844]'
                         }`}
                     title="Background music"
                 >
@@ -577,19 +577,19 @@ function GameControls({
                 <button
                     type="button"
                     onClick={game.startGame}
-                    className="ml-auto flex items-center gap-2 rounded-lg bg-blue-grad px-3 py-2 text-xs font-bold shadow-glow-sm"
+                    className="ml-auto flex items-center gap-2 rounded-lg bg-[#81b64c] px-4 py-2 text-sm font-extrabold text-white shadow-[0_3px_0_#45753c] transition hover:bg-[#a3d160]"
                 >
                     <RotateCcw size={14} />
                     New Game
                 </button>
             </div>
 
-            <div className="mt-3 hidden rounded-lg bg-navy-900/60 p-3 lg:block">
+            <div className="mt-3 hidden min-h-0 rounded-lg bg-[#1f1e1b] p-3 lg:flex lg:flex-1 lg:flex-col">
                 <div className="mb-2 text-xs font-bold uppercase tracking-wider text-navy-400">
                     Moves
                 </div>
 
-                <div className="max-h-[320px] overflow-y-auto">
+                <div className="max-h-[320px] overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1">
                     {game.history.length === 0 ? (
                         <div className="py-6 text-center text-xs text-navy-500">
                             Make the first move
