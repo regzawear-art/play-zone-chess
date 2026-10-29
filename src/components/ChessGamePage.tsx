@@ -1,4 +1,4 @@
-import { KhelShopCard } from './SylvantaAds';
+import { KhelShopCard, KhelSkyscraper } from './SylvantaAds';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ArrowLeft,
@@ -300,11 +300,11 @@ export function ChessGamePage({
 
             {/* Game */}
             <main className="flex min-h-0 flex-1 items-start justify-center overflow-hidden p-0 lg:items-center lg:p-2">
-                <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] items-start justify-center lg:items-center">
-                    <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(320px,380px)] lg:grid-rows-none lg:items-stretch lg:justify-center lg:gap-5">
+                <div className="mx-auto flex h-full min-h-0 w-full max-w-[1500px] 2xl:max-w-[1760px] items-start justify-center lg:items-center">
+                    <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(320px,380px)] 2xl:grid-cols-[auto_minmax(320px,380px)_160px] lg:grid-rows-none lg:items-stretch lg:justify-center lg:gap-5">
                     {/* BOARD */}
                     <section className="flex min-w-0 justify-center">
-                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-172px),calc(100vw-420px),1100px)] lg:max-w-none">
+                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-172px),calc(100vw-420px),1100px)] 2xl:w-[min(calc(100dvh-172px),calc(100vw-620px),1100px)] lg:max-w-none">
                             <PlayerHUD
                                 player={{
                                     name: topPlayer.name,
@@ -379,7 +379,7 @@ export function ChessGamePage({
                             />
                         </div>
 
-                        <div className="mt-2">
+                        <div className="mt-2 2xl:hidden">
                             <KhelShopCard />
                         </div>
 
@@ -442,6 +442,11 @@ export function ChessGamePage({
                             </div>
                         </div>
                     </aside>
+
+                    {/* Chess.com-style skyscraper ad (wide screens only) */}
+                    <div className="hidden 2xl:flex 2xl:items-center 2xl:justify-center">
+                        <KhelSkyscraper />
+                    </div>
                     </div>
                 </div>
             </main>

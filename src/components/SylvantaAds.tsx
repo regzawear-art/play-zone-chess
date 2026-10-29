@@ -228,3 +228,53 @@ export function KhelShopCard() {
         </div>
     );
 }
+
+/** Chess.com-style 160x600 skyscraper for the game screen (wide desktops). */
+export function KhelSkyscraper() {
+    const start = useMemo(() => Math.floor(Math.random() * SHOP.length), []);
+    const [i, setI] = useState(start);
+    useEffect(() => {
+        const t = window.setInterval(() => setI((x) => (x + 1) % SHOP.length), 15000);
+        return () => window.clearInterval(t);
+    }, []);
+    const p = SHOP[i];
+    if (!p) return null;
+    const final = Math.round(p.price * (1 - KHEL_PCT / 100));
+    return (
+        <div className="flex w-[160px] flex-col items-center">
+            <span className="mb-1 text-[9px] uppercase tracking-widest text-[#8b8987]">Advertisement</span>
+            <a
+                href={track(p.url, 'skyscraper')}
+                target="_blank"
+                rel="noopener sponsored"
+                className="flex h-[600px] w-[160px] flex-col overflow-hidden rounded-sm bg-gradient-to-b from-[#1f3a14] via-[#262421] to-[#1a1917] ring-1 ring-white/10 transition hover:ring-[#81b64c]/70"
+            >
+                <div className="bg-[#81b64c] px-2 py-2 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#1f3a14]">KhelChess Exclusive</p>
+                    <p className="font-display text-3xl font-black leading-none text-white">20% OFF</p>
+                </div>
+                <div className="px-3 pt-4 text-center">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#a3d160]">Sylvanta</p>
+                    <p className="mt-1 text-xs text-[#c3c2c1]">Chess sets &amp; T-shirts</p>
+                </div>
+                <div className="mx-3 mt-4 aspect-square rounded-md bg-white p-2">
+                    <img key={p.url} src={p.img} alt={p.name} loading="lazy" className="h-full w-full object-contain" />
+                </div>
+                <p className="mx-3 mt-3 line-clamp-3 text-center text-xs font-semibold leading-snug text-white">{p.name}</p>
+                <div className="mt-2 text-center">
+                    <p className="text-xl font-black text-[#a3d160]">{inr(final)}</p>
+                    <p className="text-[11px] text-[#989795] line-through">{inr(p.price)}</p>
+                </div>
+                <div className="mt-auto px-3 pb-4">
+                    <div className="mb-2 rounded border border-dashed border-[#81b64c] py-1.5 text-center text-[10px] text-[#c3c2c1]">
+                        Use code<br />
+                        <span className="text-sm font-extrabold tracking-wide text-white">{KHEL_COUPON}</span>
+                    </div>
+                    <div className="rounded-md bg-[#81b64c] py-2 text-center text-sm font-extrabold text-white shadow-[0_3px_0_#45753c]">
+                        Shop Now
+                    </div>
+                </div>
+            </a>
+        </div>
+    );
+}
