@@ -3,7 +3,7 @@ import { Zap, Globe2, Trophy, ShieldCheck, Sparkles, Gauge } from 'lucide-react'
 const FEATURES = [
   { icon: Zap, title: 'Instant Matching', desc: 'Jump into a rated game in seconds. Our matchmaker pairs you with opponents at your skill level.', color: 'from-royal-400 to-royal-600' },
   { icon: Globe2, title: 'Global Competition', desc: 'Face players from 180+ countries. Climb regional and worldwide ladders in real time.', color: 'from-emerald-400 to-emerald-600' },
-  { icon: Trophy, title: 'Tournaments Daily', desc: 'Compete in Bullet, Blitz, and Rapid arenas with prizes, badges, and titles on the line.', color: 'from-amber-400 to-orange-500' },
+  { icon: Trophy, title: 'Tournaments Daily', desc: 'Compete in Bullet, Blitz, and Rapid arenas for badges, titles, and bragging rights on the line.', color: 'from-amber-400 to-orange-500' },
   { icon: ShieldCheck, title: 'Fair Play First', desc: 'Anti-cheat engines monitor every move so your rating reflects real skill, not shortcuts.', color: 'from-navy-500 to-navy-700' },
   { icon: Sparkles, title: 'Beautiful by Design', desc: 'A premium, distraction-free board with smooth animations and crisp sound on every device.', color: 'from-royal-500 to-navy-600' },
   { icon: Gauge, title: 'Built for Speed', desc: 'Lightning-fast load times and 60fps motion, optimized for mobile and desktop alike.', color: 'from-royal-400 to-royal-500' },

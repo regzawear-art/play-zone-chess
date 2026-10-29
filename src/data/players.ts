@@ -164,20 +164,47 @@ export const PLAYERS: Player[] = [
   },
 ];
 
+export const DEFAULT_AVATAR = '/brand/avatar-default.svg';
+
 export const CURRENT_USER: Player = {
   id: 0,
-  name: 'You',
+  name: 'Guest',
   title: '',
-  country: 'United States',
-  countryCode: 'US',
-  flag: '\u{1F1FA}\u{1F1F8}',
-  rating: 1842,
-  avatar: 'https://images.pexels.com/photos/37273005/pexels-photo-37273005.png?auto=compress&cs=tinysrgb&w=256&h=256&fit=crop',
-  wins: 47,
-  draws: 12,
-  losses: 23,
-  streak: 2,
+  country: 'India',
+  countryCode: 'IN',
+  flag: '\u{1F1EE}\u{1F1F3}',
+  rating: 1000,
+  avatar: DEFAULT_AVATAR,
+  wins: 0,
+  draws: 0,
+  losses: 0,
+  streak: 0,
   online: true,
+};
+
+export const BOT_PLAYER: Player = {
+  id: -1,
+  name: 'KhelChess Bot',
+  title: '',
+  country: 'Computer',
+  countryCode: '',
+  flag: '\u{1F916}',
+  rating: 0,
+  avatar: '/icon-192.png',
+  wins: 0,
+  draws: 0,
+  losses: 0,
+  streak: 0,
+  online: true,
+};
+
+export const LOCAL_OPPONENT: Player = {
+  ...BOT_PLAYER,
+  id: -2,
+  name: 'Player 2',
+  country: '',
+  flag: '\u265F\uFE0F',
+  avatar: DEFAULT_AVATAR,
 };
 
 export function winRate(p: Player): number {

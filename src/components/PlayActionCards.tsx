@@ -16,7 +16,7 @@ const PRIMARY_CARDS = [
   { id: 'online', label: 'Play Online', sub: 'Match with a human', icon: Globe, accent: 'from-emerald-500 to-emerald-600' },
   { id: 'bots', label: 'Play Bots', sub: 'Challenge the AI', icon: Bot, accent: 'from-royal-500 to-royal-600' },
   { id: 'coach', label: 'Play Coach', sub: 'Learn & improve', icon: GraduationCap, accent: 'from-amber-500 to-orange-500' },
-  { id: 'tournaments', label: 'Tournaments', sub: 'Compete for prizes', icon: Trophy, accent: 'from-sky-500 to-blue-600' },
+  { id: 'tournaments', label: 'Tournaments', sub: 'Compete for titles', icon: Trophy, accent: 'from-sky-500 to-blue-600' },
 ] as const;
 
 const SECONDARY_MODES = [

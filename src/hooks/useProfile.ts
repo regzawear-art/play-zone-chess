@@ -26,7 +26,7 @@ export const COUNTRY_FLAGS: Record<string, { name: string; flag: string }> = {
   RU: { name: 'Russia', flag: '\u{1F1F7}\u{1F1FA}' },
   CN: { name: 'China', flag: '\u{1F1E8}\u{1F1F3}' },
   DE: { name: 'Germany', flag: '\u{1F1E9}\u{1F1EA}' },
-  SE: { name: 'Sweden', flag: '\u{1F1F8}\u{1F1ED}' },
+  SE: { name: 'Sweden', flag: '\u{1F1F8}\u{1F1EA}' },
   BR: { name: 'Brazil', flag: '\u{1F1E7}\u{1F1F7}' },
   JP: { name: 'Japan', flag: '\u{1F1EF}\u{1F1F5}' },
   FR: { name: 'France', flag: '\u{1F1EB}\u{1F1F7}' },

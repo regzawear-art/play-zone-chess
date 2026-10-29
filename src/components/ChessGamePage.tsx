@@ -22,7 +22,7 @@ import { GamePanel } from './GamePanel';
 import { BoardThemeSwitcher } from './BoardThemeSwitcher';
 import { GameOverPopup } from './GameOverPopup';
 
-import { PLAYERS, CURRENT_USER } from '../data/players';
+import { CURRENT_USER, BOT_PLAYER, LOCAL_OPPONENT } from '../data/players';
 
 import {
     getStoredTheme,
@@ -135,7 +135,7 @@ export function ChessGamePage({
     const [showGameOver, setShowGameOver] =
         useState(false);
 
-    const opponent = PLAYERS[1];
+    const opponent = gameMode === 'ai' ? BOT_PLAYER : LOCAL_OPPONENT;
 
     const user = {
         ...CURRENT_USER,

@@ -1,4 +1,3 @@
-import { Twitter, Github, Youtube, Instagram, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 const COLUMNS = [
@@ -6,9 +5,7 @@ const COLUMNS = [
     title: 'Play',
     links: [
       { label: 'Quick Match', action: 'play' },
-      { label: 'Tournaments', action: 'tournaments' },
-      { label: 'Puzzles', action: 'puzzles' },
-      { label: 'Computer', action: 'play' },
+      { label: 'Vs Computer', action: 'play' },
     ],
   },
   {
@@ -16,36 +13,17 @@ const COLUMNS = [
     links: [
       { label: 'Leaderboard', action: 'leaderboard' },
       { label: 'Clubs', action: 'clubs' },
-      { label: 'Forums', action: 'forums' },
-      { label: 'Events', action: 'events' },
     ],
   },
   {
-    title: 'Company',
+    title: 'Help',
     links: [
-      { label: 'About', action: 'about' },
-      { label: 'Careers', action: 'careers' },
-      { label: 'Blog', action: 'blog' },
-      { label: 'Press Kit', action: 'press' },
-    ],
-  },
-  {
-    title: 'Support',
-    links: [
+      { label: 'How to Play', action: 'rules' },
       { label: 'Help Center', action: 'faq' },
-      { label: 'Fair Play', action: 'rules' },
+      { label: 'About', action: 'about' },
       { label: 'Contact', action: 'contact' },
-      { label: 'Status', action: 'status' },
     ],
   },
-];
-
-const SOCIALS = [
-  { icon: Twitter, label: 'Twitter', href: '#' },
-  { icon: Instagram, label: 'Instagram', href: '#' },
-  { icon: Youtube, label: 'YouTube', href: '#' },
-  { icon: Github, label: 'GitHub', href: '#' },
-  { icon: Send, label: 'Telegram', href: '#' },
 ];
 
 interface Props {
@@ -63,15 +41,6 @@ export function Footer({ onNavigate, onFooterPage }: Props) {
       case 'faq': onFooterPage('faq'); break;
       case 'contact': onFooterPage('contact'); break;
       case 'rules': onFooterPage('rules'); break;
-      case 'tournaments':
-      case 'puzzles':
-      case 'forums':
-      case 'events':
-      case 'careers':
-      case 'blog':
-      case 'press':
-      case 'status':
-        onFooterPage(action); break;
       default: break;
     }
   };
@@ -127,25 +96,10 @@ export function Footer({ onNavigate, onFooterPage }: Props) {
                 Join
               </button>
             </form>
-            <div className="mt-6 flex items-center gap-2">
-              {SOCIALS.map((s) => {
-                const Icon = s.icon;
-                return (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    aria-label={s.label}
-                    className="grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/10 text-white transition-all hover:border-royal-400 hover:bg-blue-grad hover:shadow-glow-sm"
-                  >
-                    <Icon size={17} />
-                  </a>
-                );
-              })}
-            </div>
           </div>
 
           {/* link columns */}
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
             {COLUMNS.map((col) => (
               <div key={col.title}>
                 <p className="font-display text-sm font-bold uppercase tracking-wide text-royal-200">{col.title}</p>
@@ -168,7 +122,7 @@ export function Footer({ onNavigate, onFooterPage }: Props) {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-center sm:flex-row sm:text-left">
           <p className="text-xs text-royal-200/70">© {new Date().getFullYear()} KhelChess. All rights reserved.</p>
-          <p className="text-xs font-semibold text-royal-200/90">Powered by Sylvanta Pvt Ltd company</p>
+          <p className="text-xs font-semibold text-royal-200/90">A Sylvanta Pvt Ltd product</p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-royal-200/70">
             <button onClick={() => onFooterPage('privacy')} className="transition-colors hover:text-white">Privacy</button>
             <button onClick={() => onFooterPage('terms')} className="transition-colors hover:text-white">Terms</button>

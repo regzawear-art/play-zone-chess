@@ -12,7 +12,7 @@ import type {
 } from './game/types';
 
 import { useChess } from './hooks/useChess';
-import { PLAYERS, CURRENT_USER } from './data/players';
+import { CURRENT_USER, BOT_PLAYER, LOCAL_OPPONENT } from './data/players';
 
 import { TopHeader } from './components/TopHeader';
 import { Hero } from './components/Hero';
@@ -20,7 +20,6 @@ import { Features } from './components/Features';
 import { GameOverPopup } from './components/GameOverPopup';
 import { Leaderboard } from './components/Leaderboard';
 import { EditableProfile } from './components/EditableProfile';
-import { ProfileCard } from './components/ProfileCard';
 import { Settings } from './components/Settings';
 import { MatchHistory } from './components/MatchHistory';
 import { AuthModal } from './components/AuthModal';
@@ -625,7 +624,7 @@ function HomePage() {
             setActiveGames([]);
         }, []);
 
-    const opponent = PLAYERS[1];
+    const opponent = gameMode === 'ai' ? BOT_PLAYER : LOCAL_OPPONENT;
 
     const user = useMemo(
         () => ({
@@ -2053,7 +2052,7 @@ function HomePage() {
                             </p>
                         </div>
 
-                        <Leaderboard />
+                        <Leaderboard signedIn={!!authUser} onLogin={() => setAuthOpen(true)} />
                     </section>
 
                     {/* PRICING */}
@@ -2198,11 +2197,12 @@ function HomePage() {
                                     }
                                 />
                             ) : (
-                                <ProfileCard
-                                    user={
-                                        user
-                                    }
-                                />
+                                <div className="flex flex-col items-center gap-3 rounded-3xl border border-white/10 bg-navy-700/80 px-6 py-12 text-center shadow-card-lg">
+                                    <img src="/brand/avatar-default.svg" alt="" className="h-20 w-20 rounded-full ring-4 ring-navy-600" />
+                                    <p className="font-display text-xl font-bold text-white">Create your free KhelChess profile</p>
+                                    <p className="max-w-sm text-sm text-navy-400">Save your rating, track wins and losses, and appear on the leaderboard.</p>
+                                    <button onClick={() => setAuthOpen(true)} className="mt-1 rounded-xl bg-royal-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-royal-400">Log In / Sign Up</button>
+                                </div>
                             )}
 
                             <MatchHistory
