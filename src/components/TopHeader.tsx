@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from 'react';
 import {
-  Crown,
   Home,
   Gamepad2,
   Trophy,
@@ -100,21 +99,16 @@ export function TopHeader({
             type="button"
             onClick={() => go('home')}
             className="mr-2 flex shrink-0 items-center gap-2"
-            aria-label="Gambit Royale home"
+            aria-label="KhelChess home"
           >
-            <span className="relative grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-blue-grad shadow-glow-sm">
-              <Crown size={16} className="text-white" />
-            </span>
-
-            <span className="hidden flex-col leading-none sm:flex">
-              <span className="font-display text-sm font-extrabold tracking-tight text-white">
-                Gambit
-              </span>
-
-              <span className="font-display text-[8px] font-semibold uppercase tracking-[0.2em] text-royal-400">
-                Royale
-              </span>
-            </span>
+            <img
+              src="/brand/khelchess-logo.webp"
+              alt="KhelChess"
+              width={176}
+              height={36}
+              className="h-8 w-auto select-none sm:h-9"
+              draggable={false}
+            />
           </button>
 
           {/* =====================================================
