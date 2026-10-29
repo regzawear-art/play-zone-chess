@@ -308,7 +308,7 @@ export function ChessGamePage({
                     <div className="grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 lg:grid-cols-[auto_minmax(320px,380px)] lg:grid-rows-none lg:items-start lg:justify-center lg:gap-5">
                     {/* BOARD */}
                     <section className="flex min-w-0 justify-center">
-                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-190px),calc(100vw-440px),1000px)] lg:max-w-none">
+                        <div className="w-full max-w-[min(100vw,max(220px,calc(100dvh-270px)))] lg:w-[min(calc(100dvh-200px),calc(100vw-440px),1000px)] lg:max-w-none">
                             <PlayerHUD
                                 player={{
                                     name: topPlayer.name,
