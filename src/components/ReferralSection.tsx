@@ -250,34 +250,19 @@ const submitReferral = async (e: React.FormEvent) => {
             return;
         }
 
-        const { data: existing } = await supabase
-            .from('referrals')
-            .select('id')
-            .eq('referrer_id', userId)
-            .eq('referred_id', referredUser.id)
-            .maybeSingle();
+        const { data: result } = await supabase.rpc('process_referral_bonus', {
+            p_referred_id: referredUser.id,
+            p_referral_code: referralCode,
+            p_referred_email: inviteEmail.trim(),
+        });
 
-        if (existing) {
-            setError('You have already referred this user.');
+        if (result?.success) {
+            onReferralComplete(inviteEmail.trim());
+        } else {
+            setError(result?.message ?? 'Referral failed. Please try again.');
             setSubmitting(false);
             return;
         }
-
-        const { error: refErr } = await supabase
-            .from('referrals')
-            .insert({
-                referrer_id: userId,
-                referred_id: referredUser.id,
-                referral_code: referralCode,
-                bonus_inr: REFERRAL_BONUS,
-                status: 'completed',
-            });
-
-        if (refErr) {
-            throw refErr;
-        }
-
-        onReferralComplete(inviteEmail.trim());
 
         setSuccess(
             `Referral successful! ${formatCurrency(

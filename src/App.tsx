@@ -2136,12 +2136,8 @@ function HomePage() {
                                     true
                                 )
                             }
-                            onReferralComplete={(
-                                email
-                            ) =>
-                                walletDB.processReferralBonus(
-                                    email
-                                )
+                            onReferralComplete={() =>
+                                walletDB.refresh()
                             }
                         />
                     </section>

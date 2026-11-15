@@ -9,7 +9,7 @@ export interface WalletDB {
   transactions: WalletTx[];
   loading: boolean;
   refresh: () => Promise<void>;
-  processReferralBonus: (referredEmail: string) => Promise<void>;
+  processReferralBonus: (referredEmail: string, referredId?: string, referralCode?: string) => Promise<void>;
   redeemCoupon: (code: string) => Promise<{ success: boolean; message: string }>;
 }
 
@@ -20,8 +20,6 @@ export interface WalletTx {
   description: string;
   createdAt: string;
 }
-
-const REFERRAL_BONUS = 999;
 
 export function useWalletDB(authUser: AppUser | null): WalletDB {
   const [balanceInr, setBalanceInr] = useState(0);
@@ -37,6 +35,7 @@ export function useWalletDB(authUser: AppUser | null): WalletDB {
       return;
     }
     setLoading(true);
+
     const { data: wallet } = await supabase
       .from('wallets')
       .select('balance_inr, currency')
@@ -47,20 +46,17 @@ export function useWalletDB(authUser: AppUser | null): WalletDB {
       setBalanceInr(Number(wallet.balance_inr) || 0);
       setCurrency(wallet.currency || getStoredCurrency());
     } else {
-      const { data: created } = await supabase
-        .from('wallets')
-        .insert({ user_id: authUser.id, balance_inr: 50, currency: getStoredCurrency() })
-        .select()
-        .maybeSingle();
-      if (created) {
-        setBalanceInr(Number(created.balance_inr) || 50);
-        setCurrency(created.currency);
-        await supabase.from('transactions').insert({
-          user_id: authUser.id,
-          type: 'bonus',
-          amount_inr: 50,
-          description: 'Welcome bonus',
-        });
+      const { data: result } = await supabase.rpc('claim_welcome_bonus');
+      if (result?.success) {
+        const { data: newWallet } = await supabase
+          .from('wallets')
+          .select('balance_inr, currency')
+          .eq('user_id', authUser.id)
+          .maybeSingle();
+        if (newWallet) {
+          setBalanceInr(Number(newWallet.balance_inr) || 0);
+          setCurrency(newWallet.currency || getStoredCurrency());
+        }
       }
     }
 
@@ -87,97 +83,26 @@ export function useWalletDB(authUser: AppUser | null): WalletDB {
     refresh();
   }, [refresh]);
 
-  const processReferralBonus = useCallback(async (referredEmail: string) => {
+  const processReferralBonus = useCallback(async (referredEmail: string, referredId?: string, referralCode?: string) => {
     if (!authUser) return;
-    const { data: wallet } = await supabase
-      .from('wallets')
-      .select('balance_inr')
-      .eq('user_id', authUser.id)
-      .maybeSingle();
-    if (!wallet) return;
-    await supabase.from('wallets').update({
-      balance_inr: Number(wallet.balance_inr) + REFERRAL_BONUS,
-      updated_at: new Date().toISOString(),
-    }).eq('user_id', authUser.id);
-    await supabase.from('transactions').insert({
-      user_id: authUser.id,
-      type: 'referral',
-      amount_inr: REFERRAL_BONUS,
-      description: `Referral bonus for inviting ${referredEmail}`,
+    const { data: result } = await supabase.rpc('process_referral_bonus', {
+      p_referred_id: referredId ?? null,
+      p_referral_code: referralCode ?? '',
+      p_referred_email: referredEmail,
     });
-    await refresh();
+    if (result?.success) {
+      await refresh();
+    }
   }, [authUser, refresh]);
 
   const redeemCoupon = useCallback(async (code: string): Promise<{ success: boolean; message: string }> => {
     if (!authUser) return { success: false, message: 'Please sign in to redeem a coupon.' };
-    const normalized = code.trim().toUpperCase();
-    if (!normalized) return { success: false, message: 'Please enter a coupon code.' };
-
-    // Check if already redeemed
-    const { data: existing } = await supabase
-      .from('coupon_redemptions')
-      .select('id')
-      .eq('user_id', authUser.id)
-      .eq('coupon_code', normalized)
-      .maybeSingle();
-    if (existing) return { success: false, message: 'You have already redeemed this coupon.' };
-
-    // Look up the coupon
-    const { data: coupon, error: couponErr } = await supabase
-      .from('coupon_codes')
-      .select('code, amount_inr, max_uses, uses, active')
-      .eq('code', normalized)
-      .maybeSingle();
-    if (couponErr || !coupon) return { success: false, message: 'Invalid coupon code.' };
-    if (!coupon.active) return { success: false, message: 'This coupon is no longer active.' };
-    if (coupon.uses >= coupon.max_uses) return { success: false, message: 'This coupon has reached its redemption limit.' };
-
-    // Credit the wallet
-    const { data: wallet } = await supabase
-      .from('wallets')
-      .select('balance_inr')
-      .eq('user_id', authUser.id)
-      .maybeSingle();
-    if (!wallet) return { success: false, message: 'Wallet not found. Please try again.' };
-
-    const newBalance = Number(wallet.balance_inr) + Number(coupon.amount_inr);
-    const { error: updateErr } = await supabase.from('wallets').update({
-      balance_inr: newBalance,
-      updated_at: new Date().toISOString(),
-    }).eq('user_id', authUser.id);
-    if (updateErr) return { success: false, message: 'Failed to update wallet balance.' };
-
-    // Record the redemption
-    const { error: redeemErr } = await supabase.from('coupon_redemptions').insert({
-      user_id: authUser.id,
-      coupon_code: normalized,
-      amount_inr: Number(coupon.amount_inr),
-    });
-    if (redeemErr) {
-      // Refund the wallet if redemption record failed
-      await supabase.from('wallets').update({
-        balance_inr: Number(wallet.balance_inr),
-        updated_at: new Date().toISOString(),
-      }).eq('user_id', authUser.id);
-      if (redeemErr.code === '23505') return { success: false, message: 'You have already redeemed this coupon.' };
-      return { success: false, message: 'Failed to record redemption.' };
+    const { data: result } = await supabase.rpc('redeem_coupon', { p_code: code });
+    if (result) {
+      if (result.success) await refresh();
+      return { success: result.success, message: result.message ?? 'Redemption failed.' };
     }
-
-    // Increment the coupon uses count
-    await supabase.from('coupon_codes')
-      .update({ uses: coupon.uses + 1 })
-      .eq('code', normalized);
-
-    // Record the transaction
-    await supabase.from('transactions').insert({
-      user_id: authUser.id,
-      type: 'coupon',
-      amount_inr: Number(coupon.amount_inr),
-      description: `Coupon redeemed: ${normalized}`,
-    });
-
-    await refresh();
-    return { success: true, message: `Coupon redeemed successfully! ${coupon.amount_inr} credited to your wallet.` };
+    return { success: false, message: 'Failed to redeem coupon. Please try again.' };
   }, [authUser, refresh]);
 
   return { balanceInr, currency, transactions, loading, refresh, processReferralBonus, redeemCoupon };

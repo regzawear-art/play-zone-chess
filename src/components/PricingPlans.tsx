@@ -61,31 +61,13 @@ export function PricingPlans({ userId, onLogin }: Props) {
     setSuccess(null);
     setSubscribing(plan.id);
     try {
-      const expiresAt = new Date(Date.now() + plan.duration_days * 86400000).toISOString();
-      const { error: subErr } = await supabase.from('subscriptions').insert({
-        user_id: userId,
-        plan_id: plan.id,
-        status: 'active',
-        started_at: new Date().toISOString(),
-        expires_at: expiresAt,
-        price_paid_inr: plan.price_inr,
-      });
-      if (subErr) throw subErr;
-      await supabase.from('transactions').insert({
-        user_id: userId,
-        type: 'subscription',
-        amount_inr: plan.price_inr,
-        description: `Subscription: ${plan.name} plan`,
-      });
-      const { data: wallet } = await supabase.from('wallets').select('balance_inr').eq('user_id', userId).maybeSingle();
-      if (wallet) {
-        await supabase.from('wallets').update({
-          balance_inr: Math.max(0, wallet.balance_inr-plan.price_inr),
-          updated_at: new Date().toISOString(),
-        }).eq('user_id', userId);
+      const { data: result } = await supabase.rpc('subscribe_with_wallet', { p_plan: plan.id });
+      if (result?.success) {
+        setActivePlan(plan.id);
+        setSuccess(result.message ?? `Successfully subscribed to the ${plan.name} plan!`);
+      } else {
+        setError(result?.message ?? 'Failed to subscribe. Please try again.');
       }
-      setActivePlan(plan.id);
-      setSuccess(`Successfully subscribed to the ${plan.name} plan!`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to subscribe. Please try again.');
     } finally {
