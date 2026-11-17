@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     ArrowLeft,
     Flag,
@@ -32,6 +32,7 @@ import {
 } from '../game/themes';
 
 import { sound } from '../game/sound';
+import { logSiteEvent } from '../lib/analytics';
 
 const PIECE_VALUES = {
     p: 1,
@@ -167,6 +168,38 @@ export function ChessGamePage({
 
         return () => cancelAnimationFrame(frame);
     }, []);
+
+    // Analytics: log game_start once when started becomes true, game_end once when result is set.
+    const gameStartLogged = useRef(false);
+    const gameEndLogged = useRef(false);
+
+    useEffect(() => {
+        if (game.started && !gameStartLogged.current) {
+            gameStartLogged.current = true;
+            logSiteEvent('game_start', {
+                mode: 'ai',
+                detail: `${aiDifficulty}|${timeControl === 'custom' ? `${customMinutes}min` : timeControl}`,
+            });
+        }
+        if (!game.started) {
+            gameStartLogged.current = false;
+        }
+    }, [game.started, aiDifficulty, timeControl, customMinutes]);
+
+    useEffect(() => {
+        if (game.pendingResult && !gameEndLogged.current) {
+            gameEndLogged.current = true;
+            const winner = game.pendingResult.status.winner;
+            const outcome = winner === null ? 'draw' : winner === playerColor ? 'win' : 'loss';
+            logSiteEvent('game_end', {
+                mode: 'ai',
+                detail: `${outcome}|${game.pendingResult.ending}|${game.history.length}`,
+            });
+        }
+        if (!game.pendingResult) {
+            gameEndLogged.current = false;
+        }
+    }, [game.pendingResult, game.history.length, playerColor]);
 
     useEffect(() => {
         if (game.pendingResult) {

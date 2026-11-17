@@ -63,6 +63,7 @@ import {
 
 import type { OnlineGameConfig } from './hooks/useOnlineGame';
 import { joinOnlineGame } from './lib/multiplayer/supabase-multiplayer';
+import { logPageViewOnce } from './lib/analytics';
 
 const PIECE_VALUES: Record<PieceType, number> = {
     p: 1,
@@ -199,6 +200,8 @@ function formatDuration(ms: number): string {
 }
 
 function HomePage() {
+    logPageViewOnce();
+
     const [view, setView] =
         useState<string>('home');
 

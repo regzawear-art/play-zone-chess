@@ -10,6 +10,9 @@ export interface BoardTheme {
   checkBg: string;
   lastMoveBg: string;
   preview: string;
+  bgLight?: string;
+  bgDark?: string;
+  frame?: string;
 }
 
 export const BOARD_THEMES: BoardTheme[] = [
@@ -117,6 +120,60 @@ export const BOARD_THEMES: BoardTheme[] = [
     lastMoveBg: 'rgba(196,99,58,0.5)',
     preview: 'linear-gradient(135deg, #f5dccb 50%, #c4633a 50%)',
   },
+  {
+    id: 'marble',
+    name: 'Marble',
+    light: '#eeeae4',
+    dark: '#4a4d55',
+    highlight: '#dcd7cf',
+    select: '#cfc8bd',
+    legalDot: 'rgba(0,0,0,0.22)',
+    legalRing: 'rgba(0,0,0,0.22)',
+    checkBg: 'rgba(229,57,53,0.45)',
+    lastMoveBg: 'rgba(74,77,85,0.45)',
+    preview: 'linear-gradient(135deg, #eeeae4 50%, #4a4d55 50%)',
+    bgLight:
+      "linear-gradient(135deg, #eeeae4 0%, #e6e0d8 100%)",
+    bgDark:
+      "linear-gradient(135deg, #4a4d55 0%, #3d4047 100%)",
+    frame: 'linear-gradient(135deg, #b7a978, #8a8556)',
+  },
+  {
+    id: 'royal-gold',
+    name: 'Royal Gold',
+    light: '#f7e3a3',
+    dark: '#1d1b18',
+    highlight: '#e8cf8a',
+    select: '#f0d488',
+    legalDot: 'rgba(0,0,0,0.28)',
+    legalRing: 'rgba(255,255,255,0.45)',
+    checkBg: 'rgba(229,57,53,0.55)',
+    lastMoveBg: 'rgba(247,227,163,0.45)',
+    preview: 'linear-gradient(135deg, #f7e3a3 50%, #1d1b18 50%)',
+    bgLight:
+      "linear-gradient(135deg, #f7e3a3 0%, #d4ae4f 100%)",
+    bgDark:
+      "linear-gradient(135deg, #2a2722 0%, #1d1b18 100%)",
+    frame: 'linear-gradient(135deg, #d4af37, #f7e3a3, #d4af37)',
+  },
+  {
+    id: 'indian-heritage',
+    name: 'Indian Heritage',
+    light: '#fbe3c0',
+    dark: '#1f6f4a',
+    highlight: '#f0d49a',
+    select: '#f3d8a0',
+    legalDot: 'rgba(0,0,0,0.22)',
+    legalRing: 'rgba(0,0,0,0.22)',
+    checkBg: 'rgba(229,57,53,0.5)',
+    lastMoveBg: 'rgba(31,111,74,0.5)',
+    preview: 'linear-gradient(135deg, #fbe3c0 50%, #1f6f4a 50%)',
+    bgLight:
+      "linear-gradient(135deg, #fbe3c0 0%, #f6d9a8 100%)",
+    bgDark:
+      "linear-gradient(135deg, #1f6f4a 0%, #165636 100%)",
+    frame: 'linear-gradient(135deg, #ff9933, #ffffff, #138808)',
+  },
 ];
 
 const STORAGE_KEY = 'chess-board-theme';
@@ -192,6 +249,9 @@ export function applyThemeCSS(theme: BoardTheme): void {
   root.style.setProperty('--board-legal-ring', theme.legalRing);
   root.style.setProperty('--board-check-bg', theme.checkBg);
   root.style.setProperty('--board-last-move', theme.lastMoveBg);
+  root.style.setProperty('--board-bg-light', theme.bgLight || theme.light);
+  root.style.setProperty('--board-bg-dark', theme.bgDark || theme.dark);
+  root.style.setProperty('--board-frame', theme.frame || 'transparent');
 }
 
 export function getThemeById(id: string): BoardTheme {
