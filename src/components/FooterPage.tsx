@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Mail, MapPin, Send, MessageCircle, Shield, BookOpen, HelpCircle, Info, FileText, Loader2, Trophy, Target, Calendar, Briefcase, Activity } from 'lucide-react';
+import { ArrowLeft, Mail, MapPin, Send, MessageCircle, Shield, BookOpen, HelpCircle, Info, FileText, Loader2, Trophy, Target, Calendar, Briefcase, Activity, Receipt } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-type PageId = 'about' | 'privacy' | 'terms' | 'contact' | 'faq' | 'rules' | 'tournaments' | 'puzzles' | 'forums' | 'events' | 'careers' | 'blog' | 'press' | 'status';
+type PageId = 'about' | 'privacy' | 'terms' | 'contact' | 'faq' | 'rules' | 'refund' | 'tournaments' | 'puzzles' | 'forums' | 'events' | 'careers' | 'blog' | 'press' | 'status';
 
 interface Props {
   page: PageId;
@@ -16,6 +16,7 @@ const PAGE_META: Record<PageId, { title: string; icon: typeof Info; description:
   contact: { title: 'Contact Us', icon: Mail, description: 'Get in touch with our team' },
   faq: { title: 'Help Center', icon: HelpCircle, description: 'Frequently asked questions' },
   rules: { title: 'How to Play', icon: BookOpen, description: 'Chess rules and guides' },
+  refund: { title: 'Refund & Cancellation Policy', icon: Shield, description: 'Subscription cancellations and refunds' },
   tournaments: { title: 'Tournaments', icon: Trophy, description: 'Daily and weekly competitions' },
   puzzles: { title: 'Puzzles', icon: Target, description: 'Sharpen your tactical vision' },
   forums: { title: 'Forums', icon: MessageCircle, description: 'Community discussions' },
@@ -63,6 +64,7 @@ export function FooterPage({ page, onBack }: Props) {
             {page === 'contact' && <ContactContent />}
             {page === 'faq' && <FaqContent />}
             {page === 'rules' && <RulesContent />}
+            {page === 'refund' && <RefundContent />}
             {['tournaments', 'puzzles', 'forums', 'events', 'careers', 'blog', 'press', 'status'].includes(page) && (
               <ComingSoon title={meta.title} />
             )}
@@ -365,6 +367,58 @@ function RulesContent() {
         <p className="font-display text-base font-bold">Ready to play?</p>
         <p className="mt-1 text-sm text-royal-100">Start with the Easy AI to learn the basics, then work your way up!</p>
       </div>
+    </div>
+  );
+}
+
+function RefundContent() {
+  return (
+    <div className="space-y-4 text-sm leading-relaxed text-white">
+      <p>Last updated: November 2026</p>
+      <p>
+        This Refund & Cancellation Policy applies to all paid subscriptions on
+        Gambit Royale, operated by <strong>Sylvanta Private Limited</strong>.
+        By subscribing to a premium plan, you agree to the terms below.
+      </p>
+
+      <h3 className="font-display text-lg font-bold text-white">1. Auto-Renewal</h3>
+      <p>
+        All monthly and yearly subscriptions are recurring and auto-renew
+        automatically at the end of each billing cycle until you cancel. You
+        will be charged the same amount as your original subscription for each
+        renewal period.
+      </p>
+
+      <h3 className="font-display text-lg font-bold text-white">2. Cancellation</h3>
+      <p>
+        You can cancel your subscription at any time. Cancellation stops future
+        renewals but does not refund the current billing period. After
+        cancellation, you will continue to have access to all premium features
+        until the end of your current subscription period, after which your
+        account will revert to the free plan.
+      </p>
+
+      <h3 className="font-display text-lg font-bold text-white">3. No Partial Refunds</h3>
+      <p>
+        We do not provide partial or prorated refunds for partially used
+        billing periods. If you cancel mid-cycle, you retain access until the
+        period ends but will not receive a refund for the unused portion.
+      </p>
+
+      <h3 className="font-display text-lg font-bold text-white">4. Duplicate or Wrong Charges</h3>
+      <p>
+        If you believe you have been charged incorrectly or a duplicate charge
+        has occurred, please contact us at <a href="mailto:support@khelchess.com" className="text-royal-400 underline">support@khelchess.com</a> with
+        your transaction details. Verified duplicate or erroneous charges will
+        be refunded within 5-7 working days.
+      </p>
+
+      <h3 className="font-display text-lg font-bold text-white">5. Contact Us</h3>
+      <p>
+        For any questions about this policy, cancellations, or refunds, email
+        us at <a href="mailto:support@khelchess.com" className="text-royal-400 underline">support@khelchess.com</a>. Our support team responds within
+        24-48 hours.
+      </p>
     </div>
   );
 }

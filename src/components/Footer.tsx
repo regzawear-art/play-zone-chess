@@ -176,6 +176,7 @@ export function Footer({ onNavigate, onFooterPage }: Props) {
             <button onClick={() => onFooterPage('terms')} className="transition-colors hover:text-white">Terms</button>
             <button onClick={() => onFooterPage('faq')} className="transition-colors hover:text-white">FAQ</button>
             <button onClick={() => onFooterPage('rules')} className="transition-colors hover:text-white">Rules</button>
+            <button onClick={() => onFooterPage('refund')} className="transition-colors hover:text-white">Refund Policy</button>
             <button onClick={() => onFooterPage('contact')} className="transition-colors hover:text-white">Contact</button>
           </div>
         </div>

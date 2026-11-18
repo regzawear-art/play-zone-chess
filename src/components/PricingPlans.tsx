@@ -17,6 +17,35 @@ interface Props {
   onLogin: () => void;
 }
 
+declare global {
+  interface Window {
+    Razorpay?: any;
+  }
+}
+
+const RAZORPAY_CHECKOUT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
+
+function loadRazorpay(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.Razorpay) {
+      resolve();
+      return;
+    }
+    const existing = document.querySelector(`script[src="${RAZORPAY_CHECKOUT_URL}"]`);
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', () => reject(new Error('Failed to load Razorpay')));
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = RAZORPAY_CHECKOUT_URL;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Razorpay'));
+    document.head.appendChild(script);
+  });
+}
+
 export function PricingPlans({ userId, onLogin }: Props) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [activePlan, setActivePlan] = useState<string | null>(null);
@@ -57,17 +86,69 @@ export function PricingPlans({ userId, onLogin }: Props) {
   const handleSubscribe = async (plan: Plan) => {
     if (!userId) { onLogin(); return; }
     if (plan.id === 'free') return;
+    if (plan.id !== 'monthly' && plan.id !== 'yearly') return;
+
     setError(null);
     setSuccess(null);
     setSubscribing(plan.id);
     try {
-      const { data: result } = await supabase.rpc('subscribe_with_wallet', { p_plan: plan.id });
-      if (result?.success) {
-        setActivePlan(plan.id);
-        setSuccess(result.message ?? `Successfully subscribed to the ${plan.name} plan!`);
-      } else {
-        setError(result?.message ?? 'Failed to subscribe. Please try again.');
+      await loadRazorpay();
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        onLogin();
+        return;
       }
+
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription`;
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ plan: plan.id }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        setError(errBody.error ?? 'Failed to start subscription. Please try again.');
+        return;
+      }
+
+      const result = await res.json();
+      if (!result.subscription_id || !result.key_id) {
+        setError('Unexpected response from server. Please try again.');
+        return;
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        const rzp = new window.Razorpay({
+          key_id: result.key_id,
+          subscription_id: result.subscription_id,
+          name: 'Gambit Royale Premium',
+          description: `${plan.name} subscription`,
+          theme: { color: '#1e40af' },
+          handler: () => {
+            resolve();
+          },
+          modal: {
+            ondismiss: () => {
+              reject(new Error('Payment cancelled. You can subscribe anytime.'));
+            },
+          },
+        });
+        rzp.open();
+      });
+
+      setSuccess(
+        'Subscription activated! Your premium features are now unlocked.',
+      );
+      setActivePlan(plan.id);
+      loadActiveSubscription();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to subscribe. Please try again.');
     } finally {
@@ -153,7 +234,7 @@ export function PricingPlans({ userId, onLogin }: Props) {
                 }`}
               >
                 {subscribing === plan.id ? (
-                  <><Loader2 size={16} className="animate-spin inline" /> Subscribing...</>
+                  <><Loader2 size={16} className="animate-spin inline" /> Processing...</>
                 ) : isActive ? (
                   'Current Plan'
                 ) : isFree ? (

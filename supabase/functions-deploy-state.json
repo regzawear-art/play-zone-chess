@@ -1,0 +1,13 @@
+{
+  "projectId": "69535087",
+  "functions": {
+    "create-subscription": {
+      "hasChanged": false,
+      "hash": "b15d9a880f8e053097edf65d739e33b71feea727de75778c511371f3dfb5bdcf"
+    },
+    "razorpay-webhook": {
+      "hasChanged": false,
+      "hash": "ea820241ae680332f88cc104ec991732dac30fa6bcb93513a13b03b74462a323"
+    }
+  }
+}
