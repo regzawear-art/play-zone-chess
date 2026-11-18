@@ -268,3 +268,42 @@ export function getAllThemes(): BoardTheme[] {
   if (custom) list.push(buildCustomTheme(custom));
   return list;
 }
+
+/* ---- Piece style ---- */
+export type PieceSet = 'classic' | 'gold' | 'neon' | 'minimal';
+
+export const PIECE_SETS: { id: PieceSet; name: string }[] = [
+  { id: 'classic', name: 'Classic' },
+  { id: 'gold', name: 'Gold & Silver' },
+  { id: 'neon', name: 'Neon Glass' },
+  { id: 'minimal', name: 'Minimal' },
+];
+
+const PIECE_SET_KEY = 'kc-piece-set';
+
+export function getStoredPieceSet(): PieceSet {
+  try {
+    const v = localStorage.getItem(PIECE_SET_KEY);
+    if (v === 'gold' || v === 'neon' || v === 'minimal') return v;
+  } catch {
+    // ignore
+  }
+  return 'classic';
+}
+
+export function applyPieceSetCSS(set: PieceSet): void {
+  const root = document.documentElement;
+  if (set === 'classic') {
+    delete root.dataset.kcp;
+  } else {
+    root.dataset.kcp = set;
+  }
+}
+
+export function storePieceSet(set: PieceSet): void {
+  try {
+    localStorage.setItem(PIECE_SET_KEY, set);
+  } catch {
+    // ignore
+  }
+}

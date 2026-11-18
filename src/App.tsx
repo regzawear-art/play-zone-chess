@@ -59,6 +59,8 @@ import {
     storeTheme,
     getThemeById,
     applyThemeCSS,
+    getStoredPieceSet,
+    applyPieceSetCSS,
 } from './game/themes';
 
 import type { OnlineGameConfig } from './hooks/useOnlineGame';
@@ -308,6 +310,10 @@ function HomePage() {
             getThemeById(boardThemeId)
         );
     }, [boardThemeId]);
+
+    useEffect(() => {
+        applyPieceSetCSS(getStoredPieceSet());
+    }, []);
 
     usePresenceHeartbeat(
         authUser?.id ?? null

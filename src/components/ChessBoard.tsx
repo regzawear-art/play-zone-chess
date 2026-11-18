@@ -492,6 +492,7 @@ export function ChessBoard({
             <div
                 ref={containerRef}
                 className="
+          chess-board-grid
           relative
           grid
           aspect-square

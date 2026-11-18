@@ -282,15 +282,10 @@ body {
   user-select: none;
   -webkit-touch-callout: none;
 }
-/* Themed board frame (marble / royal-gold / indian-heritage) */
-.chess-board-wrap {
-  border-radius: 8px;
-}
-.chess-board-wrap[data-frame="1"] > .grid {
-  box-shadow:
-    0 0 0 2px var(--board-frame),
-    0 0 0 5px rgba(0,0,0,0.35),
-    0 14px 44px rgba(0,0,0,0.55);
+/* Themed board frame — outline ring using --board-frame (transparent = no frame) */
+.chess-board-grid {
+  outline: 3px solid var(--board-frame, transparent);
+  outline-offset: 2px;
 }
 .chess-board-wrap > div > .grid,
 .chess-board-inner {

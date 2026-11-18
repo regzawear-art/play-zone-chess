@@ -9,8 +9,13 @@ import {
   getCustomColors,
   storeCustomColors,
   buildCustomTheme,
+  PIECE_SETS,
+  applyPieceSetCSS,
+  storePieceSet,
   type CustomColors,
+  type PieceSet,
 } from '@/game/themes';
+import { pieceSVG } from '@/game/pieces';
 import { sound } from '@/game/sound';
 
 interface Props {
@@ -26,6 +31,10 @@ export function BoardThemeSwitcher({ currentThemeId, onThemeChange }: Props) {
   const [customColors, setCustomColors] = useState<CustomColors>(
     () => getCustomColors() ?? DEFAULT_CUSTOM,
   );
+  const [pieceSet, setPieceSet] = useState<PieceSet>(() => {
+    const v = localStorage.getItem('kc-piece-set');
+    return v === 'gold' || v === 'neon' || v === 'minimal' ? (v as PieceSet) : 'classic';
+  });
 
   useEffect(() => {
     if (open) {
@@ -177,6 +186,45 @@ export function BoardThemeSwitcher({ currentThemeId, onThemeChange }: Props) {
                       style={{ background: activePreview }}
                     />
                     <span className="text-sm font-semibold text-white">{activeName}</span>
+                  </div>
+
+                  {/* Piece Style picker */}
+                  <div className="mt-4">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-navy-400">
+                      Piece Style
+                    </p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {PIECE_SETS.map((set) => {
+                        const isActive = set.id === pieceSet;
+                        return (
+                          <button
+                            key={set.id}
+                            onClick={() => {
+                              setPieceSet(set.id);
+                              applyPieceSetCSS(set.id);
+                              storePieceSet(set.id);
+                              sound.play('select');
+                            }}
+                            className={`flex flex-col items-center gap-1 rounded-xl border-2 px-1 py-2 transition-all ${
+                              isActive
+                                ? 'border-royal-400 shadow-glow-sm'
+                                : 'border-white/10 hover:border-white/30'
+                            }`}
+                            title={set.name}
+                          >
+                            <span
+                              className="chess-piece h-7 w-7"
+                              dangerouslySetInnerHTML={{
+                                __html: pieceSVG('n', 'w') + pieceSVG('n', 'b'),
+                              }}
+                            />
+                            <span className="text-[10px] font-semibold leading-tight text-navy-200">
+                              {set.name}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </>
               )}
